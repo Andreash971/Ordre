@@ -54,7 +54,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [wrap-anywhere]">
+      <body className="font-sans antialiased">
         <TanStackQueryProvider>
           <Header />
           {children}
