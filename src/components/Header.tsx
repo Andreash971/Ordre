@@ -1,45 +1,58 @@
 import { Link } from '@tanstack/react-router'
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+} from '@/components/ui/navigation-menu'
 import ThemeToggle from './ThemeToggle'
+import { Settings } from 'lucide-react'
+
+const navLinks = [
+  { to: '/', label: 'Ny Ordre' },
+  { to: '/documents', label: 'Dokumenter' },
+  { to: '/customers', label: 'Kunder' },
+  { to: '/products', label: 'Produkter' },
+] as const
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-(--border-color) bg-(--color-primary) px-4 backdrop-blur-lg">
-      <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
-        <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm font-semibold sm:w-auto sm:flex-nowrap sm:pb-0">
-          <h1 className="text-3xl">OrdreFlyt</h1>
-          <Link to="/" className="">
-            Ny Ordre
-          </Link>
-          <Link
-            to="/documents"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
-          >
-            Dokumenter
-          </Link>
-          <Link
-            to="/customers"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
-          >
-            Kunder
-          </Link>
-          <Link
-            to="/products"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
-          >
-            Produkter
-          </Link>
+    <header className="sticky top-0 z-50 border-b --color-border --color-background px-4 backdrop-blur-lg">
+      <div className="page-wrap flex items-center justify-between gap-x-4 py-3 sm:py-4">
+        <div className="flex items-center gap-x-4">
+          <h1 className="text-3xl font-semibold --color-foreground">Ordre</h1>
+        </div>
+
+        <NavigationMenu viewport={false}>
+          <NavigationMenuList className="gap-x-1">
+            {navLinks.map(({ to, label }) => (
+              <NavigationMenuItem key={to}>
+                <NavigationMenuLink asChild active={false} className="">
+                  <Link
+                    to={to}
+                    activeProps={
+                      { 'data-active': 'true' } as Record<string, string>
+                    }
+                  >
+                    {label}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
+          </NavigationMenuList>
+        </NavigationMenu>
+
+        <div className="flex items-center gap-x-1">
+          <ThemeToggle />
           <Link
             to="/settings"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
+            activeProps={{ 'data-active': 'true' } as Record<string, string>}
+            className="inline-flex size-8 items-center justify-center rounded-md text-primary-foreground transition-all hover:bg-white/20 data-[active=true]:bg-white/30"
           >
-            Innstillinger
+            <Settings className="size-5 text-foreground" />
           </Link>
         </div>
-      </nav>
+      </div>
     </header>
   )
 }

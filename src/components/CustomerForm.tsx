@@ -24,6 +24,11 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from '@/components/ui/input-group'
+import { User } from 'lucide-react'
+
+interface CustomerFormProps extends React.PropsWithChildren {
+  className: string
+}
 
 const formSchema = z.object({
   name: z.string().max(50, 'Navn kan ikke være lengre enn 50 tegn'),
@@ -34,7 +39,7 @@ const formSchema = z.object({
   city: z.string().max(25, 'Sted kan ikke være lengre enn 25 tegn'),
 })
 
-export function CustomerForm() {
+export default function CustomerForm({ className }: CustomerFormProps) {
   const form = useForm({
     defaultValues: {
       name: '',
@@ -53,11 +58,80 @@ export function CustomerForm() {
   })
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
-      }}
-    ></form>
+    <Card className={className}>
+      <CardContent>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            form.handleSubmit()
+          }}
+        >
+          <Field>
+            <CardHeader>
+              <CardTitle>Kundeinformasjon</CardTitle>
+            </CardHeader>
+            <FieldLabel>Navn</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon>
+                <User className="text-foreground" />
+              </InputGroupAddon>
+              <Input type="text" name="name" placeholder="Navn" />
+            </InputGroup>
+            <FieldError />
+          </Field>
+          <Field>
+            <FieldLabel>Telefon</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon type="prefix">
+                <InputGroupText>📞</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="phone" placeholder="Telefonnummer" />
+            </InputGroup>
+            <FieldError />
+          </Field>
+          <Field>
+            <FieldLabel>Firma</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon type="prefix">
+                <InputGroupText>🏢</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="company" placeholder="Firma navn" />
+            </InputGroup>
+            <FieldError />
+          </Field>
+          <Field>
+            <FieldLabel>Adresse</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon type="prefix">
+                <InputGroupText>📍</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="address" placeholder="Adresse" />
+            </InputGroup>
+            <FieldError />
+          </Field>
+          <Field>
+            <FieldLabel>Postnummer</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon type="prefix">
+                <InputGroupText>📬</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="zip" placeholder="Postnummer" />
+            </InputGroup>
+            <FieldError />
+          </Field>
+          <Field>
+            <FieldLabel>Sted</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon type="prefix">
+                <InputGroupText>🏙️</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="city" placeholder="Sted" />
+            </InputGroup>
+            <FieldError />
+          </Field>
+          <Button type="submit">Send</Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
