@@ -5,14 +5,12 @@ import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -21,10 +19,17 @@ import { Input } from '@/components/ui/input'
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupInput,
   InputGroupText,
   InputGroupTextarea,
 } from '@/components/ui/input-group'
+
 import { User } from 'lucide-react'
+import { Phone } from 'lucide-react'
+import { BriefcaseBusiness } from 'lucide-react'
+import { House } from 'lucide-react'
+import { MapPin } from 'lucide-react'
+import { Building2 } from 'lucide-react'
 
 interface CustomerFormProps extends React.PropsWithChildren {
   className: string
@@ -51,6 +56,8 @@ export default function CustomerForm({ className }: CustomerFormProps) {
     },
     validators: {
       onSubmit: formSchema,
+      onBlur: formSchema,
+      onChange: formSchema,
     },
     onSubmit: (values) => {
       console.log(values)
@@ -59,79 +66,117 @@ export default function CustomerForm({ className }: CustomerFormProps) {
 
   return (
     <Card className={className}>
-      <CardContent>
+      <CardHeader>
+        <CardTitle>Kundeinformasjon</CardTitle>
+      </CardHeader>
+      <CardContent className="">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             form.handleSubmit()
           }}
         >
-          <Field>
-            <CardHeader>
-              <CardTitle>Kundeinformasjon</CardTitle>
-            </CardHeader>
-            <FieldLabel>Navn</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon>
-                <User className="text-foreground" />
-              </InputGroupAddon>
-              <Input type="text" name="name" placeholder="Navn" />
-            </InputGroup>
-            <FieldError />
-          </Field>
-          <Field>
-            <FieldLabel>Telefon</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon type="prefix">
-                <InputGroupText>📞</InputGroupText>
-              </InputGroupAddon>
-              <Input type="text" name="phone" placeholder="Telefonnummer" />
-            </InputGroup>
-            <FieldError />
-          </Field>
-          <Field>
-            <FieldLabel>Firma</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon type="prefix">
-                <InputGroupText>🏢</InputGroupText>
-              </InputGroupAddon>
-              <Input type="text" name="company" placeholder="Firma navn" />
-            </InputGroup>
-            <FieldError />
-          </Field>
-          <Field>
-            <FieldLabel>Adresse</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon type="prefix">
-                <InputGroupText>📍</InputGroupText>
-              </InputGroupAddon>
-              <Input type="text" name="address" placeholder="Adresse" />
-            </InputGroup>
-            <FieldError />
-          </Field>
-          <Field>
-            <FieldLabel>Postnummer</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon type="prefix">
-                <InputGroupText>📬</InputGroupText>
-              </InputGroupAddon>
-              <Input type="text" name="zip" placeholder="Postnummer" />
-            </InputGroup>
-            <FieldError />
-          </Field>
-          <Field>
-            <FieldLabel>Sted</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon type="prefix">
-                <InputGroupText>🏙️</InputGroupText>
-              </InputGroupAddon>
-              <Input type="text" name="city" placeholder="Sted" />
-            </InputGroup>
-            <FieldError />
-          </Field>
-          <Button type="submit">Send</Button>
+          <FieldGroup className="flex flex-col gap-4">
+            <form.Field
+              name="name"
+              children={(field) => {
+                const isInvalid: boolean =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <User className="text-foreground" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="{field.name}"
+                        name="{field.name}"
+                        type="text"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        placeholder="Navn"
+                      />
+                    </InputGroup>
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                )
+              }}
+            />
+
+            <Field>
+              <InputGroup>
+                <InputGroupAddon>
+                  <Phone className="text-foreground" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type="text"
+                  name="phone"
+                  placeholder="Telefon"
+                />
+              </InputGroup>
+              <FieldError />
+            </Field>
+            <Field>
+              <InputGroup>
+                <InputGroupAddon>
+                  <BriefcaseBusiness className="text-foreground" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type="text"
+                  name="company"
+                  placeholder="Firma"
+                />
+              </InputGroup>
+              <FieldError />
+            </Field>
+            <Field>
+              <InputGroup>
+                <InputGroupAddon>
+                  <House className="text-foreground" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type="text"
+                  name="address"
+                  placeholder="Adresse"
+                />
+              </InputGroup>
+              <FieldError />
+            </Field>
+            <Field>
+              <InputGroup>
+                <InputGroupAddon>
+                  <MapPin className="text-foreground" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type="text"
+                  name="zip"
+                  placeholder="Postnummer"
+                />
+              </InputGroup>
+              <FieldError />
+            </Field>
+            <Field>
+              <InputGroup>
+                <InputGroupAddon>
+                  <Building2 className="text-foreground" />
+                </InputGroupAddon>
+                <InputGroupInput type="text" name="city" placeholder="Sted" />
+              </InputGroup>
+              <FieldError />
+            </Field>
+          </FieldGroup>
         </form>
       </CardContent>
+      <CardFooter className="flex justify-end gap-2">
+        <Button type="reset" variant="destructive">
+          Reset
+        </Button>
+        <Button type="submit">Lagre</Button>
+      </CardFooter>
     </Card>
   )
 }
