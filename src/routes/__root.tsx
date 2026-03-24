@@ -2,9 +2,18 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  useRouterState,
 } from '@tanstack/react-router'
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '../components/ui/sidebar'
+import { Separator } from '../components/ui/separator'
+
 import Footer from '../components/Footer'
-import Header from '../components/Header'
+import AppSidebar from '../components/AppSidebar'
+import ThemeToggle from '../components/ThemeToggle'
 
 import TanStackQueryProvider from '../integrations/tanstack-query/root-provider'
 
@@ -34,7 +43,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'OrdreFlyt',
+        title: 'Blomster i Byhaven - Ordre',
       },
     ],
     links: [
@@ -48,7 +57,16 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   notFoundComponent: () => <div>404 Not Found</div>,
 })
 
+const pageLabels: Record<string, string> = {
+  '/': 'Ny Ordre',
+  '/documents': 'Dokumenter',
+  '/customers': 'Kunder',
+  '/products': 'Produkter',
+  '/settings': 'Innstillinger',
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -57,9 +75,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased">
         <TanStackQueryProvider>
-          <Header />
-          {children}
-          <Footer />
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <header className="flex h-16 shrink-0 items-center gap-2">
+                <div className="flex items-center gap-2 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <Separator
+                    orientation="vertical"
+                    className="mr-2 data-[orientation=vertical]:h-8"
+                  />
+                  <h1>{pageLabels[pathname] ?? 'Ordre'}</h1>
+                  <ThemeToggle />
+                </div>
+              </header>
+              <main>{children}</main>
+              <Footer />
+            </SidebarInset>
+          </SidebarProvider>
           <TanStackDevtools
             config={{
               position: 'bottom-right',
