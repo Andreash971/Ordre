@@ -125,43 +125,41 @@ export default function TimeDateForm({ className }: TimeDateFormProps) {
               }}
             />
 
-            {/* CHECKBOX */}
-            <div className="flex flex-col gap-2">
-              <FieldLabel>Leveringstidspunkt</FieldLabel>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="show-time"
-                  checked={showTime}
-                  onCheckedChange={(checked) => setShowTime(checked === true)}
-                />
-                <Label htmlFor="show-time" className="cursor-pointer">
-                  Inkluder leveringstidspunkt?
-                </Label>
-              </div>
-            </div>
-
             {/* TIME FIELD */}
-            {showTime && (
-              <form.Field
-                name="time"
-                children={(field) => {
-                  const isInvalid: boolean =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid}>
+            <form.Field
+              name="time"
+              children={(field) => {
+                const isInvalid: boolean =
+                  field.state.meta.isTouched && !field.state.meta.isValid
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel>Leveringstidspunkt</FieldLabel>
+                    <FieldGroup className="flex flex-row gap-2">
+                      <Checkbox
+                        id="show-time"
+                        checked={showTime}
+                        onCheckedChange={(checked) =>
+                          setShowTime(checked === true)
+                        }
+                      />
+                      <Label htmlFor="show-time" className="cursor-pointer">
+                        Inkluder leveringstidspunkt?
+                      </Label>
+                    </FieldGroup>
+                    {showTime && (
                       <TimePicker
                         value={field.state.value}
                         onChange={(val) => field.handleChange(val)}
                         className="w-full"
                       />
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              />
-            )}
+                    )}
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                )
+              }}
+            />
           </FieldGroup>
         </form>
       </CardContent>
