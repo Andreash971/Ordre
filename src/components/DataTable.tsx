@@ -23,6 +23,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   setData: React.Dispatch<React.SetStateAction<TData[]>>
   footer?: React.ReactNode
+  emptyMessage?: React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
@@ -30,6 +31,7 @@ export function DataTable<TData, TValue>({
   data,
   setData,
   footer,
+  emptyMessage,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -87,7 +89,7 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                {emptyMessage ?? 'Ingen resultater.'}
               </TableCell>
             </TableRow>
           )}
