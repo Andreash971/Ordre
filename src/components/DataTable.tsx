@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -22,30 +21,30 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  setData: React.Dispatch<React.SetStateAction<TData[]>>
   footer?: React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  setData,
   footer,
 }: DataTableProps<TData, TValue>) {
-  const [tableData, setTableData] = useState(data)
-
   const table = useReactTable({
-    data: tableData,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {
       updateData: (rowIndex: number, columnId: string, value: number) => {
-        setTableData((prev) =>
+        setData((prev) =>
           prev.map((row, i) =>
             i === rowIndex ? { ...row, [columnId]: value } : row,
           ),
         )
       },
       removeRow: (rowIndex: number) => {
-        setTableData((prev) => prev.filter((_, i) => i !== rowIndex))
+        setData((prev) => prev.filter((_, i) => i !== rowIndex))
       },
     },
   })
