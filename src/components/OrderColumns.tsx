@@ -130,7 +130,7 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
 export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'name',
-    header: () => <div className="text-left">Vare</div>,
+    header: () => <div className="text-left">Produkt</div>,
   },
   {
     id: 'quantity',

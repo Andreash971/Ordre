@@ -24,6 +24,7 @@ export default function OrderTable({ items, setItems }: OrderTableProps) {
         columns={columns}
         data={items}
         setData={setItems}
+        emptyMessage={'Ordren er tom.'}
         footer={
           <TableRow>
             <TableCell className="text-left font-medium">
