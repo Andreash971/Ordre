@@ -11,7 +11,6 @@ import {
 } from '../components/ui/sidebar'
 import { Separator } from '../components/ui/separator'
 
-import Footer from '../components/Footer'
 import AppSidebar from '../components/AppSidebar'
 import ThemeToggle from '../components/ThemeToggle'
 
@@ -90,7 +89,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 </div>
               </header>
               <main>{children}</main>
-              <Footer />
             </SidebarInset>
           </SidebarProvider>
           <TanStackDevtools
