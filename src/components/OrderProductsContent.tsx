@@ -91,14 +91,26 @@ export default function OrderProductsContent({
                   key={product.id}
                   className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
                   onMouseDown={() => {
-                    setItems((prev) => [
-                      ...prev,
-                      {
-                        name: product.name,
-                        price: Number(product.price),
-                        quantity: 1,
-                      },
-                    ])
+                    setItems((prev) => {
+                      const existingIndex = prev.findIndex(
+                        (item) => item.name === product.name,
+                      )
+                      if (existingIndex !== -1) {
+                        return prev.map((item, i) =>
+                          i === existingIndex
+                            ? { ...item, quantity: item.quantity + 1 }
+                            : item,
+                        )
+                      }
+                      return [
+                        ...prev,
+                        {
+                          name: product.name,
+                          price: Number(product.price),
+                          quantity: 1,
+                        },
+                      ]
+                    })
                     setSearchQuery('')
                     setSuggestions([])
                     setShowSuggestions(false)
