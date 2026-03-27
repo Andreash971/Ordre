@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar } from 'drizzle-orm/pg-core'
+import { pgTable, serial, varchar, numeric } from 'drizzle-orm/pg-core'
 
 export const customersDummy = pgTable('customers_dummy', {
   id: serial().primaryKey().notNull(),
@@ -9,4 +9,11 @@ export const customersDummy = pgTable('customers_dummy', {
   postcode: varchar({ length: 4 }),
   city: varchar({ length: 30 }),
   careof: varchar({ length: 50 }),
+})
+
+export const productsDummy = pgTable('products_dummy', {
+  id: serial().primaryKey().notNull(),
+  name: varchar({ length: 100 }).notNull(),
+  category: varchar({ length: 50 }),
+  price: numeric({ precision: 10, scale: 2 }).notNull(),
 })
