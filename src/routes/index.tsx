@@ -14,7 +14,11 @@ function App() {
 
   return (
     <main className="page-wrap grid grid-cols-[2fr_4fr] grid-rows-[auto_auto_auto_auto] gap-4 px-4 pb-8 pt-6">
-      <CustomerForm className="col-start-1 row-start-1 rise-in" />
+      <CustomerForm
+        formButtons={true}
+        saveText="Lagre Kunde"
+        className="col-start-1 row-start-1 rise-in"
+      />
       <OrderProductsContent className="col-start-2 row-start-1 row-span-2 rise-in" />
       <TimeDateForm className="col-start-1 row-start-2 rise-in" />
       <OrderExtraInfo

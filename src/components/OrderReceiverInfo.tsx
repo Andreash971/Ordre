@@ -19,7 +19,7 @@ interface OrderReceiverInfoProps extends React.PropsWithChildren {
   showCardText: boolean
 }
 
-const tags = Array.from({ length: 20 }).map(
+const tags = Array.from({ length: 3 }).map(
   (_, i, a) => `v1.2.0-beta.${a.length - i}`,
 )
 
@@ -60,7 +60,7 @@ export default function OrderReceiverInfo({
             </div>
           </div>
           <CustomerForm className="col-start-2" />
-          <div className="col-start-3 grid grid-rows-2 gap-4">
+          <div className="col-start-3 grid grid-rows-3 gap-4">
             <Field>
               <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
               <Textarea
@@ -81,6 +81,12 @@ export default function OrderReceiverInfo({
                 disabled={!showInstructionsText}
               />
             </Field>
+            <div className="flex flex-row max-h-fit justify-end gap-2">
+              <Button type="reset" variant="destructive">
+                Reset
+              </Button>
+              <Button type="submit">Lagre</Button>
+            </div>
           </div>
         </div>
       </CardContent>
