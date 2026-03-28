@@ -1,7 +1,15 @@
 import { useForm } from '@tanstack/react-form'
-import { ilike } from 'drizzle-orm'
-import { useState } from 'react'
+import { useId } from 'react'
 import * as z from 'zod'
+
+import {
+  BriefcaseBusiness,
+  Building2,
+  House,
+  MapPin,
+  Phone,
+  User,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -11,26 +19,20 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Field, FieldError, FieldGroup } from '@/components/ui/field'
+import { FieldGroup } from '@/components/ui/field'
+
+import AutocompleteField from '#/components/AutocompleteField'
+import FormInputField from '#/components/FormInputField'
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
+  type CustomerSuggestion,
+  getCustomers,
+  searchCustomers,
+  searchCustomersByBusiness,
+  searchCustomersByPhone,
+} from '#/lib/customer-server-fns'
 
-import { User } from 'lucide-react'
-import { Phone } from 'lucide-react'
-import { BriefcaseBusiness } from 'lucide-react'
-import { House } from 'lucide-react'
-import { MapPin } from 'lucide-react'
-import { Building2 } from 'lucide-react'
-
-import { createServerFn } from '@tanstack/react-start'
-import { db } from '#/db/'
-import { customersDummy } from '#/db/schema'
-
-interface CustomerFormProps extends React.PropsWithChildren {
-  className: string
+interface CustomerFormProps {
+  className?: string
 }
 
 const formSchema = z.object({
@@ -42,56 +44,24 @@ const formSchema = z.object({
   city: z.string().max(25, 'Sted kan ikke være lengre enn 25 tegn'),
 })
 
-const customerSelect = {
-  id: customersDummy.id,
-  name: customersDummy.name,
-  phone: customersDummy.phone,
-  business: customersDummy.business,
-  address: customersDummy.address,
-  postcode: customersDummy.postcode,
-  city: customersDummy.city,
+function CustomerSuggestionItem({
+  customer,
+}: {
+  customer: CustomerSuggestion
+}) {
+  return (
+    <>
+      <span className="font-medium">{customer.name}</span>
+      {(customer.phone || customer.business) && (
+        <span className="text-xs text-muted-foreground flex gap-1.5 mt-0.5">
+          {customer.phone && <span>{customer.phone}</span>}
+          {customer.phone && customer.business && <span>|</span>}
+          {customer.business && <span>{customer.business}</span>}
+        </span>
+      )}
+    </>
+  )
 }
-
-export const getCustomers = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    return db.select({ name: customersDummy.name }).from(customersDummy)
-  },
-)
-
-export const searchCustomers = createServerFn({ method: 'GET' })
-  .inputValidator((data: string) => data)
-  .handler(async ({ data: query }) => {
-    if (!query || query.length < 1) return []
-    return db
-      .select(customerSelect)
-      .from(customersDummy)
-      .where(ilike(customersDummy.name, `%${query}%`))
-      .limit(3)
-  })
-
-export const searchCustomersByPhone = createServerFn({ method: 'GET' })
-  .inputValidator((data: string) => data)
-  .handler(async ({ data: query }) => {
-    if (!query || query.length < 1) return []
-    return db
-      .select(customerSelect)
-      .from(customersDummy)
-      .where(ilike(customersDummy.phone, `%${query}%`))
-      .limit(3)
-  })
-
-export const searchCustomersByBusiness = createServerFn({ method: 'GET' })
-  .inputValidator((data: string) => data)
-  .handler(async ({ data: query }) => {
-    if (!query || query.length < 1) return []
-    return db
-      .select(customerSelect)
-      .from(customersDummy)
-      .where(ilike(customersDummy.business, `%${query}%`))
-      .limit(3)
-  })
-
-type CustomerSuggestion = Awaited<ReturnType<typeof searchCustomers>>[number]
 
 function fillForm(
   form: {
@@ -111,16 +81,7 @@ function fillForm(
 }
 
 export default function CustomerForm({ className }: CustomerFormProps) {
-  const [suggestions, setSuggestions] = useState<CustomerSuggestion[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [phoneSuggestions, setPhoneSuggestions] = useState<
-    CustomerSuggestion[]
-  >([])
-  const [showPhoneSuggestions, setShowPhoneSuggestions] = useState(false)
-  const [companySuggestions, setCompanySuggestions] = useState<
-    CustomerSuggestion[]
-  >([])
-  const [showCompanySuggestions, setShowCompanySuggestions] = useState(false)
+  const formId = useId()
 
   const form = useForm({
     defaultValues: {
@@ -137,7 +98,6 @@ export default function CustomerForm({ className }: CustomerFormProps) {
     },
     listeners: {
       onChange: ({ formApi }) => {
-        // autosave logic
         if (formApi.state.isValid) {
           formApi.handleSubmit()
         }
@@ -153,7 +113,7 @@ export default function CustomerForm({ className }: CustomerFormProps) {
       <CardHeader>
         <CardTitle>Kundeinformasjon</CardTitle>
       </CardHeader>
-      <CardContent className="">
+      <CardContent>
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -161,343 +121,89 @@ export default function CustomerForm({ className }: CustomerFormProps) {
           }}
         >
           <FieldGroup className="flex flex-col gap-4">
-            {/* FORM NAME INPUT */}
-            <form.Field
-              name="name"
-              children={(field) => {
-                const isInvalid: boolean =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <div className="relative">
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <User className="text-foreground" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          id="{field.name}"
-                          name="{field.name}"
-                          type="text"
-                          value={field.state.value}
-                          onChange={async (e) => {
-                            const value = e.target.value
-                            field.handleChange(value)
-                            if (value.length >= 1) {
-                              const results = await searchCustomers({
-                                data: value,
-                              })
-                              setSuggestions(results)
-                              setShowSuggestions(true)
-                            } else {
-                              setSuggestions([])
-                              setShowSuggestions(false)
-                            }
-                          }}
-                          onBlur={() => {
-                            setTimeout(() => setShowSuggestions(false), 150)
-                          }}
-                          aria-invalid={isInvalid}
-                          placeholder="Navn"
-                          autoComplete="off"
-                        />
-                      </InputGroup>
-                      {showSuggestions && suggestions.length > 0 && (
-                        <ul className="absolute z-10 w-full mt-1 bg-popover border border-input rounded-md shadow-md max-h-60 overflow-auto">
-                          {suggestions.map((customer) => (
-                            <li
-                              key={customer.id}
-                              className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                              onMouseDown={() => {
-                                fillForm(form, customer)
-                                setShowSuggestions(false)
-                              }}
-                            >
-                              <span className="font-medium">
-                                {customer.name}
-                              </span>
-                              {(customer.phone || customer.business) && (
-                                <span className="text-xs text-muted-foreground flex gap-1.5 mt-0.5">
-                                  {customer.phone && (
-                                    <span>{customer.phone}</span>
-                                  )}
-                                  {customer.phone && customer.business && (
-                                    <span>|</span>
-                                  )}
-                                  {customer.business && (
-                                    <span>{customer.business}</span>
-                                  )}
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
+            <form.Field name="name">
+              {(field) => (
+                <AutocompleteField
+                  field={field}
+                  id={`${formId}-name`}
+                  icon={<User className="text-foreground" />}
+                  placeholder="Navn"
+                  onSearch={(q) => searchCustomers({ data: q })}
+                  onSelect={(c) => fillForm(form, c)}
+                  renderSuggestion={(c) => (
+                    <CustomerSuggestionItem customer={c} />
+                  )}
+                />
+              )}
+            </form.Field>
 
-            {/* FORM PHONE INPUT */}
-            <form.Field
-              name="phone"
-              children={(field) => {
-                const isInvalid: boolean =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <div className="relative">
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <Phone className="text-foreground" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          id="{field.name}"
-                          name="{field.name}"
-                          type="tel"
-                          value={field.state.value}
-                          onChange={async (e) => {
-                            const value = e.target.value
-                            field.handleChange(value)
-                            if (value.length >= 1) {
-                              const results = await searchCustomersByPhone({
-                                data: value,
-                              })
-                              setPhoneSuggestions(results)
-                              setShowPhoneSuggestions(true)
-                            } else {
-                              setPhoneSuggestions([])
-                              setShowPhoneSuggestions(false)
-                            }
-                          }}
-                          onBlur={() => {
-                            setTimeout(
-                              () => setShowPhoneSuggestions(false),
-                              150,
-                            )
-                          }}
-                          aria-invalid={isInvalid}
-                          placeholder="Telefon"
-                          autoComplete="off"
-                        />
-                      </InputGroup>
-                      {showPhoneSuggestions && phoneSuggestions.length > 0 && (
-                        <ul className="absolute z-10 w-full mt-1 bg-popover border border-input rounded-md shadow-md max-h-60 overflow-auto">
-                          {phoneSuggestions.map((customer) => (
-                            <li
-                              key={customer.id}
-                              className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                              onMouseDown={() => {
-                                fillForm(form, customer)
-                                setShowPhoneSuggestions(false)
-                              }}
-                            >
-                              <span className="font-medium">
-                                {customer.name}
-                              </span>
-                              {(customer.phone || customer.business) && (
-                                <span className="text-xs text-muted-foreground flex gap-1.5 mt-0.5">
-                                  {customer.phone && (
-                                    <span>{customer.phone}</span>
-                                  )}
-                                  {customer.phone && customer.business && (
-                                    <span>|</span>
-                                  )}
-                                  {customer.business && (
-                                    <span>{customer.business}</span>
-                                  )}
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
+            <form.Field name="phone">
+              {(field) => (
+                <AutocompleteField
+                  field={field}
+                  id={`${formId}-phone`}
+                  icon={<Phone className="text-foreground" />}
+                  placeholder="Telefon"
+                  type="tel"
+                  onSearch={(q) => searchCustomersByPhone({ data: q })}
+                  onSelect={(c) => fillForm(form, c)}
+                  renderSuggestion={(c) => (
+                    <CustomerSuggestionItem customer={c} />
+                  )}
+                />
+              )}
+            </form.Field>
 
-            {/* FORM COMPANY INPUT */}
-            <form.Field
-              name="company"
-              children={(field) => {
-                const isInvalid: boolean =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <div className="relative">
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <BriefcaseBusiness className="text-foreground" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          id="{field.name}"
-                          name="{field.name}"
-                          type="text"
-                          value={field.state.value}
-                          onChange={async (e) => {
-                            const value = e.target.value
-                            field.handleChange(value)
-                            if (value.length >= 1) {
-                              const results = await searchCustomersByBusiness({
-                                data: value,
-                              })
-                              setCompanySuggestions(results)
-                              setShowCompanySuggestions(true)
-                            } else {
-                              setCompanySuggestions([])
-                              setShowCompanySuggestions(false)
-                            }
-                          }}
-                          onBlur={() => {
-                            setTimeout(
-                              () => setShowCompanySuggestions(false),
-                              150,
-                            )
-                          }}
-                          aria-invalid={isInvalid}
-                          placeholder="Firma"
-                          autoComplete="off"
-                        />
-                      </InputGroup>
-                      {showCompanySuggestions &&
-                        companySuggestions.length > 0 && (
-                          <ul className="absolute z-10 w-full mt-1 bg-popover border border-input rounded-md shadow-md max-h-60 overflow-auto">
-                            {companySuggestions.map((customer) => (
-                              <li
-                                key={customer.id}
-                                className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                                onMouseDown={() => {
-                                  fillForm(form, customer)
-                                  setShowCompanySuggestions(false)
-                                }}
-                              >
-                                <span className="font-medium">
-                                  {customer.name}
-                                </span>
-                                {(customer.phone || customer.business) && (
-                                  <span className="text-xs text-muted-foreground flex gap-1.5 mt-0.5">
-                                    {customer.phone && (
-                                      <span>{customer.phone}</span>
-                                    )}
-                                    {customer.phone && customer.business && (
-                                      <span>|</span>
-                                    )}
-                                    {customer.business && (
-                                      <span>{customer.business}</span>
-                                    )}
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                    </div>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
+            <form.Field name="company">
+              {(field) => (
+                <AutocompleteField
+                  field={field}
+                  id={`${formId}-company`}
+                  icon={<BriefcaseBusiness className="text-foreground" />}
+                  placeholder="Firma"
+                  onSearch={(q) => searchCustomersByBusiness({ data: q })}
+                  onSelect={(c) => fillForm(form, c)}
+                  renderSuggestion={(c) => (
+                    <CustomerSuggestionItem customer={c} />
+                  )}
+                />
+              )}
+            </form.Field>
 
-            {/* FORM ADDRESS INPUT */}
-            <form.Field
-              name="address"
-              children={(field) => {
-                const isInvalid: boolean =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <InputGroup>
-                      <InputGroupAddon>
-                        <House className="text-foreground" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="{field.name}"
-                        name="{field.name}"
-                        type="text"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={isInvalid}
-                        placeholder="Adresse"
-                      />
-                    </InputGroup>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
+            <form.Field name="address">
+              {(field) => (
+                <FormInputField
+                  field={field}
+                  id={`${formId}-address`}
+                  icon={<House className="text-foreground" />}
+                  placeholder="Adresse"
+                />
+              )}
+            </form.Field>
 
             <div className="grid grid-cols-[1fr_2fr] gap-4">
-              {/* FORM POSTCODE INPUT */}
-              <form.Field
-                name="postcode"
-                children={(field) => {
-                  const isInvalid: boolean =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <MapPin className="text-foreground" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          id="{field.name}"
-                          name="{field.name}"
-                          type="number"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Postnr."
-                        />
-                      </InputGroup>
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              />
+              <form.Field name="postcode">
+                {(field) => (
+                  <FormInputField
+                    field={field}
+                    id={`${formId}-postcode`}
+                    icon={<MapPin className="text-foreground" />}
+                    placeholder="Postnr."
+                    type="number"
+                  />
+                )}
+              </form.Field>
 
-              {/* FORM CITY INPUT */}
-              <form.Field
-                name="city"
-                children={(field) => {
-                  const isInvalid: boolean =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <InputGroup>
-                        <InputGroupAddon>
-                          <Building2 className="text-foreground" />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          id="{field.name}"
-                          name="{field.name}"
-                          type="text"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
-                          placeholder="Sted"
-                        />
-                      </InputGroup>
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
-              />
+              <form.Field name="city">
+                {(field) => (
+                  <FormInputField
+                    field={field}
+                    id={`${formId}-city`}
+                    icon={<Building2 className="text-foreground" />}
+                    placeholder="Sted"
+                  />
+                )}
+              </form.Field>
             </div>
           </FieldGroup>
         </form>
