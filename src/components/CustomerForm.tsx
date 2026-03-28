@@ -30,10 +30,21 @@ import {
   searchCustomersByPhone,
 } from '#/lib/customer-server-fns'
 
+type CustomerFormValues = {
+  name: string
+  phone: string
+  company: string
+  address: string
+  postcode: string
+  city: string
+}
+
 interface CustomerFormProps {
   className?: string
   formButtons?: boolean
   saveText?: string
+  defaultValues?: Partial<CustomerFormValues>
+  onValuesChange?: (values: CustomerFormValues) => void
 }
 
 const formSchema = z.object({
@@ -85,17 +96,19 @@ export default function CustomerForm({
   className,
   formButtons = false,
   saveText,
+  defaultValues: initialValues,
+  onValuesChange,
 }: CustomerFormProps) {
   const formId = useId()
 
   const form = useForm({
     defaultValues: {
-      name: '',
-      phone: '',
-      company: '',
-      address: '',
-      postcode: '',
-      city: '',
+      name: initialValues?.name ?? '',
+      phone: initialValues?.phone ?? '',
+      company: initialValues?.company ?? '',
+      address: initialValues?.address ?? '',
+      postcode: initialValues?.postcode ?? '',
+      city: initialValues?.city ?? '',
     },
     validators: {
       onSubmit: formSchema,
@@ -103,6 +116,7 @@ export default function CustomerForm({
     },
     listeners: {
       onChange: ({ formApi }) => {
+        onValuesChange?.(formApi.state.values)
         if (formApi.state.isValid) {
           formApi.handleSubmit()
         }

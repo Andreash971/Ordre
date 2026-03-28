@@ -7,6 +7,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from './ui/button-group'
+import {
+  Item,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+  ItemDescription,
+} from './ui/item'
+import { User } from 'lucide-react'
 
 import CustomerForm from '../components/CustomerForm'
 
@@ -17,17 +25,82 @@ interface OrderReceiverInfoProps extends React.PropsWithChildren {
   className: string
   showInstructionsText: boolean
   showCardText: boolean
+  defaultCardText?: string
+  defaultInstructionsText?: string
 }
 
-const tags = Array.from({ length: 3 }).map(
-  (_, i, a) => `v1.2.0-beta.${a.length - i}`,
-)
+type Customer = {
+  name: string
+  phone: string
+  company: string
+  address: string
+  postcode: string
+  city: string
+  cardmsg: string
+  instructmsg: string
+}
+
+const emptyCustomer = (): Customer => ({
+  name: '',
+  phone: '',
+  company: '',
+  address: '',
+  postcode: '',
+  city: '',
+  cardmsg: '',
+  instructmsg: '',
+})
 
 export default function OrderReceiverInfo({
   className,
   showInstructionsText,
   showCardText,
+  defaultCardText = '',
+  defaultInstructionsText = '',
 }: OrderReceiverInfoProps) {
+  const [customers, setCustomers] = React.useState<Customer[]>([])
+  const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
+
+  const handleAdd = () => {
+    setCustomers((prev) => {
+      const next = [
+        ...prev,
+        {
+          ...emptyCustomer(),
+          cardmsg: defaultCardText,
+          instructmsg: defaultInstructionsText,
+        },
+      ]
+      setSelectedIndex(next.length - 1)
+      return next
+    })
+  }
+
+  const handleRemove = () => {
+    if (selectedIndex === null) return
+    setCustomers((prev) => {
+      const next = prev.filter((_, i) => i !== selectedIndex)
+      if (next.length === 0) {
+        setSelectedIndex(null)
+      } else {
+        setSelectedIndex(Math.min(selectedIndex, next.length - 1))
+      }
+      return next
+    })
+  }
+
+  const updateCustomerField = (
+    index: number,
+    field: 'cardmsg' | 'instructmsg',
+    value: string,
+  ) => {
+    setCustomers((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
+    )
+  }
+
+  const selected = selectedIndex !== null ? customers[selectedIndex] : null
+
   return (
     <Card className={className}>
       <CardContent>
@@ -39,27 +112,69 @@ export default function OrderReceiverInfo({
                   Mottakere
                 </h4>
                 <ButtonGroup>
-                  <Button>
+                  <Button
+                    onClick={handleRemove}
+                    disabled={selectedIndex === null}
+                  >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <Button>
+                  <Button onClick={handleAdd}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </ButtonGroup>
               </div>
               <ScrollArea className="flex-1 min-h-0 rounded-md border">
                 <div className="p-4">
-                  {tags.map((tag) => (
-                    <React.Fragment key={tag}>
-                      <div className="text-sm">{tag}</div>
-                      <Separator className="my-2" />
+                  {customers.map((customer, i) => (
+                    <React.Fragment key={i}>
+                      <Item
+                        variant="outline"
+                        size="xs"
+                        className={`${
+                          selectedIndex === i
+                            ? 'bg-accent text-accent-foreground'
+                            : 'hover:bg-muted'
+                        } mb-2`}
+                        onClick={() => setSelectedIndex(i)}
+                      >
+                        <ItemMedia variant="icon">
+                          <User />
+                        </ItemMedia>
+                        <ItemContent>
+                          <ItemTitle>
+                            {customer.name || `Mottaker ${i + 1}`}
+                          </ItemTitle>
+                          <ItemDescription
+                            className={`${
+                              selectedIndex === i
+                                ? 'text-accent-foreground'
+                                : 'text-muted-foreground'
+                            }`}
+                          >
+                            {customer.phone}
+                          </ItemDescription>
+                        </ItemContent>
+                      </Item>
                     </React.Fragment>
                   ))}
                 </div>
               </ScrollArea>
             </div>
           </div>
-          <CustomerForm className="col-start-2" />
+          <CustomerForm
+            key={selectedIndex ?? 'empty'}
+            className="col-start-2"
+            defaultValues={selected ?? undefined}
+            onValuesChange={(values) => {
+              if (selectedIndex !== null) {
+                setCustomers((prev) =>
+                  prev.map((c, i) =>
+                    i === selectedIndex ? { ...c, ...values } : c,
+                  ),
+                )
+              }
+            }}
+          />
           <div className="col-start-3 grid grid-rows-2 gap-4">
             <Field>
               <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
@@ -67,7 +182,12 @@ export default function OrderReceiverInfo({
                 id="receiver-card"
                 placeholder="Skriv korttekst her..."
                 className="h-36 field-sizing-fixed"
-                disabled={!showCardText}
+                disabled={!showCardText || selectedIndex === null}
+                value={selected?.cardmsg ?? ''}
+                onChange={(e) =>
+                  selectedIndex !== null &&
+                  updateCustomerField(selectedIndex, 'cardmsg', e.target.value)
+                }
               />
             </Field>
             <Field>
@@ -78,7 +198,16 @@ export default function OrderReceiverInfo({
                 id="receiver-instructions"
                 placeholder="Skriv spesielle instrukser her..."
                 className="h-36 field-sizing-fixed"
-                disabled={!showInstructionsText}
+                disabled={!showInstructionsText || selectedIndex === null}
+                value={selected?.instructmsg ?? ''}
+                onChange={(e) =>
+                  selectedIndex !== null &&
+                  updateCustomerField(
+                    selectedIndex,
+                    'instructmsg',
+                    e.target.value,
+                  )
+                }
               />
             </Field>
           </div>

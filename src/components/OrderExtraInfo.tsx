@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Field, FieldLabel, FieldGroup } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
@@ -8,16 +9,24 @@ interface OrderExtraInfoProps extends React.PropsWithChildren {
   className: string
   showCardText: boolean
   onCardTextChange: (value: boolean) => void
+  cardTextValue: string
+  onCardTextValueChange: (value: string) => void
   showInstructionsText: boolean
   onInstructionsChange: (value: boolean) => void
+  instructionsTextValue: string
+  onInstructionsTextValueChange: (value: string) => void
 }
 
 export default function OrderExtraInfo({
   className,
   showCardText,
   onCardTextChange,
+  cardTextValue,
+  onCardTextValueChange,
   showInstructionsText,
   onInstructionsChange,
+  instructionsTextValue,
+  onInstructionsTextValueChange,
 }: OrderExtraInfoProps) {
   return (
     <div className={`${className} grid grid-cols-2 gap-4`}>
@@ -42,6 +51,8 @@ export default function OrderExtraInfo({
                 id="textarea-card"
                 placeholder="Skriv korttekst her..."
                 className="h-36"
+                value={cardTextValue}
+                onChange={(e) => onCardTextValueChange(e.target.value)}
               />
             )}
           </Field>
@@ -71,6 +82,8 @@ export default function OrderExtraInfo({
                 id="textarea-instructions"
                 placeholder="Skriv spesielle instrukser her..."
                 className="h-36"
+                value={instructionsTextValue}
+                onChange={(e) => onInstructionsTextValueChange(e.target.value)}
               />
             )}
           </Field>
