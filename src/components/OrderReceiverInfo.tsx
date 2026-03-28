@@ -31,7 +31,7 @@ export default function OrderReceiverInfo({
   return (
     <Card className={className}>
       <CardContent>
-        <div className="grid grid-cols-[16rem_35%_1fr] gap-4">
+        <div className="grid grid-cols-[16rem_35%_1fr] grid-rows-[auto_auto] gap-4">
           <div className="col-start-1 relative">
             <div className="absolute inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
@@ -60,7 +60,7 @@ export default function OrderReceiverInfo({
             </div>
           </div>
           <CustomerForm className="col-start-2" />
-          <div className="col-start-3 grid grid-rows-3 gap-4">
+          <div className="col-start-3 grid grid-rows-2 gap-4">
             <Field>
               <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
               <Textarea
@@ -81,12 +81,12 @@ export default function OrderReceiverInfo({
                 disabled={!showInstructionsText}
               />
             </Field>
-            <div className="flex flex-row max-h-fit justify-end gap-2">
-              <Button type="reset" variant="destructive">
-                Reset
-              </Button>
-              <Button type="submit">Lagre</Button>
-            </div>
+          </div>
+          <div className="col-span-3 flex flex-row justify-end gap-2">
+            <Button type="reset" variant="destructive">
+              Reset
+            </Button>
+            <Button type="submit">Lagre</Button>
           </div>
         </div>
       </CardContent>
