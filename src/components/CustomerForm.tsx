@@ -25,7 +25,6 @@ import AutocompleteField from '#/components/AutocompleteField'
 import FormInputField from '#/components/FormInputField'
 import {
   type CustomerSuggestion,
-  getCustomers,
   searchCustomers,
   searchCustomersByBusiness,
   searchCustomersByPhone,
@@ -33,6 +32,8 @@ import {
 
 interface CustomerFormProps {
   className?: string
+  formButtons?: boolean
+  saveText?: string
 }
 
 const formSchema = z.object({
@@ -80,7 +81,11 @@ function fillForm(
   form.setFieldValue('city', customer.city ?? '')
 }
 
-export default function CustomerForm({ className }: CustomerFormProps) {
+export default function CustomerForm({
+  className,
+  formButtons = false,
+  saveText,
+}: CustomerFormProps) {
   const formId = useId()
 
   const form = useForm({
@@ -208,27 +213,21 @@ export default function CustomerForm({ className }: CustomerFormProps) {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button
-          type="reset"
-          variant="destructive"
-          onClick={(e) => {
-            e.preventDefault()
-            form.reset()
-          }}
-        >
-          Reset
-        </Button>
-        <Button
-          type="submit"
-          onClick={async () => {
-            const customers = await getCustomers()
-            console.log(customers)
-          }}
-        >
-          Lagre Kunde
-        </Button>
-      </CardFooter>
+      {formButtons && (
+        <CardFooter className="flex justify-end gap-2">
+          <Button
+            type="reset"
+            variant="destructive"
+            onClick={(e) => {
+              e.preventDefault()
+              form.reset()
+            }}
+          >
+            Reset
+          </Button>
+          <Button type="submit">{saveText ?? 'Lagre'}</Button>
+        </CardFooter>
+      )}
     </Card>
   )
 }
