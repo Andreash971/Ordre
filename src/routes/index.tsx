@@ -9,6 +9,7 @@ import OrderReceiverInfo from '#/components/OrderReceiverInfo'
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
+  const [showTime, setShowTime] = useState(false)
   const [showCardText, setShowCardText] = useState(false)
   const [cardTextValue, setCardTextValue] = useState('')
   const [showInstructionsText, setShowInstructionsText] = useState(false)
@@ -21,8 +22,8 @@ function App() {
         saveText="Lagre Kunde"
         className="col-start-1 row-start-1 rise-in"
       />
-      <OrderProductsContent className="col-start-2 row-start-1 row-span-2 rise-in" />
-      <TimeDateForm className="col-start-1 row-start-2 rise-in" />
+      <OrderProductsContent className="col-start-2 row-start-1 row-span-2 rise-in" showTime={showTime} showCardText={showCardText} />
+      <TimeDateForm className="col-start-1 row-start-2 rise-in" onShowTimeChange={setShowTime} />
       <OrderExtraInfo
         className="col-start-1 row-start-3 col-span-2 rise-in"
         showCardText={showCardText}
