@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from './ui/button-group'
 import {
@@ -104,7 +103,7 @@ export default function OrderReceiverInfo({
   return (
     <Card className={className}>
       <CardContent>
-        <div className="grid grid-cols-[16rem_35%_1fr] grid-rows-[auto_auto] gap-4">
+        <div className="grid grid-cols-[16rem_35%_1fr] gap-4">
           <div className="col-start-1 relative">
             <div className="absolute inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
@@ -210,12 +209,6 @@ export default function OrderReceiverInfo({
                 }
               />
             </Field>
-          </div>
-          <div className="col-span-3 flex flex-row justify-end gap-2">
-            <Button type="reset" variant="destructive">
-              Reset
-            </Button>
-            <Button type="submit">Lagre</Button>
           </div>
         </div>
       </CardContent>
