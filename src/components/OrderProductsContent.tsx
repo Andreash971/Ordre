@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ilike } from 'drizzle-orm'
 import { createServerFn } from '@tanstack/react-start'
 
@@ -19,6 +19,8 @@ import { productsDummy } from '#/db/schema'
 
 interface OrderProductsContentProps extends React.PropsWithChildren {
   className: string
+  showTime: boolean
+  showCardText: boolean
 }
 
 export const searchProducts = createServerFn({ method: 'GET' })
@@ -44,10 +46,39 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   currency: 'NOK',
 })
 
+const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
+
 export default function OrderProductsContent({
   className,
+  showTime,
+  showCardText,
 }: OrderProductsContentProps) {
-  const [items, setItems] = useState<Item[]>([])
+  const [items, setItems] = useState<Item[]>([
+    { name: 'Frakt', price: 100, quantity: 1 },
+  ])
+
+  useEffect(() => {
+    setItems((prev) =>
+      showTime
+        ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
+          ? prev
+          : [
+              ...prev,
+              { name: 'Frakt Tidspunktstillegg', price: 100, quantity: 1 },
+            ]
+        : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
+    )
+  }, [showTime])
+
+  useEffect(() => {
+    setItems((prev) =>
+      showCardText
+        ? prev.some((i) => i.name === 'Kort')
+          ? prev
+          : [...prev, { name: 'Kort', price: 25, quantity: 1 }]
+        : prev.filter((i) => i.name !== 'Kort'),
+    )
+  }, [showCardText])
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -102,13 +133,19 @@ export default function OrderProductsContent({
                             : item,
                         )
                       }
+                      const newItem = {
+                        name: product.name,
+                        price: Number(product.price),
+                        quantity: 1,
+                      }
+                      const firstSpecialIndex = prev.findIndex((i) =>
+                        SPECIAL_ITEMS.has(i.name),
+                      )
+                      if (firstSpecialIndex === -1) return [...prev, newItem]
                       return [
-                        ...prev,
-                        {
-                          name: product.name,
-                          price: Number(product.price),
-                          quantity: 1,
-                        },
+                        ...prev.slice(0, firstSpecialIndex),
+                        newItem,
+                        ...prev.slice(firstSpecialIndex),
                       ]
                     })
                     setSearchQuery('')

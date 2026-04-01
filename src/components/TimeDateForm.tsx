@@ -24,6 +24,7 @@ import { CalendarIcon } from 'lucide-react'
 
 interface TimeDateFormProps extends React.PropsWithChildren {
   className: string
+  onShowTimeChange?: (show: boolean) => void
 }
 
 const formSchema = z.object({
@@ -39,7 +40,10 @@ function getLocalDateString() {
   return `${year}-${month}-${day}`
 }
 
-export default function TimeDateForm({ className }: TimeDateFormProps) {
+export default function TimeDateForm({
+  className,
+  onShowTimeChange,
+}: TimeDateFormProps) {
   const today = getLocalDateString()
   const [showTime, setShowTime] = useState(false)
 
@@ -138,9 +142,11 @@ export default function TimeDateForm({ className }: TimeDateFormProps) {
                       <Checkbox
                         id="show-time"
                         checked={showTime}
-                        onCheckedChange={(checked) =>
-                          setShowTime(checked === true)
-                        }
+                        onCheckedChange={(checked) => {
+                          const val = checked === true
+                          setShowTime(val)
+                          onShowTimeChange?.(val)
+                        }}
                       />
                       <Label htmlFor="show-time" className="cursor-pointer">
                         Inkluder leveringstidspunkt?
