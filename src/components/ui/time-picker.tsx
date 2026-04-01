@@ -17,7 +17,7 @@ interface TimePickerProps {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const MINUTES = ['00', '30']
-const DEFAULT_HOUR = '13'
+const DEFAULT_HOUR = '16'
 
 export function TimePicker({ value, onChange, className }: TimePickerProps) {
   const [open, setOpen] = React.useState(false)
