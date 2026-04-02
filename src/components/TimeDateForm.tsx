@@ -25,6 +25,7 @@ import { CalendarIcon } from 'lucide-react'
 interface TimeDateFormProps extends React.PropsWithChildren {
   className: string
   onShowTimeChange?: (show: boolean) => void
+  onValuesChange?: (values: { date: string; time: string | null }) => void
 }
 
 const formSchema = z.object({
@@ -43,6 +44,7 @@ function getLocalDateString() {
 export default function TimeDateForm({
   className,
   onShowTimeChange,
+  onValuesChange,
 }: TimeDateFormProps) {
   const today = getLocalDateString()
   const [showTime, setShowTime] = useState(false)
@@ -55,6 +57,11 @@ export default function TimeDateForm({
     validators: {
       onSubmit: formSchema,
       onChange: formSchema,
+    },
+    listeners: {
+      onChange: ({ formApi }) => {
+        onValuesChange?.(formApi.state.values)
+      },
     },
   })
 
@@ -146,6 +153,12 @@ export default function TimeDateForm({
                           const val = checked === true
                           setShowTime(val)
                           onShowTimeChange?.(val)
+                          if (!val) {
+                            onValuesChange?.({
+                              date: form.getFieldValue('date'),
+                              time: null,
+                            })
+                          }
                         }}
                       />
                       <Label htmlFor="show-time" className="cursor-pointer">

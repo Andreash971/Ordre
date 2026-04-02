@@ -20,14 +20,6 @@ import CustomerForm from '../components/CustomerForm'
 import { Plus } from 'lucide-react'
 import { Minus } from 'lucide-react'
 
-interface OrderReceiverInfoProps extends React.PropsWithChildren {
-  className: string
-  showInstructionsText: boolean
-  showCardText: boolean
-  defaultCardText?: string
-  defaultInstructionsText?: string
-}
-
 type Customer = {
   name: string
   phone: string
@@ -37,6 +29,15 @@ type Customer = {
   city: string
   cardmsg: string
   instructmsg: string
+}
+
+interface OrderReceiverInfoProps extends React.PropsWithChildren {
+  className: string
+  showInstructionsText: boolean
+  showCardText: boolean
+  defaultCardText?: string
+  defaultInstructionsText?: string
+  onCustomersChange?: (customers: Customer[]) => void
 }
 
 const emptyCustomer = (): Customer => ({
@@ -56,9 +57,14 @@ export default function OrderReceiverInfo({
   showCardText,
   defaultCardText = '',
   defaultInstructionsText = '',
+  onCustomersChange,
 }: OrderReceiverInfoProps) {
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    onCustomersChange?.(customers)
+  }, [customers, onCustomersChange])
 
   const handleAdd = () => {
     setCustomers((prev) => {
