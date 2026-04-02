@@ -43,6 +43,7 @@ interface CustomerFormProps {
   className?: string
   formButtons?: boolean
   saveText?: string
+  disabled?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
 }
@@ -96,6 +97,7 @@ export default function CustomerForm({
   className,
   formButtons = false,
   saveText,
+  disabled,
   defaultValues: initialValues,
   onValuesChange,
 }: CustomerFormProps) {
@@ -147,6 +149,7 @@ export default function CustomerForm({
                   id={`${formId}-name`}
                   icon={<User className="text-foreground" />}
                   placeholder="Navn"
+                  disabled={disabled}
                   onSearch={(q) => searchCustomers({ data: q })}
                   onSelect={(c) => fillForm(form, c)}
                   renderSuggestion={(c) => (
@@ -164,6 +167,7 @@ export default function CustomerForm({
                   icon={<Phone className="text-foreground" />}
                   placeholder="Telefon"
                   type="tel"
+                  disabled={disabled}
                   onSearch={(q) => searchCustomersByPhone({ data: q })}
                   onSelect={(c) => fillForm(form, c)}
                   renderSuggestion={(c) => (
@@ -180,6 +184,7 @@ export default function CustomerForm({
                   id={`${formId}-company`}
                   icon={<BriefcaseBusiness className="text-foreground" />}
                   placeholder="Firma"
+                  disabled={disabled}
                   onSearch={(q) => searchCustomersByBusiness({ data: q })}
                   onSelect={(c) => fillForm(form, c)}
                   renderSuggestion={(c) => (
@@ -196,6 +201,7 @@ export default function CustomerForm({
                   id={`${formId}-address`}
                   icon={<House className="text-foreground" />}
                   placeholder="Adresse"
+                  disabled={disabled}
                 />
               )}
             </form.Field>
@@ -209,6 +215,7 @@ export default function CustomerForm({
                     icon={<MapPin className="text-foreground" />}
                     placeholder="Postnr."
                     type="number"
+                    disabled={disabled}
                   />
                 )}
               </form.Field>
@@ -220,6 +227,7 @@ export default function CustomerForm({
                     id={`${formId}-city`}
                     icon={<Building2 className="text-foreground" />}
                     placeholder="Sted"
+                    disabled={disabled}
                   />
                 )}
               </form.Field>
