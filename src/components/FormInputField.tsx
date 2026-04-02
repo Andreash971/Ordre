@@ -23,6 +23,7 @@ interface FormInputFieldProps {
   icon: React.ReactNode
   placeholder: string
   type?: React.HTMLInputTypeAttribute
+  disabled?: boolean
 }
 
 export default function FormInputField({
@@ -31,6 +32,7 @@ export default function FormInputField({
   icon,
   placeholder,
   type = 'text',
+  disabled,
 }: FormInputFieldProps) {
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -47,6 +49,7 @@ export default function FormInputField({
           onBlur={field.handleBlur}
           aria-invalid={isInvalid}
           placeholder={placeholder}
+          disabled={disabled}
         />
       </InputGroup>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}

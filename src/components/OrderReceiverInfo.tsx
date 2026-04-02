@@ -169,6 +169,7 @@ export default function OrderReceiverInfo({
           <CustomerForm
             key={selectedIndex ?? 'empty'}
             className="col-start-2"
+            disabled={selectedIndex === null}
             defaultValues={selected ?? undefined}
             onValuesChange={(values) => {
               if (selectedIndex !== null) {
