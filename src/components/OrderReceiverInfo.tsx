@@ -2,7 +2,19 @@ import * as React from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { Calendar } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { TimePicker } from '@/components/ui/time-picker'
+import { CalendarIcon } from 'lucide-react'
+
+import { type DeliveryValues } from '#/lib/order-utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from './ui/button-group'
@@ -29,6 +41,8 @@ type Customer = {
   city: string
   cardmsg: string
   instructmsg: string
+  date: string
+  time: string | null
 }
 
 interface OrderReceiverInfoProps extends React.PropsWithChildren {
@@ -37,6 +51,7 @@ interface OrderReceiverInfoProps extends React.PropsWithChildren {
   showCardText: boolean
   defaultCardText?: string
   defaultInstructionsText?: string
+  defaultDeliveryValues?: DeliveryValues
   onCustomersChange?: (customers: Customer[]) => void
 }
 
@@ -49,6 +64,8 @@ const emptyCustomer = (): Customer => ({
   city: '',
   cardmsg: '',
   instructmsg: '',
+  date: '',
+  time: null,
 })
 
 export default function OrderReceiverInfo({
@@ -57,14 +74,24 @@ export default function OrderReceiverInfo({
   showCardText,
   defaultCardText = '',
   defaultInstructionsText = '',
+  defaultDeliveryValues,
   onCustomersChange,
 }: OrderReceiverInfoProps) {
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
+  const [showTime, setShowTime] = React.useState(false)
 
   React.useEffect(() => {
     onCustomersChange?.(customers)
   }, [customers, onCustomersChange])
+
+  React.useEffect(() => {
+    if (selectedIndex !== null && customers[selectedIndex]) {
+      setShowTime(customers[selectedIndex].time !== null)
+    } else {
+      setShowTime(false)
+    }
+  }, [selectedIndex])
 
   const handleAdd = () => {
     setCustomers((prev) => {
@@ -74,6 +101,8 @@ export default function OrderReceiverInfo({
           ...emptyCustomer(),
           cardmsg: defaultCardText,
           instructmsg: defaultInstructionsText,
+          date: defaultDeliveryValues?.date ?? '',
+          time: defaultDeliveryValues?.time ?? null,
         },
       ]
       setSelectedIndex(next.length - 1)
@@ -104,13 +133,23 @@ export default function OrderReceiverInfo({
     )
   }
 
+  const updateCustomerDelivery = (
+    index: number,
+    field: 'date' | 'time',
+    value: string | null,
+  ) => {
+    setCustomers((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
+    )
+  }
+
   const selected = selectedIndex !== null ? customers[selectedIndex] : null
 
   return (
     <Card className={className}>
       <CardContent>
-        <div className="grid grid-cols-[16rem_35%_1fr] gap-4">
-          <div className="col-start-1 relative">
+        <div className="grid grid-cols-[16rem_35%_1fr] grid-rows-[auto_auto] gap-4">
+          <div className="col-start-1 row-span-2 relative">
             <div className="absolute inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-base leading-normal font-medium">
@@ -216,6 +255,93 @@ export default function OrderReceiverInfo({
                 }
               />
             </Field>
+          </div>
+          <div className="col-start-2 col-span-2">
+            <FieldGroup className="flex flex-row gap-4">
+              {/* DATE FIELD */}
+              <Field>
+                <FieldLabel>Leveringsdato</FieldLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 font-normal"
+                      disabled={selectedIndex === null}
+                    >
+                      <CalendarIcon className="size-4 text-muted-foreground" />
+                      {selected?.date
+                        ? new Date(
+                            selected.date + 'T00:00:00',
+                          ).toLocaleDateString('nb-NO', { dateStyle: 'long' })
+                        : 'Velg dato'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        selected?.date
+                          ? new Date(selected.date + 'T00:00:00')
+                          : undefined
+                      }
+                      onSelect={(d) => {
+                        if (d && selectedIndex !== null) {
+                          const y = d.getFullYear()
+                          const m = String(d.getMonth() + 1).padStart(2, '0')
+                          const day = String(d.getDate()).padStart(2, '0')
+                          updateCustomerDelivery(
+                            selectedIndex,
+                            'date',
+                            `${y}-${m}-${day}`,
+                          )
+                        }
+                      }}
+                      disabled={(d) => {
+                        const todayStart = new Date()
+                        todayStart.setHours(0, 0, 0, 0)
+                        return d < todayStart
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+
+              {/* TIME FIELD */}
+              <Field>
+                <FieldLabel>Leveringstidspunkt</FieldLabel>
+                <FieldGroup className="flex flex-row gap-2">
+                  <Checkbox
+                    id="receiver-show-time"
+                    checked={showTime}
+                    disabled={selectedIndex === null}
+                    onCheckedChange={(checked) => {
+                      const val = checked === true
+                      setShowTime(val)
+                      if (!val && selectedIndex !== null) {
+                        updateCustomerDelivery(selectedIndex, 'time', null)
+                      }
+                    }}
+                  />
+                  <Label
+                    htmlFor="receiver-show-time"
+                    className="cursor-pointer"
+                  >
+                    Inkluder leveringstidspunkt?
+                  </Label>
+                </FieldGroup>
+                {showTime && (
+                  <TimePicker
+                    value={selected?.time ?? null}
+                    onChange={(val) => {
+                      if (selectedIndex !== null) {
+                        updateCustomerDelivery(selectedIndex, 'time', val)
+                      }
+                    }}
+                    className="w-full"
+                  />
+                )}
+              </Field>
+            </FieldGroup>
           </div>
         </div>
       </CardContent>

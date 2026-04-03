@@ -1,17 +1,10 @@
-import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
-import * as z from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Label } from '@/components/ui/label'
 import {
   Popover,
@@ -28,11 +21,6 @@ interface TimeDateFormProps extends React.PropsWithChildren {
   onValuesChange?: (values: { date: string; time: string | null }) => void
 }
 
-const formSchema = z.object({
-  date: z.string().min(1),
-  time: z.string().nullable(),
-})
-
 function getLocalDateString() {
   const d = new Date()
   const year = d.getFullYear()
@@ -46,24 +34,11 @@ export default function TimeDateForm({
   onShowTimeChange,
   onValuesChange,
 }: TimeDateFormProps) {
-  const today = getLocalDateString()
+  const [date, setDate] = useState(getLocalDateString())
+  const [time, setTime] = useState<string | null>(null)
   const [showTime, setShowTime] = useState(false)
 
-  const form = useForm({
-    defaultValues: {
-      date: today,
-      time: null as string | null,
-    },
-    validators: {
-      onSubmit: formSchema,
-      onChange: formSchema,
-    },
-    listeners: {
-      onChange: ({ formApi }) => {
-        onValuesChange?.(formApi.state.values)
-      },
-    },
-  })
+  const selectedDate = date ? new Date(date + 'T00:00:00') : undefined
 
   return (
     <Card className={className}>
@@ -71,116 +46,81 @@ export default function TimeDateForm({
         <CardTitle>Leveringsinformasjon</CardTitle>
       </CardHeader>
       <CardContent>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            form.handleSubmit()
-          }}
-        >
-          <FieldGroup className="flex flex-col gap-4">
-            {/* DATE FIELD */}
-            <form.Field
-              name="date"
-              children={(field) => {
-                const isInvalid: boolean =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                const selectedDate = field.state.value
-                  ? new Date(field.state.value + 'T00:00:00')
-                  : undefined
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel>Leveringsdato</FieldLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start gap-2 font-normal"
-                          aria-invalid={isInvalid}
-                        >
-                          <CalendarIcon className="size-4 text-muted-foreground" />
-                          {selectedDate
-                            ? selectedDate.toLocaleDateString('nb-NO', {
-                                dateStyle: 'long',
-                              })
-                            : 'Velg dato'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={(date) => {
-                            if (date) {
-                              const y = date.getFullYear()
-                              const m = String(date.getMonth() + 1).padStart(
-                                2,
-                                '0',
-                              )
-                              const d = String(date.getDate()).padStart(2, '0')
-                              field.handleChange(`${y}-${m}-${d}`)
-                            }
-                          }}
-                          disabled={(date) => {
-                            const todayStart = new Date()
-                            todayStart.setHours(0, 0, 0, 0)
-                            return date < todayStart
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
+        <FieldGroup className="flex flex-col gap-4">
+          {/* DATE FIELD */}
+          <Field>
+            <FieldLabel>Leveringsdato</FieldLabel>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 font-normal"
+                >
+                  <CalendarIcon className="size-4 text-muted-foreground" />
+                  {selectedDate
+                    ? selectedDate.toLocaleDateString('nb-NO', {
+                        dateStyle: 'long',
+                      })
+                    : 'Velg dato'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(d) => {
+                    if (d) {
+                      const y = d.getFullYear()
+                      const m = String(d.getMonth() + 1).padStart(2, '0')
+                      const day = String(d.getDate()).padStart(2, '0')
+                      const newDate = `${y}-${m}-${day}`
+                      setDate(newDate)
+                      onValuesChange?.({ date: newDate, time })
+                    }
+                  }}
+                  disabled={(d) => {
+                    const todayStart = new Date()
+                    todayStart.setHours(0, 0, 0, 0)
+                    return d < todayStart
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </Field>
 
-            {/* TIME FIELD */}
-            <form.Field
-              name="time"
-              children={(field) => {
-                const isInvalid: boolean =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel>Leveringstidspunkt</FieldLabel>
-                    <FieldGroup className="flex flex-row gap-2">
-                      <Checkbox
-                        id="show-time"
-                        checked={showTime}
-                        onCheckedChange={(checked) => {
-                          const val = checked === true
-                          setShowTime(val)
-                          onShowTimeChange?.(val)
-                          if (!val) {
-                            onValuesChange?.({
-                              date: form.getFieldValue('date'),
-                              time: null,
-                            })
-                          }
-                        }}
-                      />
-                      <Label htmlFor="show-time" className="cursor-pointer">
-                        Inkluder leveringstidspunkt?
-                      </Label>
-                    </FieldGroup>
-                    {showTime && (
-                      <TimePicker
-                        value={field.state.value}
-                        onChange={(val) => field.handleChange(val)}
-                        className="w-full"
-                      />
-                    )}
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
-          </FieldGroup>
-        </form>
+          {/* TIME FIELD */}
+          <Field>
+            <FieldLabel>Leveringstidspunkt</FieldLabel>
+            <FieldGroup className="flex flex-row gap-2">
+              <Checkbox
+                id="show-time"
+                checked={showTime}
+                onCheckedChange={(checked) => {
+                  const val = checked === true
+                  setShowTime(val)
+                  onShowTimeChange?.(val)
+                  if (!val) {
+                    setTime(null)
+                    onValuesChange?.({ date, time: null })
+                  }
+                }}
+              />
+              <Label htmlFor="show-time" className="cursor-pointer">
+                Inkluder leveringstidspunkt?
+              </Label>
+            </FieldGroup>
+            {showTime && (
+              <TimePicker
+                value={time}
+                onChange={(val) => {
+                  setTime(val)
+                  onValuesChange?.({ date, time: val })
+                }}
+                className="w-full"
+              />
+            )}
+          </Field>
+        </FieldGroup>
       </CardContent>
     </Card>
   )

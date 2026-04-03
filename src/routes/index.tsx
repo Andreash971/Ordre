@@ -83,6 +83,7 @@ function App() {
         showInstructionsText={showInstructionsText}
         defaultCardText={cardTextValue}
         defaultInstructionsText={instructionsTextValue}
+        defaultDeliveryValues={deliveryValues}
         onCustomersChange={setCustomers}
       />
       <div className="col-start-1 col-span-2 row-start-5 flex justify-end gap-2 rise-in">
