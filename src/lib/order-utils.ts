@@ -19,6 +19,8 @@ export type Customer = {
   city: string
   cardmsg: string
   instructmsg: string
+  date: string
+  time: string | null
 }
 
 export type DeliveryValues = { date: string; time: string | null }
@@ -48,13 +50,15 @@ export function buildOrderData(
   delivery: DeliveryValues,
   items: Item[],
 ): OrderData {
-  const { dayText, longDate, shortDate } = formatDeliveryDate(delivery.date)
+  const effectiveDate = customer.date || delivery.date
+  const effectiveTime = customer.time ?? delivery.time
+  const { dayText, longDate, shortDate } = formatDeliveryDate(effectiveDate)
   return {
     delivery: {
       dayText,
       longDate,
       shortDate,
-      deliveryTime: delivery.time ?? '',
+      deliveryTime: effectiveTime ?? '',
     },
     sender: {
       name: sender?.name ?? '',
