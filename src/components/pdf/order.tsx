@@ -192,8 +192,7 @@ const styles = StyleSheet.create({
   },
 })
 
-// Create Document Component
-const OrderDocument = ({ data }: { data: OrderData }) => {
+export const OrderPage = ({ data }: { data: OrderData }) => {
   const {
     delivery: { dayText, longDate, shortDate, deliveryTime },
     sender: {
@@ -216,8 +215,7 @@ const OrderDocument = ({ data }: { data: OrderData }) => {
   } = orderDataSchema.parse(data)
 
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
+    <Page size="A4" style={styles.page}>
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.leftHeader}>
@@ -389,9 +387,15 @@ const OrderDocument = ({ data }: { data: OrderData }) => {
             </View>
           </View>
         </View>
-      </Page>
-    </Document>
+    </Page>
   )
 }
+
+// Create Document Component
+const OrderDocument = ({ data }: { data: OrderData }) => (
+  <Document>
+    <OrderPage data={data} />
+  </Document>
+)
 
 export { OrderDocument }
