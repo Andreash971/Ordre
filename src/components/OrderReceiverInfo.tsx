@@ -309,6 +309,7 @@ export default function OrderReceiverInfo({
                   }}
                   className="w-full"
                   disabled={!showTime || selectedIndex === null}
+                  allowNull
                 />
               </Field>
             </FieldGroup>
