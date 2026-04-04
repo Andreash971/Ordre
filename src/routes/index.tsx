@@ -36,6 +36,9 @@ function App() {
   })
   const [items, setItems] = useState<Item[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [selectedCustomerTime, setSelectedCustomerTime] = useState<
+    string | null | undefined
+  >(undefined)
   const [isPrinting, setIsPrinting] = useState(false)
 
   const handlePrintOrders = async () => {
@@ -59,6 +62,7 @@ function App() {
         className="col-start-2 row-start-1 row-span-2 rise-in"
         showTime={showTime}
         showCardText={showCardText}
+        selectedCustomerTime={selectedCustomerTime}
         onItemsChange={setItems}
       />
       <TimeDateForm
@@ -86,6 +90,7 @@ function App() {
         defaultInstructionsText={instructionsTextValue}
         defaultDeliveryValues={deliveryValues}
         onCustomersChange={setCustomers}
+        onSelectedCustomerTimeChange={setSelectedCustomerTime}
       />
       <div className="col-start-1 col-span-2 row-start-5 flex justify-end gap-2 rise-in">
         <Button

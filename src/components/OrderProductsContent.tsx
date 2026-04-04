@@ -21,6 +21,7 @@ interface OrderProductsContentProps extends React.PropsWithChildren {
   className: string
   showTime: boolean
   showCardText: boolean
+  selectedCustomerTime?: string | null
   onItemsChange?: (items: Item[]) => void
 }
 
@@ -53,6 +54,7 @@ export default function OrderProductsContent({
   className,
   showTime,
   showCardText,
+  selectedCustomerTime,
   onItemsChange,
 }: OrderProductsContentProps) {
   const [items, setItems] = useState<Item[]>([
@@ -60,8 +62,9 @@ export default function OrderProductsContent({
   ])
 
   useEffect(() => {
+    const showTimeItem = showTime && selectedCustomerTime !== null
     setItems((prev) =>
-      showTime
+      showTimeItem
         ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
           ? prev
           : [
@@ -70,7 +73,7 @@ export default function OrderProductsContent({
             ]
         : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
     )
-  }, [showTime])
+  }, [showTime, selectedCustomerTime])
 
   useEffect(() => {
     setItems((prev) =>

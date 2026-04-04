@@ -52,6 +52,7 @@ interface OrderReceiverInfoProps extends React.PropsWithChildren {
   defaultInstructionsText?: string
   defaultDeliveryValues?: DeliveryValues
   onCustomersChange?: (customers: Customer[]) => void
+  onSelectedCustomerTimeChange?: (time: string | null | undefined) => void
 }
 
 const emptyCustomer = (): Customer => ({
@@ -76,6 +77,7 @@ export default function OrderReceiverInfo({
   defaultInstructionsText = '',
   defaultDeliveryValues,
   onCustomersChange,
+  onSelectedCustomerTimeChange,
 }: OrderReceiverInfoProps) {
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
@@ -83,6 +85,14 @@ export default function OrderReceiverInfo({
   React.useEffect(() => {
     onCustomersChange?.(customers)
   }, [customers, onCustomersChange])
+
+  React.useEffect(() => {
+    const time =
+      selectedIndex !== null
+        ? (customers[selectedIndex]?.time ?? null)
+        : undefined
+    onSelectedCustomerTimeChange?.(time)
+  }, [selectedIndex, customers, onSelectedCustomerTimeChange])
 
   const handleAdd = () => {
     setCustomers((prev) => {
