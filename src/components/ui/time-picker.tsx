@@ -14,6 +14,7 @@ interface TimePickerProps {
   onChange: (value: string | null) => void
   className?: string
   disabled?: boolean
+  allowNull?: boolean
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
@@ -25,6 +26,7 @@ export function TimePicker({
   onChange,
   className,
   disabled,
+  allowNull,
 }: TimePickerProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -61,6 +63,17 @@ export function TimePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-32 p-0" align="start">
+        {allowNull && value !== null && (
+          <button
+            onClick={() => {
+              onChange(null)
+              setOpen(false)
+            }}
+            className="w-full px-3 py-1.5 text-center text-sm text-muted-foreground hover:bg-muted border-b"
+          >
+            Fjern tidspunkt
+          </button>
+        )}
         <div className="flex divide-x">
           {/* HOURS */}
           <div
