@@ -51,14 +51,13 @@ export function buildOrderData(
   items: Item[],
 ): OrderData {
   const effectiveDate = customer.date || delivery.date
-  const effectiveTime = customer.time ?? delivery.time
   const { dayText, longDate, shortDate } = formatDeliveryDate(effectiveDate)
   return {
     delivery: {
       dayText,
       longDate,
       shortDate,
-      deliveryTime: effectiveTime ?? '',
+      deliveryTime: customer.time ?? '',
     },
     sender: {
       name: sender?.name ?? '',
@@ -79,7 +78,10 @@ export function buildOrderData(
       cardText: customer.cardmsg,
       instructionsText: customer.instructmsg,
     },
-    orderContent: items.map((item) => ({
+    orderContent: (customer.time !== null
+      ? items
+      : items.filter((i) => i.name !== 'Frakt Tidspunktstillegg')
+    ).map((item) => ({
       product: item.name,
       quantity: item.quantity,
       price: item.price,
