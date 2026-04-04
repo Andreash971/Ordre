@@ -3,9 +3,7 @@ import * as React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Calendar } from '@/components/ui/calendar'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Label } from '@/components/ui/label'
 import {
   Popover,
   PopoverContent,
@@ -49,6 +47,7 @@ interface OrderReceiverInfoProps extends React.PropsWithChildren {
   className: string
   showInstructionsText: boolean
   showCardText: boolean
+  showTime: boolean
   defaultCardText?: string
   defaultInstructionsText?: string
   defaultDeliveryValues?: DeliveryValues
@@ -72,6 +71,7 @@ export default function OrderReceiverInfo({
   className,
   showInstructionsText,
   showCardText,
+  showTime,
   defaultCardText = '',
   defaultInstructionsText = '',
   defaultDeliveryValues,
@@ -79,19 +79,10 @@ export default function OrderReceiverInfo({
 }: OrderReceiverInfoProps) {
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
-  const [showTime, setShowTime] = React.useState(false)
 
   React.useEffect(() => {
     onCustomersChange?.(customers)
   }, [customers, onCustomersChange])
-
-  React.useEffect(() => {
-    if (selectedIndex !== null && customers[selectedIndex]) {
-      setShowTime(customers[selectedIndex].time !== null)
-    } else {
-      setShowTime(false)
-    }
-  }, [selectedIndex])
 
   const handleAdd = () => {
     setCustomers((prev) => {
@@ -309,37 +300,16 @@ export default function OrderReceiverInfo({
               {/* TIME FIELD */}
               <Field>
                 <FieldLabel>Leveringstidspunkt</FieldLabel>
-                <FieldGroup className="flex flex-row gap-2">
-                  <Checkbox
-                    id="receiver-show-time"
-                    checked={showTime}
-                    disabled={selectedIndex === null}
-                    onCheckedChange={(checked) => {
-                      const val = checked === true
-                      setShowTime(val)
-                      if (!val && selectedIndex !== null) {
-                        updateCustomerDelivery(selectedIndex, 'time', null)
-                      }
-                    }}
-                  />
-                  <Label
-                    htmlFor="receiver-show-time"
-                    className="cursor-pointer"
-                  >
-                    Inkluder leveringstidspunkt?
-                  </Label>
-                </FieldGroup>
-                {showTime && (
-                  <TimePicker
-                    value={selected?.time ?? null}
-                    onChange={(val) => {
-                      if (selectedIndex !== null) {
-                        updateCustomerDelivery(selectedIndex, 'time', val)
-                      }
-                    }}
-                    className="w-full"
-                  />
-                )}
+                <TimePicker
+                  value={selected?.time ?? null}
+                  onChange={(val) => {
+                    if (selectedIndex !== null) {
+                      updateCustomerDelivery(selectedIndex, 'time', val)
+                    }
+                  }}
+                  className="w-full"
+                  disabled={!showTime || selectedIndex === null}
+                />
               </Field>
             </FieldGroup>
           </div>

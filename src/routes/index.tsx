@@ -81,6 +81,7 @@ function App() {
         className="col-start-1 row-start-4 col-span-2 rise-in"
         showCardText={showCardText}
         showInstructionsText={showInstructionsText}
+        showTime={showTime}
         defaultCardText={cardTextValue}
         defaultInstructionsText={instructionsTextValue}
         defaultDeliveryValues={deliveryValues}
