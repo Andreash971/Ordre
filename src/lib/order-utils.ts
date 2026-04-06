@@ -127,6 +127,24 @@ export function exportOrdersToJson(
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stored))
 }
 
+export function getCurrentOrders(
+  customers: Customer[],
+  sender: CustomerFormValues | null,
+  delivery: DeliveryValues,
+  items: Item[],
+): StoredOrder[] {
+  const now = Date.now()
+  return customers.map((customer, index) => {
+    const orderData = buildOrderData(customer, sender, delivery, items)
+    const safeName = (customer.name || `mottaker-${index + 1}`)
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+    const key = `ordre-${safeName}`
+    return { data: orderData, savedAt: now, expiresAt: now + EXPIRY_MS, key }
+  })
+}
+
 export function getStoredOrders(): StoredOrder[] {
   const stored: Record<string, StoredOrder> = JSON.parse(
     localStorage.getItem(STORAGE_KEY) ?? '{}',

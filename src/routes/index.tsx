@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Download, Printer } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 
 import CustomerForm from '../components/CustomerForm'
 import TimeDateForm from '../components/TimeDateForm'
@@ -8,15 +8,15 @@ import OrderProductsContent from '#/components/OrderProductsContent'
 import OrderExtraInfo from '#/components/OrderExtraInfo'
 import OrderReceiverInfo from '#/components/OrderReceiverInfo'
 import { Button } from '@/components/ui/button'
+import OpenOrderButton from '@/components/ui/open-order-button'
+
 import type { Item } from '#/components/OrderColumns'
 import {
   getLocalDateString,
-  exportOrdersToJson,
   type CustomerFormValues,
   type Customer,
   type DeliveryValues,
 } from '#/lib/order-utils'
-import { openOrdersPdf } from '#/lib/print-orders'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -39,17 +39,6 @@ function App() {
   const [selectedCustomerTime, setSelectedCustomerTime] = useState<
     string | null | undefined
   >(undefined)
-  const [isPrinting, setIsPrinting] = useState(false)
-
-  const handlePrintOrders = async () => {
-    setIsPrinting(true)
-    try {
-      await openOrdersPdf(customers, senderValues, deliveryValues, items)
-    } finally {
-      setIsPrinting(false)
-    }
-  }
-
   return (
     <main className="page-wrap grid grid-cols-[2fr_4fr] grid-rows-[auto_auto_auto_auto] gap-4 px-4 pb-8 pt-6">
       <CustomerForm
@@ -94,22 +83,21 @@ function App() {
       />
       <div className="col-start-1 col-span-2 row-start-5 flex justify-end gap-2 rise-in">
         <Button
-          onClick={handlePrintOrders}
-          disabled={isPrinting || customers.length === 0}
-          variant="outline"
+          onClick={() => {
+            window.location.reload()
+          }}
+          variant="destructive"
+          size="lg"
         >
-          <Printer className="mr-2 h-4 w-4" />
-          {isPrinting ? 'Åpner PDF...' : 'Åpne PDF'}
+          <RotateCcw className="h-4 w-4" />
+          Reset
         </Button>
-        <Button
-          onClick={() =>
-            exportOrdersToJson(customers, senderValues, deliveryValues, items)
-          }
-          disabled={customers.length === 0}
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Eksporter JSON
-        </Button>
+        <OpenOrderButton
+          customers={customers}
+          senderValues={senderValues}
+          deliveryValues={deliveryValues}
+          items={items}
+        />
       </div>
     </main>
   )
