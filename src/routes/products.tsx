@@ -1,22 +1,93 @@
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { PackagePlus, PackageSearch } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { DataTable } from '@/components/ui/DataTable'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
+
+import AddProductForm, {
+  type AddProductFormValues,
+} from '#/components/AddProductForm'
+import { productColumns } from '#/components/ProductColumns'
+import {
+  type Product,
+  getAllProducts,
+  insertProduct,
+} from '#/lib/product-server-fns'
 
 export const Route = createFileRoute('/products')({
+  loader: () => getAllProducts(),
   component: Products,
 })
 
 function Products() {
+  const loaderData = Route.useLoaderData()
+  const [data, setData] = useState<Product[]>(loaderData)
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
+
+  async function handleAddProduct(values: AddProductFormValues) {
+    const newRow = await insertProduct({
+      data: { ...values, price: Number(values.price) },
+    })
+    setData((prev) => [
+      {
+        id: newRow.id,
+        name: values.name,
+        category: values.category || null,
+        price: newRow.price,
+      },
+      ...prev,
+    ])
+    setAddOpen(false)
+  }
+
   return (
-    <main className="page-wrap px-4 py-12">
-      <section className="rounded-2xl p-6 sm:p-8">
-        <h1 className="mb-3 text-4xl font-bold sm:text-5xl">
-          A small starter with room to grow.
-        </h1>
-        <p className="m-0 max-w-3xl text-base leading-8">
-          TanStack Start gives you type-safe routing, server functions, and
-          modern SSR defaults. Use this as a clean foundation, then layer in
-          your own routes, styling, and add-ons.
-        </p>
-      </section>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <InputGroup className="max-w-sm">
+          <InputGroupAddon>
+            <PackageSearch />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="Søk etter produkt..."
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+          />
+        </InputGroup>
+        <Button onClick={() => setAddOpen(true)}>
+          <PackagePlus />
+          Legg til produkt
+        </Button>
+      </div>
+      <DataTable
+        columns={productColumns}
+        data={data}
+        setData={setData}
+        globalFilter={globalFilter}
+        emptyMessage="Ingen produkter funnet."
+        pagination
+        pageSize={14}
+      />
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Legg til produkt</DialogTitle>
+          </DialogHeader>
+          <AddProductForm saveText="Legg til" onSubmit={handleAddProduct} />
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
