@@ -16,21 +16,21 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 
-import AddCustomerForm, {
-  type AddCustomerFormValues,
-} from '#/components/AddCustomerForm'
+import AddProductForm, {
+  type AddProductFormValues,
+} from '#/components/AddProductForm'
 import {
-  type Customer,
-  deleteCustomer,
-  updateCustomer,
-} from '#/lib/customer-server-fns'
+  type Product,
+  deleteProduct,
+  updateProduct,
+} from '#/lib/product-server-fns'
 
-function DeleteCustomerCell({
+function DeleteProductCell({
   row,
   table,
 }: {
-  row: Row<Customer>
-  table: Table<Customer>
+  row: Row<Product>
+  table: Table<Product>
 }) {
   const [open, setOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
@@ -38,7 +38,7 @@ function DeleteCustomerCell({
   async function handleConfirm() {
     setIsPending(true)
     try {
-      await deleteCustomer({ data: row.original.id })
+      await deleteProduct({ data: row.original.id })
       table.options.meta?.removeRow(row.index)
     } finally {
       setIsPending(false)
@@ -51,12 +51,12 @@ function DeleteCustomerCell({
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
           <Trash2 className="size-4" />
-          <span className="sr-only">Slett kunde</span>
+          <span className="sr-only">Slett produkt</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Slett kunde</DialogTitle>
+          <DialogTitle>Slett produkt</DialogTitle>
           <DialogDescription>
             Er du sikker på at du vil slette{' '}
             <span className="font-medium">{row.original.name}</span>? Dette er
@@ -82,38 +82,32 @@ function DeleteCustomerCell({
   )
 }
 
-function EditCustomerCell({
+function EditProductCell({
   row,
   table,
 }: {
-  row: Row<Customer>
-  table: Table<Customer>
+  row: Row<Product>
+  table: Table<Product>
 }) {
   const [open, setOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
 
-  const defaultValues: AddCustomerFormValues = {
+  const defaultValues: AddProductFormValues = {
     name: row.original.name,
-    phone: row.original.phone ?? '',
-    company: row.original.business ?? '',
-    address: row.original.address ?? '',
-    postcode: row.original.postcode ?? '',
-    city: row.original.city ?? '',
-    careof: row.original.careof ?? '',
+    category: row.original.category ?? '',
+    price: row.original.price ?? '',
   }
 
-  async function handleEdit(values: AddCustomerFormValues) {
+  async function handleEdit(values: AddProductFormValues) {
     setIsPending(true)
     try {
-      await updateCustomer({ data: { id: row.original.id, ...values } })
+      await updateProduct({
+        data: { id: row.original.id, ...values, price: Number(values.price) },
+      })
       table.options.meta?.updateRow(row.index, {
         name: values.name,
-        phone: values.phone || null,
-        business: values.company || null,
-        address: values.address || null,
-        postcode: values.postcode || null,
-        city: values.city || null,
-        careof: values.careof || null,
+        category: values.category || null,
+        price: values.price,
       })
       setOpen(false)
     } finally {
@@ -126,14 +120,14 @@ function EditCustomerCell({
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
           <SquarePen className="size-4" />
-          <span className="sr-only">Rediger kunde</span>
+          <span className="sr-only">Rediger produkt</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Rediger kunde</DialogTitle>
+          <DialogTitle>Rediger produkt</DialogTitle>
         </DialogHeader>
-        <AddCustomerForm
+        <AddProductForm
           saveText="Lagre"
           disabled={isPending}
           defaultValues={defaultValues}
@@ -144,20 +138,16 @@ function EditCustomerCell({
   )
 }
 
-export const customerColumns: ColumnDef<Customer>[] = [
+export const productColumns: ColumnDef<Product>[] = [
   { accessorKey: 'name', header: 'Navn' },
-  { accessorKey: 'phone', header: 'Telefon' },
-  { accessorKey: 'business', header: 'Firma' },
-  { accessorKey: 'address', header: 'Adresse' },
-  { accessorKey: 'postcode', header: 'Postnr.' },
-  { accessorKey: 'city', header: 'Sted' },
-  { accessorKey: 'careof', header: 'C/O' },
+  { accessorKey: 'category', header: 'Kategori' },
+  { accessorKey: 'price', header: 'Pris' },
   {
     id: 'edit',
     header: '',
     meta: { className: 'w-0 whitespace-nowrap' },
     cell: ({ row, table }) => (
-      <EditCustomerCell row={row} table={table as Table<Customer>} />
+      <EditProductCell row={row} table={table as Table<Product>} />
     ),
   },
   {
@@ -165,7 +155,7 @@ export const customerColumns: ColumnDef<Customer>[] = [
     header: '',
     meta: { className: 'w-0 whitespace-nowrap' },
     cell: ({ row, table }) => (
-      <DeleteCustomerCell row={row} table={table as Table<Customer>} />
+      <DeleteProductCell row={row} table={table as Table<Product>} />
     ),
   },
 ]
