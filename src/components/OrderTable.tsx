@@ -1,6 +1,6 @@
 import { columns } from './OrderColumns'
 import type { Item } from './OrderColumns'
-import { DataTable } from './DataTable'
+import { DataTable } from './ui/DataTable'
 import { TableCell, TableRow } from '@/components/ui/table'
 
 interface OrderTableProps {
