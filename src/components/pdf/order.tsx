@@ -11,13 +11,14 @@ interface OrderItem extends Record<string, unknown> {
 }
 
 const spaceString = z.string().transform((val) => val || ' ')
+const optionalString = z.string().transform((val) => val || null)
 
 const orderDataSchema = z.object({
   delivery: z.object({
     dayText: spaceString,
     longDate: spaceString,
     shortDate: spaceString,
-    deliveryTime: spaceString,
+    deliveryTime: optionalString,
   }),
   sender: z.object({
     name: spaceString,
@@ -35,8 +36,8 @@ const orderDataSchema = z.object({
     phone: spaceString,
   }),
   card: z.object({
-    cardText: spaceString,
-    instructionsText: spaceString,
+    cardText: optionalString,
+    instructionsText: optionalString,
   }),
   orderContent: z.array(
     z.object({
@@ -49,45 +50,6 @@ const orderDataSchema = z.object({
 })
 
 export type OrderData = z.input<typeof orderDataSchema>
-
-export const orderMockData: OrderData = {
-  delivery: {
-    dayText: 'Tirsdag',
-    longDate: '1. april 2026',
-    shortDate: '01.04.2026',
-    deliveryTime: '14:00',
-  },
-  sender: {
-    name: 'Kari Nordmann',
-    address: 'Kongens gate 5',
-    postCode: '0100 Oslo',
-    phone: '98765432',
-    company: 'Norsk Blomst AS',
-  },
-  receiver: {
-    name: 'Ola Hansen',
-    company: 'Hansen & Co',
-    co: '',
-    address: 'Storgata 12',
-    postCode: '7014 Trondheim',
-    phone: '91234567',
-  },
-  card: {
-    cardText: 'Gratulerer med dagen!',
-    instructionsText: 'Ring på dørklokken.',
-  },
-  orderContent: [
-    { product: 'Roser', quantity: 1, price: 79, total: 79 },
-    { product: 'Tulipaner', quantity: 2, price: 69, total: 138 },
-    { product: 'Liljer', quantity: 2, price: 109, total: 218 },
-    { product: 'Blomsteropsatts Høst', quantity: 1, price: 250, total: 250 },
-    { product: 'Potte Stor', quantity: 2, price: 120, total: 240 },
-    { product: 'Potte Liten', quantity: 2, price: 69, total: 138 },
-    { product: 'Krans', quantity: 3, price: 140, total: 420 },
-    { product: 'Frakt', quantity: 1, price: 100, total: 100 },
-    { product: 'Tidspunkt Tillegg', quantity: 1, price: 100, total: 100 },
-  ],
-}
 
 const styles = StyleSheet.create({
   page: {
@@ -192,8 +154,7 @@ const styles = StyleSheet.create({
   },
 })
 
-// Create Document Component
-const OrderDocument = ({ data }: { data: OrderData }) => {
+export const OrderPage = ({ data }: { data: OrderData }) => {
   const {
     delivery: { dayText, longDate, shortDate, deliveryTime },
     sender: {
@@ -216,73 +177,71 @@ const OrderDocument = ({ data }: { data: OrderData }) => {
   } = orderDataSchema.parse(data)
 
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.leftHeader}>
-            <Text style={styles.logo}>Blomster i Byhaven</Text>
-            <Text style={styles.title}>Ordre</Text>
-          </View>
-          <View style={styles.rightHeader}>
-            <Text style={styles.date}>
-              {dayText} {longDate}
-            </Text>
-            <Text>Levering før {deliveryTime}</Text>
-          </View>
+    <Page size="A4" style={styles.page}>
+      {/* HEADER */}
+      <View fixed style={styles.header}>
+        <View style={styles.leftHeader}>
+          <Text style={styles.logo}>Blomster i Byhaven</Text>
+          <Text style={styles.title}>Ordre</Text>
         </View>
-
-        {/* SENDER INFO */}
-        <View style={styles.senderInfo}>
-          <View style={[styles.container, styles.textGapSmall]}>
-            <Text style={styles.senderTitle}>Sender:</Text>
-            <Text style={[styles.senderName, styles.textGap]}>
-              {senderName}
-            </Text>
-            <Text>
-              {senderAddress}, {senderPostCode}
-            </Text>
-          </View>
-          <View style={[styles.container, styles.textGapSmall]}>
-            <Text style={styles.textGap}>Telefon: {senderPhone}</Text>
-            <Text>Firma: {senderCompany}</Text>
-          </View>
+        <View style={styles.rightHeader}>
+          <Text style={styles.date}>
+            {dayText} {longDate}
+          </Text>
+          {deliveryTime ? <Text>Levering før {deliveryTime}</Text> : null}
         </View>
+      </View>
 
-        {/* ORDER CONTENTS */}
-        <DataTable
-          data={orderContentData as OrderItem[]}
-          style={styles.orderContent}
-          columns={[
-            { key: 'product', header: 'Produkt' },
-            {
-              key: 'quantity',
-              header: 'Antall',
-              width: '60',
-              align: 'right',
-            },
-            {
-              key: 'price',
-              header: 'Pris',
-              width: '80',
-              align: 'right',
-              prefix: 'Kr ',
-            },
-            {
-              key: 'total',
-              header: 'Total',
-              width: '80',
-              align: 'right',
-              prefix: 'Kr ',
-            },
-          ]}
-          footer={{
-            product: 'Totalt Beløp',
-            total: orderContentData.reduce((acc, item) => acc + item.total, 0),
-          }}
-        />
+      {/* SENDER INFO */}
+      <View fixed style={styles.senderInfo}>
+        <View style={[styles.container, styles.textGapSmall]}>
+          <Text style={styles.senderTitle}>Sender:</Text>
+          <Text style={[styles.senderName, styles.textGap]}>{senderName}</Text>
+          <Text>
+            {senderAddress}, {senderPostCode}
+          </Text>
+        </View>
+        <View style={[styles.container, styles.textGapSmall]}>
+          <Text style={styles.textGap}>Telefon: {senderPhone}</Text>
+          <Text>Firma: {senderCompany}</Text>
+        </View>
+      </View>
 
-        {/* CARD AND INSTRUCTIONS INFO */}
+      {/* ORDER CONTENTS */}
+      <DataTable
+        data={orderContentData as OrderItem[]}
+        style={styles.orderContent}
+        columns={[
+          { key: 'product', header: 'Produkt' },
+          {
+            key: 'quantity',
+            header: 'Antall',
+            width: '60',
+            align: 'right',
+          },
+          {
+            key: 'price',
+            header: 'Pris',
+            width: '80',
+            align: 'right',
+            prefix: 'Kr ',
+          },
+          {
+            key: 'total',
+            header: 'Total',
+            width: '80',
+            align: 'right',
+            prefix: 'Kr ',
+          },
+        ]}
+        footer={{
+          product: 'Totalt Beløp',
+          total: orderContentData.reduce((acc, item) => acc + item.total, 0),
+        }}
+      />
+
+      {/* CARD AND INSTRUCTIONS INFO */}
+      {cardText || instructionsText ? (
         <View wrap={false} style={[styles.rowContainer, styles.smallGap]}>
           <View style={styles.container}>
             <Text style={styles.heading}>Korttekst</Text>
@@ -298,100 +257,111 @@ const OrderDocument = ({ data }: { data: OrderData }) => {
             </View>
           </View>
         </View>
+      ) : null}
 
-        {/* DRIVER DELIVERY INFO */}
-        <View style={styles.divider} />
-        <View
-          wrap={false}
-          style={[styles.rowContainer, styles.bigGap, { marginTop: 20 }]}
-        >
-          {/* LEFT CONTAINER */}
-          <View style={styles.container}>
-            <Text style={styles.heading}>Kjørelapp 1</Text>
-            <View style={styles.driverInfo}>
-              {/* INFO KEYS (LEFT) */}
-              <View>
-                <Text>Utfører:</Text>
-                <Text>Adresse:</Text>
-                <Text>Postnr/Sted:</Text>
-                <Text style={styles.textGapLarge}>Telefon:</Text>
+      {/* DRIVER DELIVERY INFO */}
+      <View style={styles.divider} />
+      <View
+        wrap={false}
+        style={[styles.rowContainer, styles.bigGap, { marginTop: 20 }]}
+      >
+        {/* LEFT CONTAINER */}
+        <View style={styles.container}>
+          <Text style={styles.heading}>Kjørelapp 1</Text>
+          <View style={styles.driverInfo}>
+            {/* INFO KEYS (LEFT) */}
+            <View>
+              <Text>Utfører:</Text>
+              <Text>Adresse:</Text>
+              <Text>Postnr/Sted:</Text>
+              <Text style={styles.textGapLarge}>Telefon:</Text>
 
-                <Text>Lev. Dato:</Text>
-                <Text style={styles.textGapLarge}>Lev. Tid:</Text>
+              <Text>Lev. Dato:</Text>
+              <Text style={styles.textGapLarge}>Lev. Tid:</Text>
 
-                <Text>Mottaker:</Text>
-                <Text>Firma:</Text>
-                <Text>C/O:</Text>
-                <Text>Adresse:</Text>
-                <Text>Postnr/Sted:</Text>
-                <Text>Telefon:</Text>
-              </View>
-
-              {/* INFO VALUES (RIGHT) */}
-              <View style={styles.container}>
-                <Text>Blomster i Byhaven AS</Text>
-                <Text>Olav Tryggvasonsgt. 28</Text>
-                <Text>7011 Trondheim</Text>
-                <Text style={styles.textGapLarge}>73522460</Text>
-
-                <Text>{shortDate}</Text>
-                <Text style={styles.textGapLarge}>Før {deliveryTime}</Text>
-
-                <Text>{receiverName}</Text>
-                <Text>{receiverCompany}</Text>
-                <Text>{receiverCO}</Text>
-                <Text>{receiverAddress}</Text>
-                <Text>{receiverPostCode}</Text>
-                <Text>{receiverPhone}</Text>
-              </View>
+              <Text>Mottaker:</Text>
+              <Text>Firma:</Text>
+              <Text>C/O:</Text>
+              <Text>Adresse:</Text>
+              <Text>Postnr/Sted:</Text>
+              <Text>Telefon:</Text>
             </View>
-          </View>
 
-          {/* RIGHT CONTAINER */}
-          <View style={styles.container}>
-            <Text style={styles.heading}>Kjørelapp 2</Text>
-            <View style={styles.driverInfo}>
-              {/* INFO KEYS (LEFT) */}
-              <View>
-                <Text>Utfører:</Text>
-                <Text>Adresse:</Text>
-                <Text>Postnr/Sted:</Text>
-                <Text style={styles.textGapLarge}>Telefon:</Text>
+            {/* INFO VALUES (RIGHT) */}
+            <View style={styles.container}>
+              <Text>Blomster i Byhaven AS</Text>
+              <Text>Olav Tryggvasonsgt. 28</Text>
+              <Text>7011 Trondheim</Text>
+              <Text style={styles.textGapLarge}>73522460</Text>
 
-                <Text>Lev. Dato:</Text>
-                <Text style={styles.textGapLarge}>Lev. Tid:</Text>
+              <Text>{shortDate}</Text>
+              <Text style={styles.textGapLarge}>
+                {deliveryTime ? `Før ${deliveryTime}` : ' '}
+              </Text>
 
-                <Text>Mottaker:</Text>
-                <Text>Firma:</Text>
-                <Text>C/O:</Text>
-                <Text>Adresse:</Text>
-                <Text>Postnr/Sted:</Text>
-                <Text>Telefon:</Text>
-              </View>
-
-              {/* INFO VALUES (RIGHT) */}
-              <View style={styles.container}>
-                <Text>Blomster i Byhaven AS</Text>
-                <Text>Olav Tryggvasonsgt. 28</Text>
-                <Text>7011 Trondheim</Text>
-                <Text style={styles.textGapLarge}>73522460</Text>
-
-                <Text>{shortDate}</Text>
-                <Text style={styles.textGapLarge}>Før {deliveryTime}</Text>
-
-                <Text>{receiverName}</Text>
-                <Text>{receiverCompany}</Text>
-                <Text>{receiverCO}</Text>
-                <Text>{receiverAddress}</Text>
-                <Text>{receiverPostCode}</Text>
-                <Text>{receiverPhone}</Text>
-              </View>
+              <Text>{receiverName}</Text>
+              <Text>{receiverCompany}</Text>
+              <Text>{receiverCO}</Text>
+              <Text>{receiverAddress}</Text>
+              <Text>{receiverPostCode}</Text>
+              <Text>{receiverPhone}</Text>
             </View>
           </View>
         </View>
-      </Page>
-    </Document>
+
+        {/* RIGHT CONTAINER */}
+        <View style={styles.container}>
+          <Text style={styles.heading}>Kjørelapp 2</Text>
+          <View style={styles.driverInfo}>
+            {/* INFO KEYS (LEFT) */}
+            <View>
+              <Text>Utfører:</Text>
+              <Text>Adresse:</Text>
+              <Text>Postnr/Sted:</Text>
+              <Text style={styles.textGapLarge}>Telefon:</Text>
+
+              <Text>Lev. Dato:</Text>
+              <Text style={styles.textGapLarge}>Lev. Tid:</Text>
+
+              <Text>Mottaker:</Text>
+              <Text>Firma:</Text>
+              <Text>C/O:</Text>
+              <Text>Adresse:</Text>
+              <Text>Postnr/Sted:</Text>
+              <Text>Telefon:</Text>
+            </View>
+
+            {/* INFO VALUES (RIGHT) */}
+            <View style={styles.container}>
+              <Text>Blomster i Byhaven AS</Text>
+              <Text>Olav Tryggvasonsgt. 28</Text>
+              <Text>7011 Trondheim</Text>
+              <Text style={styles.textGapLarge}>73522460</Text>
+
+              <Text>{shortDate}</Text>
+              <Text style={styles.textGapLarge}>
+                {deliveryTime ? `Før ${deliveryTime}` : ' '}
+              </Text>
+
+              <Text>{receiverName}</Text>
+              <Text>{receiverCompany}</Text>
+              <Text>{receiverCO}</Text>
+              <Text>{receiverAddress}</Text>
+              <Text>{receiverPostCode}</Text>
+              <Text>{receiverPhone}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Page>
   )
 }
+
+// Create Document Component
+const OrderDocument = ({ data }: { data: OrderData }) => (
+  <Document>
+    <OrderPage data={data} />
+  </Document>
+)
 
 export { OrderDocument }

@@ -13,13 +13,21 @@ interface TimePickerProps {
   value: string | null
   onChange: (value: string | null) => void
   className?: string
+  disabled?: boolean
+  allowNull?: boolean
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const MINUTES = ['00', '30']
 const DEFAULT_HOUR = '16'
 
-export function TimePicker({ value, onChange, className }: TimePickerProps) {
+export function TimePicker({
+  value,
+  onChange,
+  className,
+  disabled,
+  allowNull,
+}: TimePickerProps) {
   const [open, setOpen] = React.useState(false)
 
   const selectedHour = value?.split(':')[0] ?? null
@@ -43,10 +51,11 @@ export function TimePicker({ value, onChange, className }: TimePickerProps) {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(val) => !disabled && setOpen(val)}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          disabled={disabled}
           className={cn('justify-start gap-2 font-normal', className)}
         >
           <Clock className="size-4 text-muted-foreground" />
@@ -54,6 +63,17 @@ export function TimePicker({ value, onChange, className }: TimePickerProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-32 p-0" align="start">
+        {allowNull && value !== null && (
+          <button
+            onClick={() => {
+              onChange(null)
+              setOpen(false)
+            }}
+            className="w-full px-3 py-1.5 text-center text-sm text-muted-foreground hover:bg-muted border-b"
+          >
+            Fjern tidspunkt
+          </button>
+        )}
         <div className="flex divide-x">
           {/* HOURS */}
           <div

@@ -25,6 +25,7 @@ interface AutocompleteFieldProps<T extends { id: number }> {
   icon: React.ReactNode
   placeholder: string
   type?: React.HTMLInputTypeAttribute
+  disabled?: boolean
   onSearch: (query: string) => Promise<T[]>
   onSelect: (item: T) => void
   renderSuggestion: (item: T) => React.ReactNode
@@ -36,6 +37,7 @@ export default function AutocompleteField<T extends { id: number }>({
   icon,
   placeholder,
   type = 'text',
+  disabled,
   onSearch,
   onSelect,
   renderSuggestion,
@@ -55,6 +57,7 @@ export default function AutocompleteField<T extends { id: number }>({
             name={field.name}
             type={type}
             value={field.state.value}
+            disabled={disabled}
             onChange={async (e) => {
               const value = e.target.value
               field.handleChange(value)

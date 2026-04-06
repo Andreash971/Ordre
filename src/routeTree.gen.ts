@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as PdfRouteImport } from './routes/pdf'
-import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -32,14 +32,14 @@ const PdfRoute = PdfRouteImport.update({
   path: '/pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveRoute = ArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -55,8 +55,8 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
-  '/documents': typeof DocumentsRoute
   '/pdf': typeof PdfRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
@@ -64,8 +64,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
-  '/documents': typeof DocumentsRoute
   '/pdf': typeof PdfRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
@@ -74,8 +74,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
-  '/documents': typeof DocumentsRoute
   '/pdf': typeof PdfRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
@@ -85,8 +85,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/archive'
     | '/customers'
-    | '/documents'
     | '/pdf'
     | '/products'
     | '/settings'
@@ -94,8 +94,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/archive'
     | '/customers'
-    | '/documents'
     | '/pdf'
     | '/products'
     | '/settings'
@@ -103,8 +103,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/archive'
     | '/customers'
-    | '/documents'
     | '/pdf'
     | '/products'
     | '/settings'
@@ -113,8 +113,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchiveRoute: typeof ArchiveRoute
   CustomersRoute: typeof CustomersRoute
-  DocumentsRoute: typeof DocumentsRoute
   PdfRoute: typeof PdfRoute
   ProductsRoute: typeof ProductsRoute
   SettingsRoute: typeof SettingsRoute
@@ -144,18 +144,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PdfRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/customers': {
       id: '/customers'
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive': {
+      id: '/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof ArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -177,8 +177,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchiveRoute: ArchiveRoute,
   CustomersRoute: CustomersRoute,
-  DocumentsRoute: DocumentsRoute,
   PdfRoute: PdfRoute,
   ProductsRoute: ProductsRoute,
   SettingsRoute: SettingsRoute,

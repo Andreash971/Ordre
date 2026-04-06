@@ -23,8 +23,8 @@ const navLinks = [
     icon: <FilePlusIcon className="text-foreground" />,
   },
   {
-    to: '/documents',
-    label: 'Dokumenter',
+    to: '/archive',
+    label: 'Arkiv',
     icon: <Archive className="text-foreground" />,
   },
   {
