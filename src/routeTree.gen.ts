@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProductsRouteImport } from './routes/products'
-import { Route as PdfRouteImport } from './routes/pdf'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,11 +24,6 @@ const SettingsRoute = SettingsRouteImport.update({
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PdfRoute = PdfRouteImport.update({
-  id: '/pdf',
-  path: '/pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersRoute = CustomersRouteImport.update({
@@ -57,7 +51,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
-  '/pdf': typeof PdfRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -66,7 +59,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
-  '/pdf': typeof PdfRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -76,7 +68,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
-  '/pdf': typeof PdfRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -87,7 +78,6 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/customers'
-    | '/pdf'
     | '/products'
     | '/settings'
     | '/api/auth/$'
@@ -96,7 +86,6 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/customers'
-    | '/pdf'
     | '/products'
     | '/settings'
     | '/api/auth/$'
@@ -105,7 +94,6 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/customers'
-    | '/pdf'
     | '/products'
     | '/settings'
     | '/api/auth/$'
@@ -115,7 +103,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
   CustomersRoute: typeof CustomersRoute
-  PdfRoute: typeof PdfRoute
   ProductsRoute: typeof ProductsRoute
   SettingsRoute: typeof SettingsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -135,13 +122,6 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof ProductsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pdf': {
-      id: '/pdf'
-      path: '/pdf'
-      fullPath: '/pdf'
-      preLoaderRoute: typeof PdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customers': {
@@ -179,7 +159,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
   CustomersRoute: CustomersRoute,
-  PdfRoute: PdfRoute,
   ProductsRoute: ProductsRoute,
   SettingsRoute: SettingsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
