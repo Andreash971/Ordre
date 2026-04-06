@@ -21,6 +21,8 @@ interface OrderProductsContentProps extends React.PropsWithChildren {
   className: string
   showTime: boolean
   showCardText: boolean
+  selectedCustomerTime?: string | null
+  onItemsChange?: (items: Item[]) => void
 }
 
 export const searchProducts = createServerFn({ method: 'GET' })
@@ -52,14 +54,17 @@ export default function OrderProductsContent({
   className,
   showTime,
   showCardText,
+  selectedCustomerTime,
+  onItemsChange,
 }: OrderProductsContentProps) {
   const [items, setItems] = useState<Item[]>([
     { name: 'Frakt', price: 100, quantity: 1 },
   ])
 
   useEffect(() => {
+    const showTimeItem = showTime && selectedCustomerTime !== null
     setItems((prev) =>
-      showTime
+      showTimeItem
         ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
           ? prev
           : [
@@ -68,7 +73,7 @@ export default function OrderProductsContent({
             ]
         : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
     )
-  }, [showTime])
+  }, [showTime, selectedCustomerTime])
 
   useEffect(() => {
     setItems((prev) =>
@@ -79,6 +84,10 @@ export default function OrderProductsContent({
         : prev.filter((i) => i.name !== 'Kort'),
     )
   }, [showCardText])
+  useEffect(() => {
+    onItemsChange?.(items)
+  }, [items, onItemsChange])
+
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
