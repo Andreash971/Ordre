@@ -11,6 +11,7 @@ import {
   User,
   Save,
   RotateCcw,
+  UserCheck,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -45,14 +46,16 @@ type CustomerFormValues = {
   address: string
   postcode: string
   city: string
+  careof: string
 }
 
 interface CustomerFormProps {
   className?: string
-  size: 'default' | 'sm'
+  size?: 'default' | 'sm'
   formButtons?: boolean
   reset?: boolean
   disabled?: boolean
+  showCareof?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
 }
@@ -64,6 +67,7 @@ const formSchema = z.object({
   address: z.string().max(50, 'Adresse kan ikke være lengre enn 50 tegn'),
   postcode: z.string().max(4, 'Postnummer kan ikke være lengre enn 4 tegn'),
   city: z.string().max(25, 'Sted kan ikke være lengre enn 25 tegn'),
+  careof: z.string().max(50, 'C/O person kan ikke være lengre enn 50 tegn'),
 })
 
 function CustomerSuggestionItem({
@@ -88,7 +92,14 @@ function CustomerSuggestionItem({
 function fillForm(
   form: {
     setFieldValue: (
-      field: 'name' | 'phone' | 'company' | 'address' | 'postcode' | 'city',
+      field:
+        | 'name'
+        | 'phone'
+        | 'company'
+        | 'address'
+        | 'postcode'
+        | 'city'
+        | 'careof',
       value: string,
     ) => void
   },
@@ -108,6 +119,7 @@ export default function CustomerForm({
   reset = false,
   size,
   disabled,
+  showCareof = false,
   defaultValues: initialValues,
   onValuesChange,
 }: CustomerFormProps) {
@@ -121,6 +133,7 @@ export default function CustomerForm({
       address: initialValues?.address ?? '',
       postcode: initialValues?.postcode ?? '',
       city: initialValues?.city ?? '',
+      careof: initialValues?.careof ?? '',
     },
     validators: {
       onSubmit: formSchema,
@@ -228,6 +241,20 @@ export default function CustomerForm({
             )}
           </form.Field>
         </div>
+
+        {showCareof && (
+          <form.Field name="careof">
+            {(field) => (
+              <FormInputField
+                field={field}
+                id={`${formId}-careof`}
+                icon={<UserCheck className="text-foreground" />}
+                placeholder="C/O"
+                disabled={disabled}
+              />
+            )}
+          </form.Field>
+        )}
       </FieldGroup>
     </form>
   )
