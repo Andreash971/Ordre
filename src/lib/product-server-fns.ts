@@ -26,25 +26,18 @@ export const deleteProduct = createServerFn({ method: 'POST' })
     await db.delete(productsDummy).where(eq(productsDummy.id, id))
   })
 
-const insertProductSchema = z.object({
+const productSchema = z.object({
+  id: z.number().optional(),
   name: z.string().min(1, 'Navn er påkrevd').max(100),
   category: z.string().max(50).optional(),
   price: z.number(),
 })
 
-export type InsertProductInput = z.infer<typeof insertProductSchema>
-
-const updateProductSchema = z.object({
-  id: z.number(),
-  name: z.string().min(1, 'Navn er påkrevd').max(100),
-  category: z.string().max(50).optional(),
-  price: z.number(),
-})
-
-export type UpdateProductInput = z.infer<typeof updateProductSchema>
+export type InsertProductInput = Omit<z.infer<typeof productSchema>, 'id'>
+export type UpdateProductInput = z.infer<typeof productSchema> & { id: number }
 
 export const insertProduct = createServerFn({ method: 'POST' })
-  .inputValidator((data: InsertProductInput) => insertProductSchema.parse(data))
+  .inputValidator((data: InsertProductInput) => productSchema.parse(data))
   .handler(async ({ data }) => {
     const [row] = await db
       .insert(productsDummy)
@@ -58,7 +51,7 @@ export const insertProduct = createServerFn({ method: 'POST' })
   })
 
 export const updateProduct = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateProductInput) => updateProductSchema.parse(data))
+  .inputValidator((data: UpdateProductInput) => productSchema.parse(data))
   .handler(async ({ data }) => {
     await db
       .update(productsDummy)
@@ -67,5 +60,5 @@ export const updateProduct = createServerFn({ method: 'POST' })
         category: data.category || null,
         price: String(data.price),
       })
-      .where(eq(productsDummy.id, data.id))
+      .where(eq(productsDummy.id, data.id!))
   })

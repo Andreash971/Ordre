@@ -1,6 +1,5 @@
-'use client'
-
 import { useState } from 'react'
+import * as z from 'zod'
 import type { ColumnDef, Row, Table } from '@tanstack/react-table'
 import { SquarePen, Trash2 } from 'lucide-react'
 
@@ -19,11 +18,16 @@ import {
 import AddProductForm, {
   type AddProductFormValues,
 } from '#/components/AddProductForm'
-import {
-  type Product,
-  deleteProduct,
-  updateProduct,
-} from '#/lib/product-server-fns'
+import { deleteProduct, updateProduct } from '#/lib/product-server-fns'
+
+const productSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  category: z.string().nullable(),
+  price: z.string(),
+})
+
+export type Product = z.infer<typeof productSchema>
 
 function DeleteProductCell({
   row,
@@ -129,6 +133,7 @@ function EditProductCell({
         </DialogHeader>
         <AddProductForm
           saveText="Lagre"
+          close
           disabled={isPending}
           defaultValues={defaultValues}
           onSubmit={handleEdit}
@@ -141,7 +146,18 @@ function EditProductCell({
 export const productColumns: ColumnDef<Product>[] = [
   { accessorKey: 'name', header: 'Navn' },
   { accessorKey: 'category', header: 'Kategori' },
-  { accessorKey: 'price', header: 'Pris' },
+  {
+    accessorKey: 'price',
+    header: 'Pris',
+    cell: ({ row }) => {
+      const formatted = new Intl.NumberFormat('no-NB', {
+        style: 'currency',
+        currency: 'NOK',
+      }).format(Number(row.original.price))
+
+      return <div>{formatted}</div>
+    },
+  },
   {
     id: 'edit',
     header: '',
