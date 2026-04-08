@@ -149,7 +149,7 @@ export default function OrderReceiverInfo({
   return (
     <Card className={className}>
       <CardContent>
-        <div className="grid grid-cols-[16rem_35%_1fr] grid-rows-[auto_auto] gap-4">
+        <div className="grid grid-cols-[16rem_33%_1fr] grid-rows-[auto_auto] gap-4">
           <div className="col-start-1 row-span-2 relative">
             <div className="absolute inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
@@ -209,6 +209,9 @@ export default function OrderReceiverInfo({
           <CustomerForm
             key={selectedIndex ?? 'empty'}
             className="col-start-2"
+            formButtons={true}
+            size="sm"
+            showCareof={true}
             disabled={selectedIndex === null}
             defaultValues={selected ?? undefined}
             onValuesChange={(values) => {
