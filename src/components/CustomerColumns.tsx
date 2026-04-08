@@ -1,6 +1,5 @@
-'use client'
-
 import { useState } from 'react'
+import * as z from 'zod'
 import type { ColumnDef, Row, Table } from '@tanstack/react-table'
 import { SquarePen, Trash2 } from 'lucide-react'
 
@@ -19,11 +18,20 @@ import {
 import AddCustomerForm, {
   type AddCustomerFormValues,
 } from '#/components/AddCustomerForm'
-import {
-  type Customer,
-  deleteCustomer,
-  updateCustomer,
-} from '#/lib/customer-server-fns'
+import { deleteCustomer, updateCustomer } from '#/lib/customer-server-fns'
+
+const customerSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  phone: z.string().nullable(),
+  business: z.string().nullable(),
+  address: z.string().nullable(),
+  postcode: z.string().nullable(),
+  city: z.string().nullable(),
+  careof: z.string().nullable(),
+})
+
+export type Customer = z.infer<typeof customerSchema>
 
 function DeleteCustomerCell({
   row,
