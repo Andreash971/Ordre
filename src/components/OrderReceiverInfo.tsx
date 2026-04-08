@@ -209,6 +209,8 @@ export default function OrderReceiverInfo({
           <CustomerForm
             key={selectedIndex ?? 'empty'}
             className="col-start-2"
+            formButtons={true}
+            size="sm"
             disabled={selectedIndex === null}
             defaultValues={selected ?? undefined}
             onValuesChange={(values) => {
