@@ -129,6 +129,7 @@ function EditProductCell({
         </DialogHeader>
         <AddProductForm
           saveText="Lagre"
+          close
           disabled={isPending}
           defaultValues={defaultValues}
           onSubmit={handleEdit}

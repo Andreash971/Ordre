@@ -88,7 +88,11 @@ function Customers() {
           <DialogHeader>
             <DialogTitle>Legg til kunde</DialogTitle>
           </DialogHeader>
-          <AddCustomerForm saveText="Legg til" onSubmit={handleAddCustomer} />
+          <AddCustomerForm
+            saveText="Legg til"
+            close
+            onSubmit={handleAddCustomer}
+          />
         </DialogContent>
       </Dialog>
     </main>

@@ -135,6 +135,7 @@ function EditCustomerCell({
         </DialogHeader>
         <AddCustomerForm
           saveText="Lagre"
+          close
           disabled={isPending}
           defaultValues={defaultValues}
           onSubmit={handleEdit}
