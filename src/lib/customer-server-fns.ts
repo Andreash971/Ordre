@@ -83,7 +83,8 @@ export const deleteCustomer = createServerFn({ method: 'POST' })
     await db.delete(customersDummy).where(eq(customersDummy.id, id))
   })
 
-const insertCustomerSchema = z.object({
+const customerSchema = z.object({
+  id: z.number().optional(),
   name: z.string().max(50),
   phone: z.string().max(15).optional(),
   company: z.string().max(50).optional(),
@@ -93,25 +94,13 @@ const insertCustomerSchema = z.object({
   careof: z.string().max(50).optional(),
 })
 
-export type InsertCustomerInput = z.infer<typeof insertCustomerSchema>
-
-const updateCustomerSchema = z.object({
-  id: z.number(),
-  name: z.string().max(50),
-  phone: z.string().max(15).optional(),
-  company: z.string().max(50).optional(),
-  address: z.string().max(50).optional(),
-  postcode: z.string().max(4).optional(),
-  city: z.string().max(25).optional(),
-  careof: z.string().max(50).optional(),
-})
-
-export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>
+export type InsertCustomerInput = Omit<z.infer<typeof customerSchema>, 'id'>
+export type UpdateCustomerInput = z.infer<typeof customerSchema> & {
+  id: number
+}
 
 export const updateCustomer = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateCustomerInput) =>
-    updateCustomerSchema.parse(data),
-  )
+  .inputValidator((data: UpdateCustomerInput) => customerSchema.parse(data))
   .handler(async ({ data }) => {
     await db
       .update(customersDummy)
@@ -124,13 +113,11 @@ export const updateCustomer = createServerFn({ method: 'POST' })
         city: data.city || null,
         careof: data.careof || null,
       })
-      .where(eq(customersDummy.id, data.id))
+      .where(eq(customersDummy.id, data.id!))
   })
 
 export const insertCustomer = createServerFn({ method: 'POST' })
-  .inputValidator((data: InsertCustomerInput) =>
-    insertCustomerSchema.parse(data),
-  )
+  .inputValidator((data: InsertCustomerInput) => customerSchema.parse(data))
   .handler(async ({ data }) => {
     const [row] = await db
       .insert(customersDummy)

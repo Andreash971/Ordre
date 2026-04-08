@@ -85,7 +85,11 @@ function Products() {
           <DialogHeader>
             <DialogTitle>Legg til produkt</DialogTitle>
           </DialogHeader>
-          <AddProductForm saveText="Legg til" onSubmit={handleAddProduct} />
+          <AddProductForm
+            saveText="Legg til"
+            close
+            onSubmit={handleAddProduct}
+          />
         </DialogContent>
       </Dialog>
     </main>

@@ -1,4 +1,3 @@
-'use client'
 import { useState } from 'react'
 import * as z from 'zod'
 import type { ColumnDef, Row, RowData, Table } from '@tanstack/react-table'
