@@ -2,12 +2,13 @@ import { useForm } from '@tanstack/react-form'
 import { useId } from 'react'
 import * as z from 'zod'
 
-import { CircleDollarSign, FolderOpen, Package } from 'lucide-react'
+import { CreditCard, FolderOpen, Package } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { FieldGroup } from '@/components/ui/field'
 
 import FormInputField from '#/components/FormInputField'
+import { DialogClose } from './ui/dialog'
 
 export type AddProductFormValues = {
   name: string
@@ -18,6 +19,8 @@ export type AddProductFormValues = {
 interface AddProductFormProps {
   saveText?: string
   disabled?: boolean
+  reset?: boolean
+  close?: boolean
   defaultValues?: Partial<AddProductFormValues>
   onSubmit: (values: AddProductFormValues) => Promise<void> | void
 }
@@ -37,6 +40,8 @@ const formSchema = z.object({
 export default function AddProductForm({
   saveText,
   disabled,
+  reset,
+  close,
   defaultValues: initialValues,
   onSubmit,
 }: AddProductFormProps) {
@@ -94,7 +99,7 @@ export default function AddProductForm({
             <FormInputField
               field={field}
               id={`${formId}-price`}
-              icon={<CircleDollarSign className="text-foreground" />}
+              icon={<CreditCard className="text-foreground" />}
               placeholder="Pris"
               type="number"
               disabled={disabled}
@@ -104,17 +109,26 @@ export default function AddProductForm({
       </FieldGroup>
 
       <div className="flex justify-end gap-2 mt-4">
-        <Button
-          type="reset"
-          variant="outline"
-          onClick={(e) => {
-            e.preventDefault()
-            form.reset()
-          }}
-          disabled={disabled}
-        >
-          Nullstill
-        </Button>
+        {close && (
+          <DialogClose>
+            <Button type="button" variant="ghost" disabled={disabled}>
+              Lukk
+            </Button>
+          </DialogClose>
+        )}
+        {reset && (
+          <Button
+            type="reset"
+            variant="outline"
+            onClick={(e) => {
+              e.preventDefault()
+              form.reset()
+            }}
+            disabled={disabled}
+          >
+            Nullstill
+          </Button>
+        )}
         <Button type="submit" disabled={disabled}>
           {saveText ?? 'Lagre'}
         </Button>

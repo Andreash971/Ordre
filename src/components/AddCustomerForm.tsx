@@ -14,6 +14,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { FieldGroup } from '@/components/ui/field'
+import { DialogClose } from '@/components/ui/dialog'
 
 import FormInputField from '#/components/FormInputField'
 
@@ -30,6 +31,8 @@ export type AddCustomerFormValues = {
 interface AddCustomerFormProps {
   saveText?: string
   disabled?: boolean
+  reset?: boolean
+  close?: boolean
   defaultValues?: Partial<AddCustomerFormValues>
   onSubmit: (values: AddCustomerFormValues) => Promise<void> | void
 }
@@ -50,6 +53,8 @@ const formSchema = z.object({
 export default function AddCustomerForm({
   saveText,
   disabled,
+  reset,
+  close,
   defaultValues: initialValues,
   onSubmit,
 }: AddCustomerFormProps) {
@@ -172,17 +177,26 @@ export default function AddCustomerForm({
       </FieldGroup>
 
       <div className="flex justify-end gap-2 mt-4">
-        <Button
-          type="reset"
-          variant="outline"
-          onClick={(e) => {
-            e.preventDefault()
-            form.reset()
-          }}
-          disabled={disabled}
-        >
-          Nullstill
-        </Button>
+        {close && (
+          <DialogClose>
+            <Button type="button" variant="ghost" disabled={disabled}>
+              Lukk
+            </Button>
+          </DialogClose>
+        )}
+        {reset && (
+          <Button
+            type="reset"
+            variant="outline"
+            onClick={(e) => {
+              e.preventDefault()
+              form.reset()
+            }}
+            disabled={disabled}
+          >
+            Nullstill
+          </Button>
+        )}
         <Button type="submit" disabled={disabled}>
           {saveText ?? 'Lagre'}
         </Button>
