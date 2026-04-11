@@ -67,7 +67,7 @@ const pageLabels: Record<string, string> = {
 function RootDocument({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="no" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />

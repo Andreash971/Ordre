@@ -10,8 +10,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
-import { CalendarIcon } from 'lucide-react'
-
 import { type DeliveryValues } from '#/lib/order-utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -23,12 +21,10 @@ import {
   ItemTitle,
   ItemDescription,
 } from './ui/item'
-import { User } from 'lucide-react'
-
 import CustomerForm from '../components/CustomerForm'
+import { EmptyCard } from '@/components/ui/empty-card'
 
-import { Plus } from 'lucide-react'
-import { Minus } from 'lucide-react'
+import { CalendarIcon, User, Plus, Minus } from 'lucide-react'
 
 type Customer = {
   name: string
@@ -55,6 +51,13 @@ interface OrderReceiverInfoProps extends React.PropsWithChildren {
   onSelectedCustomerTimeChange?: (time: string | null | undefined) => void
 }
 
+export type OrderReceiverInfoHandle = {
+  updateSelectedCustomerField: (
+    field: 'cardmsg' | 'instructmsg',
+    value: string,
+  ) => void
+}
+
 const emptyCustomer = (): Customer => ({
   name: '',
   phone: '',
@@ -68,23 +71,41 @@ const emptyCustomer = (): Customer => ({
   time: null,
 })
 
-export default function OrderReceiverInfo({
-  className,
-  showInstructionsText,
-  showCardText,
-  showTime,
-  defaultCardText = '',
-  defaultInstructionsText = '',
-  defaultDeliveryValues,
-  onCustomersChange,
-  onSelectedCustomerTimeChange,
-}: OrderReceiverInfoProps) {
+const OrderReceiverInfo = React.forwardRef<
+  OrderReceiverInfoHandle,
+  OrderReceiverInfoProps
+>(function OrderReceiverInfoInner(
+  {
+    className,
+    showInstructionsText,
+    showCardText,
+    showTime,
+    defaultCardText = '',
+    defaultInstructionsText = '',
+    defaultDeliveryValues,
+    onCustomersChange,
+    onSelectedCustomerTimeChange,
+  }: OrderReceiverInfoProps,
+  ref,
+) {
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
 
   React.useEffect(() => {
     onCustomersChange?.(customers)
   }, [customers, onCustomersChange])
+
+  React.useEffect(() => {
+    if (!showCardText) {
+      setCustomers((prev) => prev.map((c) => ({ ...c, cardmsg: '' })))
+    }
+  }, [showCardText])
+
+  React.useEffect(() => {
+    if (!showInstructionsText) {
+      setCustomers((prev) => prev.map((c) => ({ ...c, instructmsg: '' })))
+    }
+  }, [showInstructionsText])
 
   React.useEffect(() => {
     const time =
@@ -133,6 +154,14 @@ export default function OrderReceiverInfo({
       prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
     )
   }
+
+  React.useImperativeHandle(ref, () => ({
+    updateSelectedCustomerField(field, value) {
+      if (selectedIndex !== null) {
+        updateCustomerField(selectedIndex, field, value)
+      }
+    },
+  }))
 
   const updateCustomerDelivery = (
     index: number,
@@ -227,37 +256,57 @@ export default function OrderReceiverInfo({
           <div className="col-start-3 grid grid-rows-2 gap-4">
             <Field>
               <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
-              <Textarea
-                id="receiver-card"
-                placeholder="Skriv korttekst her..."
-                className="h-36 field-sizing-fixed"
-                disabled={!showCardText || selectedIndex === null}
-                value={selected?.cardmsg ?? ''}
-                onChange={(e) =>
-                  selectedIndex !== null &&
-                  updateCustomerField(selectedIndex, 'cardmsg', e.target.value)
-                }
-              />
+
+              {showCardText ? (
+                <Textarea
+                  id="receiver-card"
+                  placeholder="Skriv korttekst her..."
+                  className="h-40 field-sizing-fixed resize-none"
+                  disabled={!showCardText || selectedIndex === null}
+                  value={selected?.cardmsg ?? ''}
+                  onChange={(e) =>
+                    selectedIndex !== null &&
+                    updateCustomerField(
+                      selectedIndex,
+                      'cardmsg',
+                      e.target.value,
+                    )
+                  }
+                />
+              ) : (
+                <EmptyCard
+                  className="h-40 field-sizing-fixed"
+                  componentName="kort"
+                />
+              )}
             </Field>
             <Field>
               <FieldLabel htmlFor="receiver-instructions">
                 Spesielle Instrukser
               </FieldLabel>
-              <Textarea
-                id="receiver-instructions"
-                placeholder="Skriv spesielle instrukser her..."
-                className="h-36 field-sizing-fixed"
-                disabled={!showInstructionsText || selectedIndex === null}
-                value={selected?.instructmsg ?? ''}
-                onChange={(e) =>
-                  selectedIndex !== null &&
-                  updateCustomerField(
-                    selectedIndex,
-                    'instructmsg',
-                    e.target.value,
-                  )
-                }
-              />
+
+              {showInstructionsText ? (
+                <Textarea
+                  id="receiver-instructions"
+                  placeholder="Skriv spesielle instrukser her..."
+                  className="h-40 field-sizing-fixed resize-none"
+                  disabled={!showInstructionsText || selectedIndex === null}
+                  value={selected?.instructmsg ?? ''}
+                  onChange={(e) =>
+                    selectedIndex !== null &&
+                    updateCustomerField(
+                      selectedIndex,
+                      'instructmsg',
+                      e.target.value,
+                    )
+                  }
+                />
+              ) : (
+                <EmptyCard
+                  className="h-40 field-sizing-fixed"
+                  componentName="instrukser"
+                />
+              )}
             </Field>
           </div>
           <div className="col-start-2 col-span-2">
@@ -331,4 +380,6 @@ export default function OrderReceiverInfo({
       </CardContent>
     </Card>
   )
-}
+})
+
+export default OrderReceiverInfo

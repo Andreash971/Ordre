@@ -1,32 +1,36 @@
 import * as React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Field, FieldLabel, FieldGroup } from '@/components/ui/field'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { TextBoxSwap } from '@/components/ui/TextBoxSwap'
 
 interface OrderExtraInfoProps extends React.PropsWithChildren {
   className: string
+
   showCardText: boolean
-  onCardTextChange: (value: boolean) => void
-  cardTextValue: string
+  setShowCardText: (value: boolean) => void
+  cardTextValue: string | null
   onCardTextValueChange: (value: string) => void
+  onCardTextSubmit?: (value: string) => void
+
   showInstructionsText: boolean
-  onInstructionsChange: (value: boolean) => void
-  instructionsTextValue: string
+  setShowInstructionsText: (value: boolean) => void
+  instructionsTextValue: string | null
   onInstructionsTextValueChange: (value: string) => void
+  onInstructionsSubmit?: (value: string) => void
 }
 
 export default function OrderExtraInfo({
   className,
   showCardText,
-  onCardTextChange,
+  setShowCardText,
   cardTextValue,
   onCardTextValueChange,
   showInstructionsText,
-  onInstructionsChange,
+  setShowInstructionsText,
   instructionsTextValue,
   onInstructionsTextValueChange,
+  onCardTextSubmit,
+  onInstructionsSubmit,
 }: OrderExtraInfoProps) {
   return (
     <div className={`${className} grid grid-cols-2 gap-4`}>
@@ -34,27 +38,19 @@ export default function OrderExtraInfo({
         <CardContent>
           <Field>
             <FieldLabel htmlFor="textarea-card">Kort</FieldLabel>
-            <FieldGroup className="flex flex-row gap-2">
-              <Checkbox
-                id="show-cardtext"
-                checked={showCardText}
-                onCheckedChange={(checked) =>
-                  onCardTextChange(checked === true)
-                }
-              />
-              <Label htmlFor="show-cardtext" className="cursor-pointer">
-                Inkluder kort?
-              </Label>
-            </FieldGroup>
-            {showCardText && (
-              <Textarea
-                id="textarea-card"
-                placeholder="Skriv korttekst her..."
-                className="h-36"
-                value={cardTextValue}
-                onChange={(e) => onCardTextValueChange(e.target.value)}
-              />
-            )}
+
+            <TextBoxSwap
+              id="textarea-card"
+              showBool={showCardText}
+              placeholder="Skriv korttekst her..."
+              textValue={cardTextValue}
+              onValueChange={onCardTextValueChange}
+              onSubmit={onCardTextSubmit}
+              extraName="kort"
+              toggleBool={() => setShowCardText(!showCardText)}
+              tooltipWrite="Overskriv kundens personlige korttekst"
+              tooltipRemove="Fjern kort og nullstill korttekster"
+            />
           </Field>
         </CardContent>
       </Card>
@@ -65,27 +61,19 @@ export default function OrderExtraInfo({
             <FieldLabel htmlFor="textarea-instructions">
               Spesielle Instrukser
             </FieldLabel>
-            <FieldGroup className="flex flex-row gap-2">
-              <Checkbox
-                id="show-instructionstext"
-                checked={showInstructionsText}
-                onCheckedChange={(checked) =>
-                  onInstructionsChange(checked === true)
-                }
-              />
-              <Label htmlFor="show-instructionstext" className="cursor-pointer">
-                Inkluder spesielle instrukser?
-              </Label>
-            </FieldGroup>
-            {showInstructionsText && (
-              <Textarea
-                id="textarea-instructions"
-                placeholder="Skriv spesielle instrukser her..."
-                className="h-36"
-                value={instructionsTextValue}
-                onChange={(e) => onInstructionsTextValueChange(e.target.value)}
-              />
-            )}
+
+            <TextBoxSwap
+              id="textarea-instructions"
+              showBool={showInstructionsText}
+              placeholder="Skriv instrukser her..."
+              textValue={instructionsTextValue}
+              onValueChange={onInstructionsTextValueChange}
+              onSubmit={onInstructionsSubmit}
+              extraName="instrukser"
+              toggleBool={() => setShowInstructionsText(!showInstructionsText)}
+              tooltipWrite="Overskriv kundens personlige instrukser"
+              tooltipRemove="Fjern instrukser og nullstill"
+            />
           </Field>
         </CardContent>
       </Card>
