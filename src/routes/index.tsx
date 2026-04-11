@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { RotateCcw } from 'lucide-react'
 
@@ -6,7 +6,9 @@ import CustomerForm from '../components/CustomerForm'
 import TimeDateForm from '../components/TimeDateForm'
 import OrderProductsContent from '#/components/OrderProductsContent'
 import OrderExtraInfo from '#/components/OrderExtraInfo'
-import OrderReceiverInfo from '#/components/OrderReceiverInfo'
+import OrderReceiverInfo, {
+  type OrderReceiverInfoHandle,
+} from '#/components/OrderReceiverInfo'
 import { Button } from '@/components/ui/button'
 import OpenOrderButton from '@/components/ui/open-order-button'
 
@@ -22,10 +24,20 @@ export const Route = createFileRoute('/')({ component: App })
 
 function App() {
   const [showTime, setShowTime] = useState(false)
+
   const [showCardText, setShowCardText] = useState(false)
   const [cardTextValue, setCardTextValue] = useState('')
+  const handleSetShowCardText = (value: boolean) => {
+    setShowCardText(value)
+    if (!value) setCardTextValue('')
+  }
+
   const [showInstructionsText, setShowInstructionsText] = useState(false)
   const [instructionsTextValue, setInstructionsTextValue] = useState('')
+  const handleSetShowInstructionsText = (value: boolean) => {
+    setShowInstructionsText(value)
+    if (!value) setInstructionsTextValue('')
+  }
 
   const [senderValues, setSenderValues] = useState<CustomerFormValues | null>(
     null,
@@ -35,6 +47,7 @@ function App() {
     time: null,
   })
   const [items, setItems] = useState<Item[]>([])
+  const orderReceiverRef = useRef<OrderReceiverInfoHandle>(null)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [selectedCustomerTime, setSelectedCustomerTime] = useState<
     string | null | undefined
@@ -62,15 +75,28 @@ function App() {
       <OrderExtraInfo
         className="col-start-1 row-start-3 col-span-2 rise-in"
         showCardText={showCardText}
-        onCardTextChange={setShowCardText}
+        setShowCardText={handleSetShowCardText}
         cardTextValue={cardTextValue}
         onCardTextValueChange={setCardTextValue}
+        onCardTextSubmit={(value) =>
+          orderReceiverRef.current?.updateSelectedCustomerField(
+            'cardmsg',
+            value,
+          )
+        }
         showInstructionsText={showInstructionsText}
-        onInstructionsChange={setShowInstructionsText}
+        setShowInstructionsText={handleSetShowInstructionsText}
         instructionsTextValue={instructionsTextValue}
         onInstructionsTextValueChange={setInstructionsTextValue}
+        onInstructionsSubmit={(value) =>
+          orderReceiverRef.current?.updateSelectedCustomerField(
+            'instructmsg',
+            value,
+          )
+        }
       />
       <OrderReceiverInfo
+        ref={orderReceiverRef}
         className="col-start-1 row-start-4 col-span-2 rise-in"
         showCardText={showCardText}
         showInstructionsText={showInstructionsText}

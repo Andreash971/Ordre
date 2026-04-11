@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/popover'
 
 interface TimePickerProps {
+  id?: string
   value: string | null
   onChange: (value: string | null) => void
   className?: string
@@ -27,6 +28,7 @@ export function TimePicker({
   className,
   disabled,
   allowNull,
+  id,
 }: TimePickerProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -54,6 +56,7 @@ export function TimePicker({
     <Popover open={open} onOpenChange={(val) => !disabled && setOpen(val)}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           disabled={disabled}
           className={cn('justify-start gap-2 font-normal', className)}

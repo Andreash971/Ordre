@@ -163,7 +163,7 @@ export default function OrderProductsContent({
                   }}
                 >
                   <span className="font-medium">{product.name}</span>
-                  <span className="text-xs text-muted-foreground flex gap-1.5 mt-0.5">
+                  <span className="text-xs flex gap-1.5 mt-0.5">
                     {product.category && <span>{product.category}</span>}
                     {product.category && <span>|</span>}
                     <span>{nokFormatter.format(Number(product.price))}</span>

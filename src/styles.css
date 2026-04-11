@@ -147,6 +147,11 @@
     @apply font-sans;
   }
 }
+
+[data-disabled] {
+  cursor: not-allowed;
+}
+
 /* **********************
 ****** Shadcn End *******
 ********************** */

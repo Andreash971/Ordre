@@ -3,17 +3,16 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Label } from '@/components/ui/label'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
+import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
 
-import { CalendarIcon } from 'lucide-react'
+import { CalendarIcon, ClockPlus, X } from 'lucide-react'
 
 interface TimeDateFormProps extends React.PropsWithChildren {
   className: string
@@ -90,34 +89,44 @@ export default function TimeDateForm({
 
           {/* TIME FIELD */}
           <Field>
-            <FieldLabel>Leveringstidspunkt</FieldLabel>
-            <FieldGroup className="flex flex-row gap-2">
-              <Checkbox
-                id="show-time"
-                checked={showTime}
-                onCheckedChange={(checked) => {
-                  const val = checked === true
-                  setShowTime(val)
-                  onShowTimeChange?.(val)
-                  if (!val) {
-                    setTime(null)
-                    onValuesChange?.({ date, time: null })
-                  }
+            <FieldLabel htmlFor="time-picker">Leveringstidspunkt</FieldLabel>
+            {showTime ? (
+              <div className="flex w-full">
+                <TimePicker
+                  id="time-picker"
+                  value={time}
+                  onChange={(val) => {
+                    setTime(val)
+                    onValuesChange?.({ date, time: val })
+                  }}
+                  className="flex-1"
+                />
+                <TooltipWrapper TooltipText="Fjern leveringstidspunkt">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowTime(false)
+                      setTime(null)
+                      onShowTimeChange?.(false)
+                      onValuesChange?.({ date, time: null })
+                    }}
+                    className="ml-2"
+                  >
+                    <X />
+                  </Button>
+                </TooltipWrapper>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => {
+                  setShowTime(true)
+                  onShowTimeChange?.(true)
                 }}
-              />
-              <Label htmlFor="show-time" className="cursor-pointer">
-                Inkluder leveringstidspunkt?
-              </Label>
-            </FieldGroup>
-            {showTime && (
-              <TimePicker
-                value={time}
-                onChange={(val) => {
-                  setTime(val)
-                  onValuesChange?.({ date, time: val })
-                }}
-                className="w-full"
-              />
+              >
+                <ClockPlus />
+                Legg til leveringstidspunkt
+              </Button>
             )}
           </Field>
         </FieldGroup>

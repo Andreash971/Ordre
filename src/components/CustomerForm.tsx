@@ -15,12 +15,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
 import {
   Card,
   CardContent,
@@ -79,7 +74,7 @@ function CustomerSuggestionItem({
     <>
       <span className="font-medium">{customer.name}</span>
       {(customer.phone || customer.business) && (
-        <span className="text-xs text-muted-foreground flex gap-1.5 mt-0.5">
+        <span className="text-xs flex gap-1.5 mt-0.5">
           {customer.phone && <span>{customer.phone}</span>}
           {customer.phone && customer.business && <span>|</span>}
           {customer.business && <span>{customer.business}</span>}
@@ -269,24 +264,18 @@ export default function CustomerForm({
             e.preventDefault()
             form.reset()
           }}
+          disabled={disabled}
         >
           <RotateCcw className="h-4 w-4" />
           Reset
         </Button>
       )}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button type="submit">
-              <Save className="h-4 w-4" />
-              Lagre
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Lagre kundens informasjon i systemet</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <TooltipWrapper TooltipText={'Lagre kundens informasjon i systemet'}>
+        <Button type="submit" disabled={disabled}>
+          <Save className="h-4 w-4" />
+          Lagre
+        </Button>
+      </TooltipWrapper>
     </>
   )
 
