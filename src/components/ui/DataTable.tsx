@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import {
   flexRender,
@@ -92,54 +90,69 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className={header.column.columnDef.meta?.className}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+    <div className="flex flex-col gap-2 flex-1 min-h-0">
+      <div className="rounded-md border overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <Table containerClassName="overflow-x-clip">
+            <TableHeader className="sticky top-0 bg-background">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={header.column.columnDef.meta?.className}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    )
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  {emptyMessage ?? 'Ingen resultater.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-          {footer && <TableFooter>{footer}</TableFooter>}
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cell.column.columnDef.meta?.className}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    {emptyMessage ?? 'Ingen resultater.'}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {footer && (
+          <Table containerClassName="overflow-x-clip">
+            <TableFooter>{footer}</TableFooter>
+          </Table>
+        )}
       </div>
       {pagination && (
         <div className="flex items-center justify-between px-1">

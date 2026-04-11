@@ -6,9 +6,14 @@ import { TableCell, TableRow } from '@/components/ui/table'
 interface OrderTableProps {
   items: Item[]
   setItems: React.Dispatch<React.SetStateAction<Item[]>>
+  className?: string
 }
 
-export default function OrderTable({ items, setItems }: OrderTableProps) {
+export default function OrderTable({
+  items,
+  setItems,
+  className,
+}: OrderTableProps) {
   const grandTotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -19,7 +24,7 @@ export default function OrderTable({ items, setItems }: OrderTableProps) {
   })
 
   return (
-    <div className={`container mx-auto py-4`}>
+    <div className={`container mx-auto py-4 flex flex-col ${className}`}>
       <DataTable
         columns={columns}
         data={items}
