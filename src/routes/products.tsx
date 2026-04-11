@@ -28,10 +28,10 @@ import {
 
 export const Route = createFileRoute('/products')({
   loader: () => getAllProducts(),
-  component: Products,
+  component: ProductsPage,
 })
 
-function Products() {
+function ProductsPage() {
   const loaderData = Route.useLoaderData()
   const [data, setData] = useState<Product[]>(loaderData)
   const [globalFilter, setGlobalFilter] = useState('')
