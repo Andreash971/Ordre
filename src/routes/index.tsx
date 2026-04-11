@@ -53,27 +53,31 @@ function App() {
     string | null | undefined
   >(undefined)
   return (
-    <main className="page-wrap grid grid-cols-[2fr_4fr] grid-rows-[auto_auto_auto_auto] gap-4 px-4 pb-8 pt-6">
-      <CustomerForm
-        size="default"
-        formButtons={true}
-        className="col-start-1 row-start-1 rise-in"
-        onValuesChange={setSenderValues}
-      />
-      <OrderProductsContent
-        className="col-start-2 row-start-1 row-span-2 rise-in"
-        showTime={showTime}
-        showCardText={showCardText}
-        selectedCustomerTime={selectedCustomerTime}
-        onItemsChange={setItems}
-      />
-      <TimeDateForm
-        className="col-start-1 row-start-2 rise-in"
-        onShowTimeChange={setShowTime}
-        onValuesChange={setDeliveryValues}
-      />
+    <main className="page-wrap flex flex-col gap-4 px-4 pb-8 pt-6">
+      <div className="grid grid-cols-[2fr_4fr] grid-rows-[minmax(auto,clamp(400px,65vh,700px))] gap-4">
+        <div className="flex flex-col gap-4">
+          <CustomerForm
+            size="default"
+            formButtons={true}
+            className="rise-in"
+            onValuesChange={setSenderValues}
+          />
+          <TimeDateForm
+            className="rise-in"
+            onShowTimeChange={setShowTime}
+            onValuesChange={setDeliveryValues}
+          />
+        </div>
+        <OrderProductsContent
+          className="rise-in min-h-0"
+          showTime={showTime}
+          showCardText={showCardText}
+          selectedCustomerTime={selectedCustomerTime}
+          onItemsChange={setItems}
+        />
+      </div>
       <OrderExtraInfo
-        className="col-start-1 row-start-3 col-span-2 rise-in"
+        className="rise-in"
         showCardText={showCardText}
         setShowCardText={handleSetShowCardText}
         cardTextValue={cardTextValue}
@@ -97,7 +101,7 @@ function App() {
       />
       <OrderReceiverInfo
         ref={orderReceiverRef}
-        className="col-start-1 row-start-4 col-span-2 rise-in"
+        className="rise-in"
         showCardText={showCardText}
         showInstructionsText={showInstructionsText}
         showTime={showTime}
@@ -107,7 +111,7 @@ function App() {
         onCustomersChange={setCustomers}
         onSelectedCustomerTimeChange={setSelectedCustomerTime}
       />
-      <div className="col-start-1 col-span-2 row-start-5 flex justify-end gap-2 rise-in">
+      <div className="flex justify-end gap-2 rise-in">
         <Button
           onClick={() => {
             window.location.reload()
