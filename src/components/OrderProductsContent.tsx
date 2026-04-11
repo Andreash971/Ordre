@@ -130,7 +130,7 @@ export default function OrderProductsContent({
       <CardHeader>
         <CardTitle>Ordreinnhold</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col">
+      <CardContent className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="flex gap-2 mb-0">
           <div className="relative flex-1">
             <InputGroup>
@@ -226,7 +226,11 @@ export default function OrderProductsContent({
           </DialogContent>
         </Dialog>
 
-        <OrderTable items={items} setItems={setItems} className="flex-1" />
+        <OrderTable
+          items={items}
+          setItems={setItems}
+          className="flex-1 min-h-0"
+        />
       </CardContent>
     </Card>
   )
