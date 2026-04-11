@@ -48,7 +48,7 @@ export default function AutocompleteField<T extends { id: number }>({
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
 
   return (
-    <Field data-invalid={isInvalid}>
+    <Field data-invalid={isInvalid} data-disabled>
       <div className="relative">
         <InputGroup>
           <InputGroupAddon>{icon}</InputGroupAddon>

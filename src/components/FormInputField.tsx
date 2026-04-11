@@ -37,7 +37,7 @@ export default function FormInputField({
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
 
   return (
-    <Field data-invalid={isInvalid}>
+    <Field data-invalid={isInvalid} data-disabled>
       <InputGroup>
         <InputGroupAddon>{icon}</InputGroupAddon>
         <InputGroupInput
