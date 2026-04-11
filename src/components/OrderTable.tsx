@@ -24,7 +24,7 @@ export default function OrderTable({
   })
 
   return (
-    <div className={`container mx-auto py-4 flex flex-col ${className}`}>
+    <div className={`container mx-auto pt-4 flex flex-col ${className}`}>
       <DataTable
         columns={columns}
         data={items}

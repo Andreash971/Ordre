@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/settings')({
-  component: Settings,
+  component: SettingsPage,
 })
 
-function Settings() {
+function SettingsPage() {
   return (
     <main className="page-wrap px-4 py-12">
       <section className="rounded-2xl p-6 sm:p-8">
