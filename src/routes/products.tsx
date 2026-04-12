@@ -25,6 +25,7 @@ import {
   getAllProducts,
   insertProduct,
 } from '#/lib/product-server-fns'
+import { getStoredSettings } from '@/lib/settings'
 
 export const Route = createFileRoute('/products')({
   loader: () => getAllProducts(),
@@ -36,6 +37,7 @@ function ProductsPage() {
   const [data, setData] = useState<Product[]>(loaderData)
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const pageSize = getStoredSettings().rowsPerPage
 
   async function handleAddProduct(values: AddProductFormValues) {
     const newRow = await insertProduct({
@@ -78,7 +80,7 @@ function ProductsPage() {
         globalFilter={globalFilter}
         emptyMessage="Ingen produkter funnet."
         pagination
-        pageSize={14}
+        pageSize={pageSize}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">

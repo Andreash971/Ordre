@@ -26,6 +26,7 @@ import {
   getAllCustomers,
   insertCustomer,
 } from '#/lib/customer-server-fns'
+import { getStoredSettings } from '@/lib/settings'
 
 export const Route = createFileRoute('/customers')({
   loader: () => getAllCustomers(),
@@ -37,6 +38,7 @@ function CustomersPage() {
   const [data, setData] = useState<Customer[]>(loaderData)
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const pageSize = getStoredSettings().rowsPerPage
 
   async function handleAddCustomer(values: AddCustomerFormValues) {
     const newRow = await insertCustomer({ data: values })
@@ -81,7 +83,7 @@ function CustomersPage() {
         globalFilter={globalFilter}
         emptyMessage="Ingen kunder funnet."
         pagination
-        pageSize={14}
+        pageSize={pageSize}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">

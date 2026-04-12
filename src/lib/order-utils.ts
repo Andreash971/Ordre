@@ -1,5 +1,6 @@
 import type { Item } from '#/components/OrderColumns'
 import type { OrderData } from '#/components/pdf/order'
+import { getRetentionMs, getStoredSettings } from '#/lib/settings'
 
 export type CustomerFormValues = {
   name: string
@@ -50,9 +51,16 @@ export function buildOrderData(
   delivery: DeliveryValues,
   items: Item[],
 ): OrderData {
+  const { company } = getStoredSettings()
   const effectiveDate = customer.date || delivery.date
   const { dayText, longDate, shortDate } = formatDeliveryDate(effectiveDate)
   return {
+    company: {
+      name: company.name,
+      address: company.address,
+      postCode: company.postCode,
+      phone: company.phone,
+    },
     delivery: {
       dayText,
       longDate,
@@ -98,7 +106,6 @@ export type StoredOrder = {
 }
 
 const STORAGE_KEY = 'ordreflyt_orders'
-const EXPIRY_MS = 7 * 24 * 60 * 60 * 1000
 
 export function exportOrdersToJson(
   customers: Customer[],
@@ -120,7 +127,7 @@ export function exportOrdersToJson(
     stored[key] = {
       data: orderData,
       savedAt: now,
-      expiresAt: now + EXPIRY_MS,
+      expiresAt: now + getRetentionMs(),
       key,
     }
   })
@@ -141,7 +148,7 @@ export function getCurrentOrders(
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
     const key = `ordre-${safeName}`
-    return { data: orderData, savedAt: now, expiresAt: now + EXPIRY_MS, key }
+    return { data: orderData, savedAt: now, expiresAt: now + getRetentionMs(), key }
   })
 }
 
@@ -156,4 +163,8 @@ export function getStoredOrders(): StoredOrder[] {
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(active))
   return Object.values(active)
+}
+
+export function clearArchive(): void {
+  localStorage.removeItem(STORAGE_KEY)
 }
