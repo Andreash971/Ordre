@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
 import { UserSearch } from 'lucide-react'
 
@@ -21,40 +22,34 @@ import AddCustomerForm, {
   type AddCustomerFormValues,
 } from '#/components/AddCustomerForm'
 import { customerColumns } from '#/components/CustomerColumns'
-import {
-  type Customer,
-  getAllCustomers,
-  insertCustomer,
-} from '#/lib/customer-server-fns'
+import { getAllCustomers, insertCustomer } from '#/lib/customer-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 import { getStoredSettings } from '@/lib/settings'
 
 export const Route = createFileRoute('/customers')({
-  loader: () => getAllCustomers(),
   component: CustomersPage,
 })
 
 function CustomersPage() {
-  const loaderData = Route.useLoaderData()
-  const [data, setData] = useState<Customer[]>(loaderData)
+  const queryClient = useQueryClient()
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const pageSize = getStoredSettings().rowsPerPage
 
+  const { data = [] } = useQuery({
+    queryKey: queryKeys.customers.all,
+    queryFn: () => getAllCustomers(),
+  })
+
+  const addMutation = useMutation({
+    mutationFn: (values: AddCustomerFormValues) =>
+      insertCustomer({ data: values }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+  })
+
   async function handleAddCustomer(values: AddCustomerFormValues) {
-    const newRow = await insertCustomer({ data: values })
-    setData((prev) => [
-      {
-        id: newRow.id,
-        name: values.name,
-        phone: values.phone || null,
-        business: values.company || null,
-        address: values.address || null,
-        postcode: values.postcode || null,
-        city: values.city || null,
-        careof: values.careof || null,
-      },
-      ...prev,
-    ])
+    await addMutation.mutateAsync(values)
     setAddOpen(false)
   }
 
@@ -79,7 +74,6 @@ function CustomersPage() {
       <DataTable
         columns={customerColumns}
         data={data}
-        setData={setData}
         globalFilter={globalFilter}
         emptyMessage="Ingen kunder funnet."
         pagination
@@ -93,6 +87,7 @@ function CustomersPage() {
           <AddCustomerForm
             saveText="Legg til"
             close
+            disabled={addMutation.isPending}
             onSubmit={handleAddCustomer}
           />
         </DialogContent>

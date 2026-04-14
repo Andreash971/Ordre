@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import * as z from 'zod'
-import type { ColumnDef, Row, Table } from '@tanstack/react-table'
+import type { ColumnDef, Row } from '@tanstack/react-table'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { SquarePen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import AddProductForm, {
   type AddProductFormValues,
 } from '#/components/AddProductForm'
 import { deleteProduct, updateProduct } from '#/lib/product-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 
 const productSchema = z.object({
   id: z.number(),
@@ -29,25 +31,19 @@ const productSchema = z.object({
 
 export type Product = z.infer<typeof productSchema>
 
-function DeleteProductCell({
-  row,
-  table,
-}: {
-  row: Row<Product>
-  table: Table<Product>
-}) {
+function DeleteProductCell({ row }: { row: Row<Product> }) {
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [isPending, setIsPending] = useState(false)
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteProduct({ data: id }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+  })
 
   async function handleConfirm() {
-    setIsPending(true)
-    try {
-      await deleteProduct({ data: row.original.id })
-      table.options.meta?.removeRow(row.index)
-    } finally {
-      setIsPending(false)
-      setOpen(false)
-    }
+    await deleteMutation.mutateAsync(row.original.id)
+    setOpen(false)
   }
 
   return (
@@ -69,16 +65,16 @@ function DeleteProductCell({
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost" disabled={isPending}>
+            <Button variant="ghost" disabled={deleteMutation.isPending}>
               Avbryt
             </Button>
           </DialogClose>
           <Button
             variant="destructive"
             onClick={handleConfirm}
-            disabled={isPending}
+            disabled={deleteMutation.isPending}
           >
-            {isPending ? 'Sletter...' : 'Slett'}
+            {deleteMutation.isPending ? 'Sletter...' : 'Slett'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -86,15 +82,18 @@ function DeleteProductCell({
   )
 }
 
-function EditProductCell({
-  row,
-  table,
-}: {
-  row: Row<Product>
-  table: Table<Product>
-}) {
+function EditProductCell({ row }: { row: Row<Product> }) {
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [isPending, setIsPending] = useState(false)
+
+  const updateMutation = useMutation({
+    mutationFn: (values: AddProductFormValues) =>
+      updateProduct({
+        data: { id: row.original.id, ...values, price: Number(values.price) },
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+  })
 
   const defaultValues: AddProductFormValues = {
     name: row.original.name,
@@ -103,20 +102,8 @@ function EditProductCell({
   }
 
   async function handleEdit(values: AddProductFormValues) {
-    setIsPending(true)
-    try {
-      await updateProduct({
-        data: { id: row.original.id, ...values, price: Number(values.price) },
-      })
-      table.options.meta?.updateRow(row.index, {
-        name: values.name,
-        category: values.category || null,
-        price: values.price,
-      })
-      setOpen(false)
-    } finally {
-      setIsPending(false)
-    }
+    await updateMutation.mutateAsync(values)
+    setOpen(false)
   }
 
   return (
@@ -134,7 +121,7 @@ function EditProductCell({
         <AddProductForm
           saveText="Lagre"
           close
-          disabled={isPending}
+          disabled={updateMutation.isPending}
           defaultValues={defaultValues}
           onSubmit={handleEdit}
         />
@@ -162,16 +149,12 @@ export const productColumns: ColumnDef<Product>[] = [
     id: 'edit',
     header: '',
     meta: { className: 'w-0 whitespace-nowrap' },
-    cell: ({ row, table }) => (
-      <EditProductCell row={row} table={table as Table<Product>} />
-    ),
+    cell: ({ row }) => <EditProductCell row={row} />,
   },
   {
     id: 'action',
     header: '',
     meta: { className: 'w-0 whitespace-nowrap' },
-    cell: ({ row, table }) => (
-      <DeleteProductCell row={row} table={table as Table<Product>} />
-    ),
+    cell: ({ row }) => <DeleteProductCell row={row} />,
   },
 ]
