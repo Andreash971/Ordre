@@ -65,15 +65,14 @@ export default function OrderProductsContent({
   className,
   onItemsChange,
 }: OrderProductsContentProps) {
-  const { showTime, showCardText, selectedCustomerTime } = useOrderForm()
+  const { showTime, showCardText } = useOrderForm()
   const [items, setItems] = useState<Item[]>([
     { name: 'Frakt', price: 100, quantity: 1 },
   ])
 
   useEffect(() => {
-    const showTimeItem = showTime && selectedCustomerTime !== null
     setItems((prev) =>
-      showTimeItem
+      showTime
         ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
           ? prev
           : [
@@ -82,7 +81,7 @@ export default function OrderProductsContent({
             ]
         : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
     )
-  }, [showTime, selectedCustomerTime])
+  }, [showTime])
 
   useEffect(() => {
     setItems((prev) =>

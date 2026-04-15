@@ -83,7 +83,6 @@ const OrderReceiverInfo = React.forwardRef<
     showTime,
     cardTextValue: defaultCardText,
     instructionsTextValue: defaultInstructionsText,
-    setSelectedCustomerTime,
   } = useOrderForm()
 
   const [customers, setCustomers] = React.useState<Customer[]>([])
@@ -104,14 +103,6 @@ const OrderReceiverInfo = React.forwardRef<
       setCustomers((prev) => prev.map((c) => ({ ...c, instructmsg: '' })))
     }
   }, [showInstructionsText])
-
-  React.useEffect(() => {
-    const time =
-      selectedIndex !== null
-        ? (customers[selectedIndex]?.time ?? null)
-        : undefined
-    setSelectedCustomerTime(time)
-  }, [selectedIndex, customers, setSelectedCustomerTime])
 
   const handleAdd = () => {
     setCustomers((prev) => {
