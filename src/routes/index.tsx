@@ -9,6 +9,10 @@ import OrderExtraInfo from '#/components/OrderExtraInfo'
 import OrderReceiverInfo, {
   type OrderReceiverInfoHandle,
 } from '#/components/OrderReceiverInfo'
+import {
+  OrderFormProvider,
+  useOrderForm,
+} from '#/components/order-form/OrderFormContext'
 import { Button } from '@/components/ui/button'
 import OpenOrderButton from '@/components/ui/open-order-button'
 
@@ -23,21 +27,15 @@ import {
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
-  const [showTime, setShowTime] = useState(false)
+  return (
+    <OrderFormProvider>
+      <OrderFormView />
+    </OrderFormProvider>
+  )
+}
 
-  const [showCardText, setShowCardText] = useState(false)
-  const [cardTextValue, setCardTextValue] = useState('')
-  const handleSetShowCardText = (value: boolean) => {
-    setShowCardText(value)
-    if (!value) setCardTextValue('')
-  }
-
-  const [showInstructionsText, setShowInstructionsText] = useState(false)
-  const [instructionsTextValue, setInstructionsTextValue] = useState('')
-  const handleSetShowInstructionsText = (value: boolean) => {
-    setShowInstructionsText(value)
-    if (!value) setInstructionsTextValue('')
-  }
+function OrderFormView() {
+  const { setShowTime } = useOrderForm()
 
   const [senderValues, setSenderValues] = useState<CustomerFormValues | null>(
     null,
@@ -49,9 +47,7 @@ function App() {
   const [items, setItems] = useState<Item[]>([])
   const orderReceiverRef = useRef<OrderReceiverInfoHandle>(null)
   const [customers, setCustomers] = useState<Customer[]>([])
-  const [selectedCustomerTime, setSelectedCustomerTime] = useState<
-    string | null | undefined
-  >(undefined)
+
   return (
     <main className="page-wrap flex flex-col gap-4 px-4 pb-8 pt-6">
       <div className="grid grid-cols-[2fr_4fr] grid-rows-[minmax(auto,clamp(400px,65vh,700px))] gap-4">
@@ -70,28 +66,17 @@ function App() {
         </div>
         <OrderProductsContent
           className="rise-in min-h-0"
-          showTime={showTime}
-          showCardText={showCardText}
-          selectedCustomerTime={selectedCustomerTime}
           onItemsChange={setItems}
         />
       </div>
       <OrderExtraInfo
         className="rise-in"
-        showCardText={showCardText}
-        setShowCardText={handleSetShowCardText}
-        cardTextValue={cardTextValue}
-        onCardTextValueChange={setCardTextValue}
         onCardTextSubmit={(value) =>
           orderReceiverRef.current?.updateSelectedCustomerField(
             'cardmsg',
             value,
           )
         }
-        showInstructionsText={showInstructionsText}
-        setShowInstructionsText={handleSetShowInstructionsText}
-        instructionsTextValue={instructionsTextValue}
-        onInstructionsTextValueChange={setInstructionsTextValue}
         onInstructionsSubmit={(value) =>
           orderReceiverRef.current?.updateSelectedCustomerField(
             'instructmsg',
@@ -102,14 +87,8 @@ function App() {
       <OrderReceiverInfo
         ref={orderReceiverRef}
         className="rise-in"
-        showCardText={showCardText}
-        showInstructionsText={showInstructionsText}
-        showTime={showTime}
-        defaultCardText={cardTextValue}
-        defaultInstructionsText={instructionsTextValue}
         defaultDeliveryValues={deliveryValues}
         onCustomersChange={setCustomers}
-        onSelectedCustomerTimeChange={setSelectedCustomerTime}
       />
       <div className="flex justify-end gap-2 rise-in">
         <Button

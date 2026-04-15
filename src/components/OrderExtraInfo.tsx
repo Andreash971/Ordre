@@ -2,36 +2,30 @@ import * as React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { TextBoxSwap } from '@/components/ui/TextBoxSwap'
+import { useOrderForm } from '#/components/order-form/OrderFormContext'
 
 interface OrderExtraInfoProps extends React.PropsWithChildren {
   className: string
-
-  showCardText: boolean
-  setShowCardText: (value: boolean) => void
-  cardTextValue: string | null
-  onCardTextValueChange: (value: string) => void
   onCardTextSubmit?: (value: string) => void
-
-  showInstructionsText: boolean
-  setShowInstructionsText: (value: boolean) => void
-  instructionsTextValue: string | null
-  onInstructionsTextValueChange: (value: string) => void
   onInstructionsSubmit?: (value: string) => void
 }
 
 export default function OrderExtraInfo({
   className,
-  showCardText,
-  setShowCardText,
-  cardTextValue,
-  onCardTextValueChange,
-  showInstructionsText,
-  setShowInstructionsText,
-  instructionsTextValue,
-  onInstructionsTextValueChange,
   onCardTextSubmit,
   onInstructionsSubmit,
 }: OrderExtraInfoProps) {
+  const {
+    showCardText,
+    setShowCardText,
+    cardTextValue,
+    setCardTextValue,
+    showInstructionsText,
+    setShowInstructionsText,
+    instructionsTextValue,
+    setInstructionsTextValue,
+  } = useOrderForm()
+
   return (
     <div className={`${className} grid grid-cols-2 gap-4`}>
       <Card>
@@ -44,7 +38,7 @@ export default function OrderExtraInfo({
               showBool={showCardText}
               placeholder="Skriv korttekst her..."
               textValue={cardTextValue}
-              onValueChange={onCardTextValueChange}
+              onValueChange={setCardTextValue}
               onSubmit={onCardTextSubmit}
               extraName="kort"
               toggleBool={() => setShowCardText(!showCardText)}
@@ -67,7 +61,7 @@ export default function OrderExtraInfo({
               showBool={showInstructionsText}
               placeholder="Skriv instrukser her..."
               textValue={instructionsTextValue}
-              onValueChange={onInstructionsTextValueChange}
+              onValueChange={setInstructionsTextValue}
               onSubmit={onInstructionsSubmit}
               extraName="instrukser"
               toggleBool={() => setShowInstructionsText(!showInstructionsText)}
