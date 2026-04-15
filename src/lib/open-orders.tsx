@@ -1,14 +1,13 @@
 import React from 'react'
 import { pdf, Document } from '@react-pdf/renderer'
 import { OrderPage } from '#/components/pdf/order'
-import {
-  exportOrdersToJson,
-  getCurrentOrders,
-  type Customer,
-  type CustomerFormValues,
-  type DeliveryValues,
-  type StoredOrder,
+import type {
+  Customer,
+  CustomerFormValues,
+  DeliveryValues,
+  StoredOrder,
 } from '#/lib/order-utils'
+import { exportOrdersToJson, getCurrentOrders } from '#/lib/order-utils'
 import type { Item } from '#/components/OrderColumns'
 
 export async function openOrdersPdf(

@@ -6,9 +6,8 @@ import CustomerForm from '../components/CustomerForm'
 import TimeDateForm from '../components/TimeDateForm'
 import OrderProductsContent from '#/components/OrderProductsContent'
 import OrderExtraInfo from '#/components/OrderExtraInfo'
-import OrderReceiverInfo, {
-  type OrderReceiverInfoHandle,
-} from '#/components/OrderReceiverInfo'
+import OrderReceiverInfo from '#/components/OrderReceiverInfo'
+import type { OrderReceiverInfoHandle } from '#/components/OrderReceiverInfo'
 import {
   OrderFormProvider,
   useOrderForm,
@@ -17,11 +16,11 @@ import { Button } from '@/components/ui/button'
 import OpenOrderButton from '@/components/ui/open-order-button'
 
 import type { Item } from '#/components/OrderColumns'
-import {
-  getLocalDateString,
-  type CustomerFormValues,
-  type Customer,
-  type DeliveryValues,
+import { getLocalDateString } from '#/lib/order-utils'
+import type {
+  CustomerFormValues,
+  Customer,
+  DeliveryValues,
 } from '#/lib/order-utils'
 
 export const Route = createFileRoute('/')({ component: App })
