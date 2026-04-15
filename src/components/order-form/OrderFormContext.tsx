@@ -13,9 +13,6 @@ type OrderFormContextValue = {
   setShowInstructionsText: (value: boolean) => void
   instructionsTextValue: string
   setInstructionsTextValue: (value: string) => void
-
-  selectedCustomerTime: string | null | undefined
-  setSelectedCustomerTime: (value: string | null | undefined) => void
 }
 
 const OrderFormContext = React.createContext<OrderFormContextValue | null>(null)
@@ -46,10 +43,6 @@ export function OrderFormProvider({ children }: { children: React.ReactNode }) {
     if (!value) setInstructionsTextValue('')
   }, [])
 
-  const [selectedCustomerTime, setSelectedCustomerTime] = React.useState<
-    string | null | undefined
-  >(undefined)
-
   const value = React.useMemo<OrderFormContextValue>(
     () => ({
       showTime,
@@ -62,8 +55,6 @@ export function OrderFormProvider({ children }: { children: React.ReactNode }) {
       setShowInstructionsText,
       instructionsTextValue,
       setInstructionsTextValue,
-      selectedCustomerTime,
-      setSelectedCustomerTime,
     }),
     [
       showTime,
@@ -73,7 +64,6 @@ export function OrderFormProvider({ children }: { children: React.ReactNode }) {
       showInstructionsText,
       setShowInstructionsText,
       instructionsTextValue,
-      selectedCustomerTime,
     ],
   )
 
