@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import * as z from 'zod'
-import type { ColumnDef, Row, Table } from '@tanstack/react-table'
+import type { ColumnDef, Row } from '@tanstack/react-table'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { SquarePen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -19,12 +20,13 @@ import AddCustomerForm, {
   type AddCustomerFormValues,
 } from '#/components/AddCustomerForm'
 import { deleteCustomer, updateCustomer } from '#/lib/customer-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 
 const customerSchema = z.object({
   id: z.number(),
   name: z.string(),
   phone: z.string().nullable(),
-  business: z.string().nullable(),
+  company: z.string().nullable(),
   address: z.string().nullable(),
   postcode: z.string().nullable(),
   city: z.string().nullable(),
@@ -33,25 +35,19 @@ const customerSchema = z.object({
 
 export type Customer = z.infer<typeof customerSchema>
 
-function DeleteCustomerCell({
-  row,
-  table,
-}: {
-  row: Row<Customer>
-  table: Table<Customer>
-}) {
+function DeleteCustomerCell({ row }: { row: Row<Customer> }) {
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [isPending, setIsPending] = useState(false)
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteCustomer({ data: id }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+  })
 
   async function handleConfirm() {
-    setIsPending(true)
-    try {
-      await deleteCustomer({ data: row.original.id })
-      table.options.meta?.removeRow(row.index)
-    } finally {
-      setIsPending(false)
-      setOpen(false)
-    }
+    await deleteMutation.mutateAsync(row.original.id)
+    setOpen(false)
   }
 
   return (
@@ -73,16 +69,16 @@ function DeleteCustomerCell({
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost" disabled={isPending}>
+            <Button variant="ghost" disabled={deleteMutation.isPending}>
               Avbryt
             </Button>
           </DialogClose>
           <Button
             variant="destructive"
             onClick={handleConfirm}
-            disabled={isPending}
+            disabled={deleteMutation.isPending}
           >
-            {isPending ? 'Sletter...' : 'Slett'}
+            {deleteMutation.isPending ? 'Sletter...' : 'Slett'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -90,20 +86,21 @@ function DeleteCustomerCell({
   )
 }
 
-function EditCustomerCell({
-  row,
-  table,
-}: {
-  row: Row<Customer>
-  table: Table<Customer>
-}) {
+function EditCustomerCell({ row }: { row: Row<Customer> }) {
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [isPending, setIsPending] = useState(false)
+
+  const updateMutation = useMutation({
+    mutationFn: (values: AddCustomerFormValues) =>
+      updateCustomer({ data: { id: row.original.id, ...values } }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+  })
 
   const defaultValues: AddCustomerFormValues = {
     name: row.original.name,
     phone: row.original.phone ?? '',
-    company: row.original.business ?? '',
+    company: row.original.company ?? '',
     address: row.original.address ?? '',
     postcode: row.original.postcode ?? '',
     city: row.original.city ?? '',
@@ -111,22 +108,8 @@ function EditCustomerCell({
   }
 
   async function handleEdit(values: AddCustomerFormValues) {
-    setIsPending(true)
-    try {
-      await updateCustomer({ data: { id: row.original.id, ...values } })
-      table.options.meta?.updateRow(row.index, {
-        name: values.name,
-        phone: values.phone || null,
-        business: values.company || null,
-        address: values.address || null,
-        postcode: values.postcode || null,
-        city: values.city || null,
-        careof: values.careof || null,
-      })
-      setOpen(false)
-    } finally {
-      setIsPending(false)
-    }
+    await updateMutation.mutateAsync(values)
+    setOpen(false)
   }
 
   return (
@@ -144,7 +127,7 @@ function EditCustomerCell({
         <AddCustomerForm
           saveText="Lagre"
           close
-          disabled={isPending}
+          disabled={updateMutation.isPending}
           defaultValues={defaultValues}
           onSubmit={handleEdit}
         />
@@ -156,7 +139,7 @@ function EditCustomerCell({
 export const customerColumns: ColumnDef<Customer>[] = [
   { accessorKey: 'name', header: 'Navn' },
   { accessorKey: 'phone', header: 'Telefon' },
-  { accessorKey: 'business', header: 'Firma' },
+  { accessorKey: 'company', header: 'Firma' },
   { accessorKey: 'address', header: 'Adresse' },
   { accessorKey: 'postcode', header: 'Postnr.' },
   { accessorKey: 'city', header: 'Sted' },
@@ -165,16 +148,12 @@ export const customerColumns: ColumnDef<Customer>[] = [
     id: 'edit',
     header: '',
     meta: { className: 'w-0 whitespace-nowrap' },
-    cell: ({ row, table }) => (
-      <EditCustomerCell row={row} table={table as Table<Customer>} />
-    ),
+    cell: ({ row }) => <EditCustomerCell row={row} />,
   },
   {
     id: 'action',
     header: '',
     meta: { className: 'w-0 whitespace-nowrap' },
-    cell: ({ row, table }) => (
-      <DeleteCustomerCell row={row} table={table as Table<Customer>} />
-    ),
+    cell: ({ row }) => <DeleteCustomerCell row={row} />,
   },
 ]

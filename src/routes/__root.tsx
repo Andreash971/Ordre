@@ -12,7 +12,6 @@ import {
 import { Separator } from '../components/ui/separator'
 
 import AppSidebar from '../components/AppSidebar'
-import ThemeToggle from '../components/ThemeToggle'
 
 import TanStackQueryProvider from '../integrations/tanstack-query/root-provider'
 
@@ -85,7 +84,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                     className="mr-2 data-[orientation=vertical]:h-8"
                   />
                   <h1>{pageLabels[pathname] ?? 'Ordre'}</h1>
-                  <ThemeToggle />
                 </div>
               </header>
               <main>{children}</main>

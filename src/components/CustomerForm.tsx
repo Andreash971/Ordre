@@ -73,11 +73,11 @@ function CustomerSuggestionItem({
   return (
     <>
       <span className="font-medium">{customer.name}</span>
-      {(customer.phone || customer.business) && (
+      {(customer.phone || customer.company) && (
         <span className="text-xs flex gap-1.5 mt-0.5">
           {customer.phone && <span>{customer.phone}</span>}
-          {customer.phone && customer.business && <span>|</span>}
-          {customer.business && <span>{customer.business}</span>}
+          {customer.phone && customer.company && <span>|</span>}
+          {customer.company && <span>{customer.company}</span>}
         </span>
       )}
     </>
@@ -102,7 +102,7 @@ function fillForm(
 ) {
   form.setFieldValue('name', customer.name)
   form.setFieldValue('phone', customer.phone ?? '')
-  form.setFieldValue('company', customer.business ?? '')
+  form.setFieldValue('company', customer.company ?? '')
   form.setFieldValue('address', customer.address ?? '')
   form.setFieldValue('postcode', customer.postcode ?? '')
   form.setFieldValue('city', customer.city ?? '')

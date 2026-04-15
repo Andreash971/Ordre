@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PackagePlus, PackageSearch } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -20,36 +21,34 @@ import AddProductForm, {
   type AddProductFormValues,
 } from '#/components/AddProductForm'
 import { productColumns } from '#/components/ProductColumns'
-import {
-  type Product,
-  getAllProducts,
-  insertProduct,
-} from '#/lib/product-server-fns'
+import { getAllProducts, insertProduct } from '#/lib/product-server-fns'
+import { queryKeys } from '#/lib/query-keys'
+import { getStoredSettings } from '@/lib/settings'
 
 export const Route = createFileRoute('/products')({
-  loader: () => getAllProducts(),
   component: ProductsPage,
 })
 
 function ProductsPage() {
-  const loaderData = Route.useLoaderData()
-  const [data, setData] = useState<Product[]>(loaderData)
+  const queryClient = useQueryClient()
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const pageSize = getStoredSettings().rowsPerPage
+
+  const { data = [] } = useQuery({
+    queryKey: queryKeys.products.all,
+    queryFn: () => getAllProducts(),
+  })
+
+  const addMutation = useMutation({
+    mutationFn: (values: AddProductFormValues) =>
+      insertProduct({ data: { ...values, price: Number(values.price) } }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+  })
 
   async function handleAddProduct(values: AddProductFormValues) {
-    const newRow = await insertProduct({
-      data: { ...values, price: Number(values.price) },
-    })
-    setData((prev) => [
-      {
-        id: newRow.id,
-        name: values.name,
-        category: values.category || null,
-        price: newRow.price,
-      },
-      ...prev,
-    ])
+    await addMutation.mutateAsync(values)
     setAddOpen(false)
   }
 
@@ -74,11 +73,10 @@ function ProductsPage() {
       <DataTable
         columns={productColumns}
         data={data}
-        setData={setData}
         globalFilter={globalFilter}
         emptyMessage="Ingen produkter funnet."
         pagination
-        pageSize={14}
+        pageSize={pageSize}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -88,6 +86,7 @@ function ProductsPage() {
           <AddProductForm
             saveText="Legg til"
             close
+            disabled={addMutation.isPending}
             onSubmit={handleAddProduct}
           />
         </DialogContent>

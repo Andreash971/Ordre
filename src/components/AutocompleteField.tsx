@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { Field, FieldError } from '@/components/ui/field'
 import {
@@ -42,8 +43,20 @@ export default function AutocompleteField<T extends { id: number }>({
   onSelect,
   renderSuggestion,
 }: AutocompleteFieldProps<T>) {
-  const [suggestions, setSuggestions] = useState<T[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [debouncedValue, setDebouncedValue] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(field.state.value), 300)
+    return () => clearTimeout(timer)
+  }, [field.state.value])
+
+  const { data: suggestions = [] } = useQuery({
+    queryKey: [field.name, debouncedValue],
+    queryFn: () => onSearch(debouncedValue),
+    enabled: debouncedValue.length >= 1,
+    staleTime: 1000 * 10,
+  })
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -58,20 +71,11 @@ export default function AutocompleteField<T extends { id: number }>({
             type={type}
             value={field.state.value}
             disabled={disabled}
-            onChange={async (e) => {
-              const value = e.target.value
-              field.handleChange(value)
-              if (value.length >= 1) {
-                try {
-                  const results = await onSearch(value)
-                  setSuggestions(results)
-                  setShowSuggestions(true)
-                } catch {
-                  setSuggestions([])
-                  setShowSuggestions(false)
-                }
+            onChange={(e) => {
+              field.handleChange(e.target.value)
+              if (e.target.value.length >= 1) {
+                setShowSuggestions(true)
               } else {
-                setSuggestions([])
                 setShowSuggestions(false)
               }
             }}
