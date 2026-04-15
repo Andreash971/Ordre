@@ -19,7 +19,12 @@ const SETTINGS_KEY = 'app_settings'
 const DEFAULT_SETTINGS: AppSettings = {
   archiveRetention: 7,
   rowsPerPage: 14,
-  company: { name: '', address: '', postCode: '', phone: '' },
+  company: {
+    name: 'Blomster i Byhaven AS',
+    address: 'Olav Tryggvasonsgt. 28',
+    postCode: '7011 Trondheim',
+    phone: '73522460',
+  },
 }
 
 export function getStoredSettings(): AppSettings {
@@ -29,7 +34,8 @@ export function getStoredSettings(): AppSettings {
     if (!raw) return DEFAULT_SETTINGS
     const parsed = JSON.parse(raw) as Partial<AppSettings>
     return {
-      archiveRetention: parsed.archiveRetention ?? DEFAULT_SETTINGS.archiveRetention,
+      archiveRetention:
+        parsed.archiveRetention ?? DEFAULT_SETTINGS.archiveRetention,
       rowsPerPage: parsed.rowsPerPage ?? DEFAULT_SETTINGS.rowsPerPage,
       company: { ...DEFAULT_SETTINGS.company, ...(parsed.company ?? {}) },
     }
@@ -40,7 +46,10 @@ export function getStoredSettings(): AppSettings {
 
 export function updateSettings(partial: Partial<AppSettings>): void {
   const current = getStoredSettings()
-  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...partial }))
+  window.localStorage.setItem(
+    SETTINGS_KEY,
+    JSON.stringify({ ...current, ...partial }),
+  )
 }
 
 export function getRetentionMs(): number {
