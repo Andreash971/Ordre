@@ -23,6 +23,7 @@ import {
 } from './ui/item'
 import CustomerForm from '../components/CustomerForm'
 import { EmptyCard } from '@/components/ui/empty-card'
+import { useOrderForm } from '#/components/order-form/OrderFormContext'
 
 import { CalendarIcon, User, Plus, Minus } from 'lucide-react'
 
@@ -41,14 +42,8 @@ type Customer = {
 
 interface OrderReceiverInfoProps extends React.PropsWithChildren {
   className: string
-  showInstructionsText: boolean
-  showCardText: boolean
-  showTime: boolean
-  defaultCardText?: string
-  defaultInstructionsText?: string
   defaultDeliveryValues?: DeliveryValues
   onCustomersChange?: (customers: Customer[]) => void
-  onSelectedCustomerTimeChange?: (time: string | null | undefined) => void
 }
 
 export type OrderReceiverInfoHandle = {
@@ -77,17 +72,20 @@ const OrderReceiverInfo = React.forwardRef<
 >(function OrderReceiverInfoInner(
   {
     className,
-    showInstructionsText,
-    showCardText,
-    showTime,
-    defaultCardText = '',
-    defaultInstructionsText = '',
     defaultDeliveryValues,
     onCustomersChange,
-    onSelectedCustomerTimeChange,
   }: OrderReceiverInfoProps,
   ref,
 ) {
+  const {
+    showCardText,
+    showInstructionsText,
+    showTime,
+    cardTextValue: defaultCardText,
+    instructionsTextValue: defaultInstructionsText,
+    setSelectedCustomerTime,
+  } = useOrderForm()
+
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
 
@@ -112,8 +110,8 @@ const OrderReceiverInfo = React.forwardRef<
       selectedIndex !== null
         ? (customers[selectedIndex]?.time ?? null)
         : undefined
-    onSelectedCustomerTimeChange?.(time)
-  }, [selectedIndex, customers, onSelectedCustomerTimeChange])
+    setSelectedCustomerTime(time)
+  }, [selectedIndex, customers, setSelectedCustomerTime])
 
   const handleAdd = () => {
     setCustomers((prev) => {

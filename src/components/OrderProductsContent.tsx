@@ -23,18 +23,16 @@ import {
 } from '@/components/ui/dialog'
 
 import { db } from '#/db/'
-import { productsDummy } from '#/db/schema'
+import { products } from '#/db/schema'
 import AddProductForm, {
   type AddProductFormValues,
 } from '#/components/AddProductForm'
 import { insertProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
+import { useOrderForm } from '#/components/order-form/OrderFormContext'
 
 interface OrderProductsContentProps extends React.PropsWithChildren {
   className: string
-  showTime: boolean
-  showCardText: boolean
-  selectedCustomerTime?: string | null
   onItemsChange?: (items: Item[]) => void
 }
 
@@ -44,13 +42,13 @@ export const searchProducts = createServerFn({ method: 'GET' })
     if (!query || query.length < 1) return []
     return db
       .select({
-        id: productsDummy.id,
-        name: productsDummy.name,
-        category: productsDummy.category,
-        price: productsDummy.price,
+        id: products.id,
+        name: products.name,
+        category: products.category,
+        price: products.price,
       })
-      .from(productsDummy)
-      .where(ilike(productsDummy.name, `%${query}%`))
+      .from(products)
+      .where(ilike(products.name, `%${query}%`))
       .limit(3)
   })
 
@@ -65,11 +63,9 @@ const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
 
 export default function OrderProductsContent({
   className,
-  showTime,
-  showCardText,
-  selectedCustomerTime,
   onItemsChange,
 }: OrderProductsContentProps) {
+  const { showTime, showCardText, selectedCustomerTime } = useOrderForm()
   const [items, setItems] = useState<Item[]>([
     { name: 'Frakt', price: 100, quantity: 1 },
   ])
