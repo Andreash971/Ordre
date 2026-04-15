@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { ilike } from 'drizzle-orm'
 import { createServerFn } from '@tanstack/react-start'
@@ -24,9 +22,8 @@ import {
 
 import { db } from '#/db/'
 import { products } from '#/db/schema'
-import AddProductForm, {
-  type AddProductFormValues,
-} from '#/components/AddProductForm'
+import AddProductForm from '#/components/AddProductForm'
+import type { AddProductFormValues } from '#/components/AddProductForm'
 import { insertProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 import { useOrderForm } from '#/components/order-form/OrderFormContext'
@@ -51,8 +48,6 @@ export const searchProducts = createServerFn({ method: 'GET' })
       .where(ilike(products.name, `%${query}%`))
       .limit(3)
   })
-
-type ProductSuggestion = Awaited<ReturnType<typeof searchProducts>>[number]
 
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
