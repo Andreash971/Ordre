@@ -209,7 +209,7 @@ function CompanyInfoForm() {
     setSaved(false)
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault()
     updateSettings({ company })
     setSaved(true)
