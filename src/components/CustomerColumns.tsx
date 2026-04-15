@@ -26,7 +26,7 @@ const customerSchema = z.object({
   id: z.number(),
   name: z.string(),
   phone: z.string().nullable(),
-  business: z.string().nullable(),
+  company: z.string().nullable(),
   address: z.string().nullable(),
   postcode: z.string().nullable(),
   city: z.string().nullable(),
@@ -100,7 +100,7 @@ function EditCustomerCell({ row }: { row: Row<Customer> }) {
   const defaultValues: AddCustomerFormValues = {
     name: row.original.name,
     phone: row.original.phone ?? '',
-    company: row.original.business ?? '',
+    company: row.original.company ?? '',
     address: row.original.address ?? '',
     postcode: row.original.postcode ?? '',
     city: row.original.city ?? '',
@@ -139,7 +139,7 @@ function EditCustomerCell({ row }: { row: Row<Customer> }) {
 export const customerColumns: ColumnDef<Customer>[] = [
   { accessorKey: 'name', header: 'Navn' },
   { accessorKey: 'phone', header: 'Telefon' },
-  { accessorKey: 'business', header: 'Firma' },
+  { accessorKey: 'company', header: 'Firma' },
   { accessorKey: 'address', header: 'Adresse' },
   { accessorKey: 'postcode', header: 'Postnr.' },
   { accessorKey: 'city', header: 'Sted' },
