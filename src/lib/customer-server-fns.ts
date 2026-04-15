@@ -3,21 +3,21 @@ import * as z from 'zod'
 
 import { createServerFn } from '@tanstack/react-start'
 import { db } from '#/db/'
-import { customersDummy } from '#/db/schema'
+import { customers } from '#/db/schema'
 
 const customerSelect = {
-  id: customersDummy.id,
-  name: customersDummy.name,
-  phone: customersDummy.phone,
-  business: customersDummy.business,
-  address: customersDummy.address,
-  postcode: customersDummy.postcode,
-  city: customersDummy.city,
+  id: customers.id,
+  name: customers.name,
+  phone: customers.phone,
+  company: customers.company,
+  address: customers.address,
+  postcode: customers.postcode,
+  city: customers.city,
 }
 
 export const getCustomers = createServerFn({ method: 'GET' }).handler(
   async () => {
-    return db.select({ name: customersDummy.name }).from(customersDummy)
+    return db.select({ name: customers.name }).from(customers)
   },
 )
 
@@ -27,8 +27,8 @@ export const searchCustomers = createServerFn({ method: 'GET' })
     if (!query || query.length < 1) return []
     return db
       .select(customerSelect)
-      .from(customersDummy)
-      .where(ilike(customersDummy.name, `%${query}%`))
+      .from(customers)
+      .where(ilike(customers.name, `%${query}%`))
       .limit(3)
   })
 
@@ -38,8 +38,8 @@ export const searchCustomersByPhone = createServerFn({ method: 'GET' })
     if (!query || query.length < 1) return []
     return db
       .select(customerSelect)
-      .from(customersDummy)
-      .where(ilike(customersDummy.phone, `%${query}%`))
+      .from(customers)
+      .where(ilike(customers.phone, `%${query}%`))
       .limit(3)
   })
 
@@ -49,8 +49,8 @@ export const searchCustomersByBusiness = createServerFn({ method: 'GET' })
     if (!query || query.length < 1) return []
     return db
       .select(customerSelect)
-      .from(customersDummy)
-      .where(ilike(customersDummy.business, `%${query}%`))
+      .from(customers)
+      .where(ilike(customers.company, `%${query}%`))
       .limit(3)
   })
 
@@ -62,16 +62,16 @@ export const getAllCustomers = createServerFn({ method: 'GET' }).handler(
   async () => {
     return db
       .select({
-        id: customersDummy.id,
-        name: customersDummy.name,
-        phone: customersDummy.phone,
-        business: customersDummy.business,
-        address: customersDummy.address,
-        postcode: customersDummy.postcode,
-        city: customersDummy.city,
-        careof: customersDummy.careof,
+        id: customers.id,
+        name: customers.name,
+        phone: customers.phone,
+        company: customers.company,
+        address: customers.address,
+        postcode: customers.postcode,
+        city: customers.city,
+        careof: customers.careof,
       })
-      .from(customersDummy)
+      .from(customers)
   },
 )
 
@@ -80,7 +80,7 @@ export type Customer = Awaited<ReturnType<typeof getAllCustomers>>[number]
 export const deleteCustomer = createServerFn({ method: 'POST' })
   .inputValidator((data: number) => data)
   .handler(async ({ data: id }) => {
-    await db.delete(customersDummy).where(eq(customersDummy.id, id))
+    await db.delete(customers).where(eq(customers.id, id))
   })
 
 const customerSchema = z.object({
@@ -103,33 +103,33 @@ export const updateCustomer = createServerFn({ method: 'POST' })
   .inputValidator((data: UpdateCustomerInput) => customerSchema.parse(data))
   .handler(async ({ data }) => {
     await db
-      .update(customersDummy)
+      .update(customers)
       .set({
         name: data.name,
         phone: data.phone || null,
-        business: data.company || null,
+        company: data.company || null,
         address: data.address || null,
         postcode: data.postcode || null,
         city: data.city || null,
         careof: data.careof || null,
       })
-      .where(eq(customersDummy.id, data.id!))
+      .where(eq(customers.id, data.id!))
   })
 
 export const insertCustomer = createServerFn({ method: 'POST' })
   .inputValidator((data: InsertCustomerInput) => customerSchema.parse(data))
   .handler(async ({ data }) => {
     const [row] = await db
-      .insert(customersDummy)
+      .insert(customers)
       .values({
         name: data.name,
         phone: data.phone || null,
-        business: data.company || null,
+        company: data.company || null,
         address: data.address || null,
         postcode: data.postcode || null,
         city: data.city || null,
         careof: data.careof || null,
       })
-      .returning({ id: customersDummy.id })
+      .returning({ id: customers.id })
     return row
   })

@@ -30,7 +30,7 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  setData: React.Dispatch<React.SetStateAction<TData[]>>
+  setData?: React.Dispatch<React.SetStateAction<TData[]>>
   footer?: React.ReactNode
   emptyMessage?: React.ReactNode
   globalFilter?: string
@@ -72,17 +72,17 @@ export function DataTable<TData, TValue>({
     manualPagination: false,
     meta: {
       updateData: (rowIndex: number, columnId: string, value: number) => {
-        setData((prev) =>
+        setData?.((prev) =>
           prev.map((row, i) =>
             i === rowIndex ? { ...row, [columnId]: value } : row,
           ),
         )
       },
       removeRow: (rowIndex: number) => {
-        setData((prev) => prev.filter((_, i) => i !== rowIndex))
+        setData?.((prev) => prev.filter((_, i) => i !== rowIndex))
       },
       updateRow: (rowIndex: number, values: Record<string, unknown>) => {
-        setData((prev) =>
+        setData?.((prev) =>
           prev.map((row, i) => (i === rowIndex ? { ...row, ...values } : row)),
         )
       },

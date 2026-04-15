@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ilike } from 'drizzle-orm'
 import { createServerFn } from '@tanstack/react-start'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 import OrderTable from './OrderTable'
 import type { Item } from './OrderColumns'
@@ -27,6 +28,7 @@ import AddProductForm, {
   type AddProductFormValues,
 } from '#/components/AddProductForm'
 import { insertProduct } from '#/lib/product-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 
 interface OrderProductsContentProps extends React.PropsWithChildren {
   className: string
@@ -99,15 +101,33 @@ export default function OrderProductsContent({
     onItemsChange?.(items)
   }, [items, onItemsChange])
 
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
-  const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([])
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  const { data: suggestions = [] } = useQuery({
+    queryKey: queryKeys.products.search(debouncedQuery),
+    queryFn: () => searchProducts({ data: debouncedQuery }),
+    enabled: debouncedQuery.length >= 1,
+    staleTime: 1000 * 10,
+  })
+
+  const addProductMutation = useMutation({
+    mutationFn: (values: AddProductFormValues) =>
+      insertProduct({ data: { ...values, price: Number(values.price) } }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+  })
+
   async function handleAddProduct(values: AddProductFormValues) {
-    const newRow = await insertProduct({
-      data: { ...values, price: Number(values.price) },
-    })
+    const newRow = await addProductMutation.mutateAsync(values)
     const newItem = {
       name: values.name,
       price: Number(newRow.price),
@@ -141,17 +161,10 @@ export default function OrderProductsContent({
                 placeholder="Søk etter produkt..."
                 autoComplete="off"
                 value={searchQuery}
-                onChange={async (e) => {
+                onChange={(e) => {
                   const value = e.target.value
                   setSearchQuery(value)
-                  if (value.length >= 1) {
-                    const results = await searchProducts({ data: value })
-                    setSuggestions(results)
-                    setShowSuggestions(true)
-                  } else {
-                    setSuggestions([])
-                    setShowSuggestions(false)
-                  }
+                  setShowSuggestions(value.length >= 1)
                 }}
                 onBlur={() => {
                   setTimeout(() => setShowSuggestions(false), 150)
@@ -192,7 +205,6 @@ export default function OrderProductsContent({
                         ]
                       })
                       setSearchQuery('')
-                      setSuggestions([])
                       setShowSuggestions(false)
                     }}
                   >

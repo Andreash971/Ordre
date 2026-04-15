@@ -14,6 +14,12 @@ const spaceString = z.string().transform((val) => val || ' ')
 const optionalString = z.string().transform((val) => val || null)
 
 const orderDataSchema = z.object({
+  company: z.object({
+    name: spaceString,
+    address: spaceString,
+    postCode: spaceString,
+    phone: spaceString,
+  }),
   delivery: z.object({
     dayText: spaceString,
     longDate: spaceString,
@@ -156,6 +162,12 @@ const styles = StyleSheet.create({
 
 export const OrderPage = ({ data }: { data: OrderData }) => {
   const {
+    company: {
+      name: companyName,
+      address: companyAddress,
+      postCode: companyPostCode,
+      phone: companyPhone,
+    },
     delivery: { dayText, longDate, shortDate, deliveryTime },
     sender: {
       name: senderName,
@@ -289,10 +301,10 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
 
             {/* INFO VALUES (RIGHT) */}
             <View style={styles.container}>
-              <Text>Blomster i Byhaven AS</Text>
-              <Text>Olav Tryggvasonsgt. 28</Text>
-              <Text>7011 Trondheim</Text>
-              <Text style={styles.textGapLarge}>73522460</Text>
+              <Text>{companyName}</Text>
+              <Text>{companyAddress}</Text>
+              <Text>{companyPostCode}</Text>
+              <Text style={styles.textGapLarge}>{companyPhone}</Text>
 
               <Text>{shortDate}</Text>
               <Text style={styles.textGapLarge}>
@@ -333,10 +345,10 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
 
             {/* INFO VALUES (RIGHT) */}
             <View style={styles.container}>
-              <Text>Blomster i Byhaven AS</Text>
-              <Text>Olav Tryggvasonsgt. 28</Text>
-              <Text>7011 Trondheim</Text>
-              <Text style={styles.textGapLarge}>73522460</Text>
+              <Text>{companyName}</Text>
+              <Text>{companyAddress}</Text>
+              <Text>{companyPostCode}</Text>
+              <Text style={styles.textGapLarge}>{companyPhone}</Text>
 
               <Text>{shortDate}</Text>
               <Text style={styles.textGapLarge}>
