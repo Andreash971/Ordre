@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
 import {
   Card,
@@ -27,8 +28,8 @@ import { FieldGroup } from '@/components/ui/field'
 
 import AutocompleteField from '#/components/AutocompleteField'
 import FormInputField from '#/components/FormInputField'
+import type { CustomerSuggestion } from '#/lib/customer-server-fns'
 import {
-  type CustomerSuggestion,
   searchCustomers,
   searchCustomersByBusiness,
   searchCustomersByPhone,
@@ -210,7 +211,7 @@ export default function CustomerForm({
           )}
         </form.Field>
 
-        <div className="grid grid-cols-[1fr_2fr] gap-4">
+        <div className="grid grid-cols-[minmax(6rem,1fr)_minmax(6rem,2fr)] gap-4">
           <form.Field name="postcode">
             {(field) => (
               <FormInputField
@@ -280,7 +281,7 @@ export default function CustomerForm({
   )
 
   return (
-    <Card size={size} className={className}>
+    <Card size={size} className={cn('min-w-60', className)}>
       <CardHeader>
         <CardTitle>Kundeinformasjon</CardTitle>
       </CardHeader>
