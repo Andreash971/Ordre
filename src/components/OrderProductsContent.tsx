@@ -231,7 +231,7 @@ export default function OrderProductsContent({
         <OrderTable
           items={items}
           setItems={setItems}
-          className="flex-1 min-h-60"
+          className="flex-1 min-h-96"
         />
       </CardContent>
     </Card>
