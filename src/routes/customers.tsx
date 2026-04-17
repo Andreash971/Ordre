@@ -53,8 +53,8 @@ function CustomersPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <InputGroup className="max-w-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <InputGroup className="flex-1">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
@@ -66,7 +66,7 @@ function CustomersPage() {
         </InputGroup>
         <Button onClick={() => setAddOpen(true)}>
           <UserPlus />
-          Legg til kunde
+          <span className="hidden sm:inline">Legg til kunde</span>
         </Button>
       </div>
       <DataTable

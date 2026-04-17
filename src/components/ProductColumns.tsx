@@ -2,7 +2,7 @@ import { useState } from 'react'
 import * as z from 'zod'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { SquarePen, Trash2 } from 'lucide-react'
+import { MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -13,8 +13,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 import AddProductForm, {
   type AddProductFormValues,
@@ -31,60 +36,16 @@ const productSchema = z.object({
 
 export type Product = z.infer<typeof productSchema>
 
-function DeleteProductCell({ row }: { row: Row<Product> }) {
+function ProductActionsCell({ row }: { row: Row<Product> }) {
   const queryClient = useQueryClient()
-  const [open, setOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteProduct({ data: id }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
   })
-
-  async function handleConfirm() {
-    await deleteMutation.mutateAsync(row.original.id)
-    setOpen(false)
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Trash2 className="size-4" />
-          <span className="sr-only">Slett produkt</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Slett produkt</DialogTitle>
-          <DialogDescription>
-            Er du sikker på at du vil slette{' '}
-            <span className="font-medium">{row.original.name}</span>? Dette er
-            permanent og kan ikke angres.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="ghost" disabled={deleteMutation.isPending}>
-              Avbryt
-            </Button>
-          </DialogClose>
-          <Button
-            variant="destructive"
-            onClick={handleConfirm}
-            disabled={deleteMutation.isPending}
-          >
-            {deleteMutation.isPending ? 'Sletter...' : 'Slett'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function EditProductCell({ row }: { row: Row<Product> }) {
-  const queryClient = useQueryClient()
-  const [open, setOpen] = useState(false)
 
   const updateMutation = useMutation({
     mutationFn: (values: AddProductFormValues) =>
@@ -103,36 +64,94 @@ function EditProductCell({ row }: { row: Row<Product> }) {
 
   async function handleEdit(values: AddProductFormValues) {
     await updateMutation.mutateAsync(values)
-    setOpen(false)
+    setEditOpen(false)
+  }
+
+  async function handleConfirmDelete() {
+    await deleteMutation.mutateAsync(row.original.id)
+    setDeleteOpen(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <SquarePen className="size-4" />
-          <span className="sr-only">Rediger produkt</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Rediger produkt</DialogTitle>
-        </DialogHeader>
-        <AddProductForm
-          saveText="Lagre"
-          close
-          disabled={updateMutation.isPending}
-          defaultValues={defaultValues}
-          onSubmit={handleEdit}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon-sm">
+            <MoreHorizontal className="size-4" />
+            <span className="sr-only">Åpne handlinger</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <SquarePen />
+            Rediger
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onSelect={() => setDeleteOpen(true)}
+          >
+            <Trash2 />
+            Slett
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Rediger produkt</DialogTitle>
+          </DialogHeader>
+          <AddProductForm
+            saveText="Lagre"
+            close
+            disabled={updateMutation.isPending}
+            defaultValues={defaultValues}
+            onSubmit={handleEdit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Slett produkt</DialogTitle>
+            <DialogDescription>
+              Er du sikker på at du vil slette{' '}
+              <span className="font-medium">{row.original.name}</span>? Dette er
+              permanent og kan ikke angres.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="ghost" disabled={deleteMutation.isPending}>
+                Avbryt
+              </Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Sletter...' : 'Slett'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
 export const productColumns: ColumnDef<Product>[] = [
-  { accessorKey: 'name', header: 'Navn' },
-  { accessorKey: 'category', header: 'Kategori' },
+  {
+    accessorKey: 'name',
+    header: 'Navn',
+    meta: { priority: 'primary', truncate: true, className: 'max-w-[14rem]' },
+  },
+  {
+    accessorKey: 'category',
+    header: 'Kategori',
+    meta: { truncate: true, className: 'max-w-[10rem]' },
+  },
   {
     accessorKey: 'price',
     header: 'Pris',
@@ -146,15 +165,9 @@ export const productColumns: ColumnDef<Product>[] = [
     },
   },
   {
-    id: 'edit',
+    id: 'actions',
     header: '',
-    meta: { className: 'w-0 whitespace-nowrap' },
-    cell: ({ row }) => <EditProductCell row={row} />,
-  },
-  {
-    id: 'action',
-    header: '',
-    meta: { className: 'w-0 whitespace-nowrap' },
-    cell: ({ row }) => <DeleteProductCell row={row} />,
+    meta: { className: 'w-0 whitespace-nowrap', action: true },
+    cell: ({ row }) => <ProductActionsCell row={row} />,
   },
 ]

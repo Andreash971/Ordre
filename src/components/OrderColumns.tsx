@@ -5,6 +5,7 @@ import type { ColumnDef, Row, RowData, Table } from '@tanstack/react-table'
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -24,13 +25,15 @@ export type Item = z.infer<typeof itemSchema>
 
 function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const [isEditing, setIsEditing] = useState(false)
+  const isMobile = useIsMobile()
   const quantity = row.original.quantity
 
   if (!isEditing) {
     return (
       <div
         className="flex justify-end cursor-default select-none"
-        onDoubleClick={() => setIsEditing(true)}
+        onClick={isMobile ? () => setIsEditing(true) : undefined}
+        onDoubleClick={!isMobile ? () => setIsEditing(true) : undefined}
       >
         {quantity}
       </div>
@@ -92,13 +95,15 @@ const nokFormatter = new Intl.NumberFormat('no-NB', {
 
 function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const [isEditing, setIsEditing] = useState(false)
+  const isMobile = useIsMobile()
   const price = row.original.price
 
   if (!isEditing) {
     return (
       <div
         className="flex justify-end cursor-default select-none"
-        onDoubleClick={() => setIsEditing(true)}
+        onClick={isMobile ? () => setIsEditing(true) : undefined}
+        onDoubleClick={!isMobile ? () => setIsEditing(true) : undefined}
       >
         {nokFormatter.format(price)}
       </div>
@@ -131,6 +136,7 @@ export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'name',
     header: () => <div className="text-left">Produkt</div>,
+    meta: { priority: 'primary' },
   },
   {
     id: 'quantity',
@@ -153,16 +159,23 @@ export const columns: ColumnDef<Item>[] = [
 
       return <div className="text-right">{formatted}</div>
     },
+    meta: { priority: 'primary' },
   },
   {
     id: 'action',
     header: () => <div className="text-right"></div>,
+    meta: { action: true },
     cell: ({ row, table }) => {
       return (
         <div className="text-right">
-          <button onClick={() => table.options.meta?.removeRow(row.index)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => table.options.meta?.removeRow(row.index)}
+          >
             <Trash2 className="h-4 w-4" />
-          </button>
+            <span className="sr-only">Fjern rad</span>
+          </Button>
         </div>
       )
     },
