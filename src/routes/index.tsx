@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { RotateCcw } from 'lucide-react'
 
 import CustomerForm from '../components/CustomerForm'
 import TimeDateForm from '../components/TimeDateForm'
@@ -14,7 +13,6 @@ import {
 } from '#/components/order-form/OrderFormContext'
 import { Button } from '@/components/ui/button'
 import OpenOrderButton from '@/components/ui/open-order-button'
-
 import type { Item } from '#/components/OrderColumns'
 import { getLocalDateString } from '#/lib/order-utils'
 import type {
@@ -22,6 +20,9 @@ import type {
   Customer,
   DeliveryValues,
 } from '#/lib/order-utils'
+import { TooltipWrapper } from '../components/ui/TooltipWrapper'
+
+import { RotateCcw } from 'lucide-react'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -90,16 +91,18 @@ function OrderFormView() {
         onCustomersChange={setCustomers}
       />
       <div className="flex justify-end gap-2 rise-in">
-        <Button
-          onClick={() => {
-            window.location.reload()
-          }}
-          variant="destructive"
-          size="lg"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Reset
-        </Button>
+        <TooltipWrapper TooltipText="Nulstill ordre og start på nytt">
+          <Button
+            onClick={() => {
+              window.location.reload()
+            }}
+            variant="destructive"
+            size="lg"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Nulstill
+          </Button>
+        </TooltipWrapper>
         <OpenOrderButton
           customers={customers}
           senderValues={senderValues}
