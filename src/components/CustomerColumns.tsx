@@ -2,9 +2,10 @@ import { useState } from 'react'
 import * as z from 'zod'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
+import { Eye, MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { useDataTableSheet } from '@/components/ui/DataTable'
 import {
   Dialog,
   DialogClose,
@@ -21,9 +22,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-import AddCustomerForm, {
-  type AddCustomerFormValues,
-} from '#/components/AddCustomerForm'
+import type { AddCustomerFormValues } from '#/components/AddCustomerForm'
+import AddCustomerForm from '#/components/AddCustomerForm'
 import { deleteCustomer, updateCustomer } from '#/lib/customer-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 
@@ -42,6 +42,7 @@ export type Customer = z.infer<typeof customerSchema>
 
 function CustomerActionsCell({ row }: { row: Row<Customer> }) {
   const queryClient = useQueryClient()
+  const { isInSheet, openSheet, closeSheet } = useDataTableSheet()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -71,36 +72,63 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
   async function handleEdit(values: AddCustomerFormValues) {
     await updateMutation.mutateAsync(values)
     setEditOpen(false)
+    if (isInSheet) closeSheet()
   }
 
   async function handleConfirmDelete() {
     await deleteMutation.mutateAsync(row.original.id)
     setDeleteOpen(false)
+    if (isInSheet) closeSheet()
   }
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm">
-            <MoreHorizontal className="size-4" />
-            <span className="sr-only">Åpne handlinger</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+      {isInSheet ? (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditOpen(true)}
+          >
             <SquarePen />
             Rediger
-          </DropdownMenuItem>
-          <DropdownMenuItem
+          </Button>
+          <Button
             variant="destructive"
-            onSelect={() => setDeleteOpen(true)}
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
           >
             <Trash2 />
             Slett
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </Button>
+        </>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Åpne handlinger</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => openSheet(row.id)}>
+              <Eye />
+              Vis
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+              <SquarePen />
+              Rediger
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setDeleteOpen(true)}
+            >
+              <Trash2 />
+              Slett
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-sm">
