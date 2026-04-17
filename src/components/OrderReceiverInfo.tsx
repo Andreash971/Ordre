@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
-import { type DeliveryValues } from '#/lib/order-utils'
+import type { DeliveryValues } from '#/lib/order-utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from './ui/button-group'
@@ -167,13 +167,13 @@ const OrderReceiverInfo = React.forwardRef<
   return (
     <Card className={className}>
       <CardContent>
-        <div className="grid grid-cols-[16rem_33%_1fr] grid-rows-[auto_auto] gap-4">
-          <div className="col-start-1 row-span-2 relative">
-            <div className="absolute inset-0 flex flex-col">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[12rem_minmax(15rem,1fr)_1fr] lg:grid-rows-[auto_auto]">
+          <div className="lg:col-start-1 lg:row-span-2 lg:relative">
+            <div className="lg:absolute lg:inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                <h4 className="text-base leading-normal font-medium">
+                <h2 className="text-base leading-normal font-medium">
                   Mottakere
-                </h4>
+                </h2>
                 <ButtonGroup>
                   <Button
                     onClick={handleRemove}
@@ -186,7 +186,7 @@ const OrderReceiverInfo = React.forwardRef<
                   </Button>
                 </ButtonGroup>
               </div>
-              <ScrollArea className="flex-1 min-h-0 rounded-md border">
+              <ScrollArea className="flex-1 min-h-0 max-h-48 lg:max-h-none rounded-md border">
                 <div className="p-4">
                   {customers.map((customer, i) => (
                     <React.Fragment key={i}>
@@ -226,7 +226,7 @@ const OrderReceiverInfo = React.forwardRef<
           </div>
           <CustomerForm
             key={selectedIndex ?? 'empty'}
-            className="col-start-2"
+            className="lg:col-start-2"
             formButtons={true}
             size="sm"
             showCareof={true}
@@ -242,7 +242,7 @@ const OrderReceiverInfo = React.forwardRef<
               }
             }}
           />
-          <div className="col-start-3 grid grid-rows-2 gap-4">
+          <div className="lg:col-start-3 grid lg:grid-rows-2 gap-4">
             <Field>
               <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
 
@@ -251,7 +251,7 @@ const OrderReceiverInfo = React.forwardRef<
                   id="receiver-card"
                   placeholder="Skriv korttekst her..."
                   className="h-40 field-sizing-fixed resize-none"
-                  disabled={!showCardText || selectedIndex === null}
+                  disabled={selectedIndex === null}
                   value={selected?.cardmsg ?? ''}
                   onChange={(e) =>
                     selectedIndex !== null &&
@@ -279,7 +279,7 @@ const OrderReceiverInfo = React.forwardRef<
                   id="receiver-instructions"
                   placeholder="Skriv spesielle instrukser her..."
                   className="h-40 field-sizing-fixed resize-none"
-                  disabled={!showInstructionsText || selectedIndex === null}
+                  disabled={selectedIndex === null}
                   value={selected?.instructmsg ?? ''}
                   onChange={(e) =>
                     selectedIndex !== null &&
@@ -298,8 +298,8 @@ const OrderReceiverInfo = React.forwardRef<
               )}
             </Field>
           </div>
-          <div className="col-start-2 col-span-2">
-            <FieldGroup className="flex flex-row gap-4">
+          <div className="lg:col-start-2 lg:col-span-2 @container/delivery">
+            <FieldGroup className="flex flex-col @[32rem]/delivery:flex-row gap-4">
               {/* DATE FIELD */}
               <Field>
                 <FieldLabel>Leveringsdato</FieldLabel>

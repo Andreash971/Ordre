@@ -27,7 +27,7 @@ export default function OrderExtraInfo({
   } = useOrderForm()
 
   return (
-    <div className={`${className} grid grid-cols-2 gap-4`}>
+    <div className={`${className} grid lg:grid-cols-2 gap-4`}>
       <Card>
         <CardContent>
           <Field>
