@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { UserPlus } from 'lucide-react'
-import { UserSearch } from 'lucide-react'
+import { UserPlus, UserSearch } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/ui/DataTable'
@@ -18,9 +17,8 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import AddCustomerForm, {
-  type AddCustomerFormValues,
-} from '#/components/AddCustomerForm'
+import type { AddCustomerFormValues } from '#/components/AddCustomerForm'
+import AddCustomerForm from '#/components/AddCustomerForm'
 import { customerColumns } from '#/components/CustomerColumns'
 import { getAllCustomers, insertCustomer } from '#/lib/customer-server-fns'
 import { queryKeys } from '#/lib/query-keys'
@@ -55,8 +53,8 @@ function CustomersPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <InputGroup className="max-w-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <InputGroup className="flex-1">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
@@ -68,7 +66,7 @@ function CustomersPage() {
         </InputGroup>
         <Button onClick={() => setAddOpen(true)}>
           <UserPlus />
-          Legg til kunde
+          <span className="hidden sm:inline">Legg til kunde</span>
         </Button>
       </div>
       <DataTable

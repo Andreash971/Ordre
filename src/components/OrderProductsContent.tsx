@@ -211,7 +211,7 @@ export default function OrderProductsContent({
           </div>
           <Button type="button" onClick={() => setAddOpen(true)}>
             <PackagePlus />
-            Nytt produkt
+            <span className="hidden sm:inline">Nytt produkt</span>
           </Button>
         </div>
 
@@ -231,7 +231,7 @@ export default function OrderProductsContent({
         <OrderTable
           items={items}
           setItems={setItems}
-          className="flex-1 min-h-0"
+          className="flex-1 min-h-60"
         />
       </CardContent>
     </Card>

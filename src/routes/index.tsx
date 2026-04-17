@@ -49,7 +49,7 @@ function OrderFormView() {
 
   return (
     <main className="page-wrap flex flex-col gap-4 px-4 pb-8 pt-6">
-      <div className="grid grid-cols-[2fr_4fr] grid-rows-[minmax(auto,clamp(400px,65vh,700px))] gap-4">
+      <div className="grid lg:grid-cols-[2fr_4fr] lg:grid-rows-[minmax(auto,clamp(400px,65vh,max-content))] gap-4">
         <div className="flex flex-col gap-4">
           <CustomerForm
             size="default"

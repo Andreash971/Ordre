@@ -8,13 +8,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
-import { FilePlusIcon } from 'lucide-react'
-import { Archive } from 'lucide-react'
-import { IdCard } from 'lucide-react'
-import { Package } from 'lucide-react'
-import { Settings } from 'lucide-react'
+import { FilePlusIcon, Archive, IdCard, Package, Settings } from 'lucide-react'
 
 const navLinks = [
   {
@@ -40,10 +37,15 @@ const navLinks = [
 ] as const
 
 export default function AppSidebar() {
+  const { isMobile, setOpenMobile } = useSidebar()
+  const handleNavClick = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader className="px-4 py-3">
-        <p className="text-2xl font-semibold group-data-[collapsible=icon]:hidden">
+        <p className="w-48 text-2xl font-semibold group-data-[collapsible=icon]:hidden">
           Blomster i Byhaven
         </p>
         <p className="text-lg group-data-[collapsible=icon]:hidden">Ordre</p>
@@ -64,6 +66,7 @@ export default function AppSidebar() {
                     activeProps={
                       { 'data-active': 'true' } as Record<string, string>
                     }
+                    onClick={handleNavClick}
                   >
                     {icon}
                     {label}
@@ -84,6 +87,7 @@ export default function AppSidebar() {
           <Link
             to="/settings"
             activeProps={{ 'data-active': 'true' } as Record<string, string>}
+            onClick={handleNavClick}
           >
             <Settings className="text-foreground" />
             Innstillinger

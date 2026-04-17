@@ -17,9 +17,8 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import AddProductForm, {
-  type AddProductFormValues,
-} from '#/components/AddProductForm'
+import type { AddProductFormValues } from '#/components/AddProductForm'
+import AddProductForm from '#/components/AddProductForm'
 import { productColumns } from '#/components/ProductColumns'
 import { getAllProducts, insertProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
@@ -54,8 +53,8 @@ function ProductsPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <InputGroup className="max-w-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <InputGroup className="flex-1">
           <InputGroupAddon>
             <PackageSearch />
           </InputGroupAddon>
@@ -67,7 +66,7 @@ function ProductsPage() {
         </InputGroup>
         <Button onClick={() => setAddOpen(true)}>
           <PackagePlus />
-          Legg til produkt
+          <span className="hidden sm:inline">Legg til produkt</span>
         </Button>
       </div>
       <DataTable
