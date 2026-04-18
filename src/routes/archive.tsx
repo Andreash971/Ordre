@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { getStoredOrders } from '#/lib/order-utils'
 import { OrderCard } from '@/components/ui/order-card'
 import {
@@ -10,7 +10,6 @@ import {
   EmptyContent,
 } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
-import { Link } from '@tanstack/react-router'
 
 import { Archive } from 'lucide-react'
 
