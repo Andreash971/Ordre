@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
-import type { DeliveryValues } from '#/lib/order-utils'
+import type { Customer, DeliveryValues } from '#/lib/order-utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from './ui/button-group'
@@ -34,19 +34,6 @@ import { TooltipWrapper } from './ui/TooltipWrapper'
 
 import { CalendarIcon, User, Plus, Minus } from 'lucide-react'
 
-type Customer = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  cardmsg: string
-  instructmsg: string
-  date: string
-  time: string | null
-}
-
 interface OrderReceiverInfoProps extends React.PropsWithChildren {
   className: string
   defaultDeliveryValues?: DeliveryValues
@@ -67,6 +54,7 @@ const emptyCustomer = (): Customer => ({
   address: '',
   postcode: '',
   city: '',
+  careof: '',
   cardmsg: '',
   instructmsg: '',
   date: '',
