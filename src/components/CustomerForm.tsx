@@ -107,6 +107,7 @@ function fillForm(
   form.setFieldValue('address', customer.address ?? '')
   form.setFieldValue('postcode', customer.postcode ?? '')
   form.setFieldValue('city', customer.city ?? '')
+  form.setFieldValue('careof', customer.careof ?? '')
 }
 
 export default function CustomerForm({
