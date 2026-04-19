@@ -13,6 +13,7 @@ const customerSelect = {
   address: customers.address,
   postcode: customers.postcode,
   city: customers.city,
+  careof: customers.careof,
 }
 
 export const getCustomers = createServerFn({ method: 'GET' }).handler(
