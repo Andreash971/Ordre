@@ -1,5 +1,6 @@
-import { useForm } from '@tanstack/react-form'
-import { useId } from 'react'
+import { useForm, useStore } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useId } from 'react'
 import * as z from 'zod'
 
 import {
@@ -34,6 +35,7 @@ import {
   searchCustomersByBusiness,
   searchCustomersByPhone,
 } from '#/lib/customer-server-fns'
+import { lookupPostcode } from '#/lib/bring-server-fns'
 
 type CustomerFormValues = {
   name: string
@@ -145,6 +147,21 @@ export default function CustomerForm({
       },
     },
   })
+
+  const postcode = useStore(form.store, (s) => s.values.postcode)
+
+  const { data: bringLookup } = useQuery({
+    queryKey: ['bring-postcode', postcode],
+    queryFn: () => lookupPostcode({ data: postcode }),
+    enabled: /^\d{4}$/.test(postcode),
+    staleTime: Infinity,
+  })
+
+  useEffect(() => {
+    if (bringLookup?.city) {
+      form.setFieldValue('city', bringLookup.city)
+    }
+  }, [bringLookup?.city])
 
   const formContent = (
     <form
