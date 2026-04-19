@@ -8,6 +8,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@/components/ui/input-group'
+import { cn } from '@/lib/utils'
 
 interface AutocompleteFieldProps<T extends { id: number }> {
   field: {
@@ -46,7 +47,9 @@ export default function AutocompleteField<T extends { id: number }>({
 }: AutocompleteFieldProps<T>) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [debouncedValue, setDebouncedValue] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   const [menuRect, setMenuRect] = useState<{
     top: number
     left: number
@@ -64,6 +67,18 @@ export default function AutocompleteField<T extends { id: number }>({
     enabled: debouncedValue.length >= 1,
     staleTime: 1000 * 10,
   })
+
+  useEffect(() => {
+    setHighlightedIndex(-1)
+  }, [suggestions])
+
+  useEffect(() => {
+    if (highlightedIndex < 0 || !listRef.current) return
+    const el = listRef.current.children[highlightedIndex] as
+      | HTMLElement
+      | undefined
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [highlightedIndex])
 
   useLayoutEffect(() => {
     if (!showSuggestions) return
@@ -98,6 +113,7 @@ export default function AutocompleteField<T extends { id: number }>({
             disabled={disabled}
             onChange={(e) => {
               field.handleChange(e.target.value)
+              setHighlightedIndex(-1)
               if (e.target.value.length >= 1) {
                 setShowSuggestions(true)
               } else {
@@ -106,11 +122,45 @@ export default function AutocompleteField<T extends { id: number }>({
             }}
             onBlur={() => {
               field.handleBlur()
-              setTimeout(() => setShowSuggestions(false), 150)
+              setTimeout(() => {
+                setShowSuggestions(false)
+                setHighlightedIndex(-1)
+              }, 150)
+            }}
+            onKeyDown={(e) => {
+              if (!showSuggestions || suggestions.length === 0) return
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                setHighlightedIndex((i) => (i + 1) % suggestions.length)
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                setHighlightedIndex((i) =>
+                  i <= 0 ? suggestions.length - 1 : i - 1,
+                )
+              } else if (e.key === 'Enter') {
+                if (highlightedIndex >= 0) {
+                  e.preventDefault()
+                  onSelect(suggestions[highlightedIndex])
+                  setShowSuggestions(false)
+                  setHighlightedIndex(-1)
+                }
+              } else if (e.key === 'Escape') {
+                setShowSuggestions(false)
+                setHighlightedIndex(-1)
+              }
             }}
             aria-invalid={isInvalid}
             placeholder={placeholder}
             autoComplete="off"
+            role="combobox"
+            aria-expanded={showSuggestions && suggestions.length > 0}
+            aria-controls={`${id}-listbox`}
+            aria-autocomplete="list"
+            aria-activedescendant={
+              highlightedIndex >= 0
+                ? `${id}-option-${highlightedIndex}`
+                : undefined
+            }
           />
         </InputGroup>
         {showSuggestions &&
@@ -118,6 +168,9 @@ export default function AutocompleteField<T extends { id: number }>({
           menuRect &&
           createPortal(
             <ul
+              ref={listRef}
+              id={`${id}-listbox`}
+              role="listbox"
               className="fixed z-50 mt-1 bg-popover border border-input rounded-md shadow-md max-h-60 overflow-auto"
               style={{
                 top: menuRect.top,
@@ -125,13 +178,22 @@ export default function AutocompleteField<T extends { id: number }>({
                 width: menuRect.width,
               }}
             >
-              {suggestions.map((item) => (
+              {suggestions.map((item, index) => (
                 <li
                   key={item.id}
-                  className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                  id={`${id}-option-${index}`}
+                  role="option"
+                  aria-selected={index === highlightedIndex}
+                  className={cn(
+                    'px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground',
+                    index === highlightedIndex &&
+                      'bg-accent text-accent-foreground',
+                  )}
+                  onMouseEnter={() => setHighlightedIndex(index)}
                   onMouseDown={() => {
                     onSelect(item)
                     setShowSuggestions(false)
+                    setHighlightedIndex(-1)
                   }}
                 >
                   {renderSuggestion(item)}
