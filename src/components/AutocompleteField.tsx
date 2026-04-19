@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 
 import { Field, FieldError } from '@/components/ui/field'
@@ -45,6 +46,12 @@ export default function AutocompleteField<T extends { id: number }>({
 }: AutocompleteFieldProps<T>) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [debouncedValue, setDebouncedValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [menuRect, setMenuRect] = useState<{
+    top: number
+    left: number
+    width: number
+  } | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedValue(field.state.value), 300)
@@ -58,6 +65,23 @@ export default function AutocompleteField<T extends { id: number }>({
     staleTime: 1000 * 10,
   })
 
+  useLayoutEffect(() => {
+    if (!showSuggestions) return
+    const update = () => {
+      const el = inputRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      setMenuRect({ top: r.bottom, left: r.left, width: r.width })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [showSuggestions])
+
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
 
   return (
@@ -69,6 +93,7 @@ export default function AutocompleteField<T extends { id: number }>({
             id={id}
             name={field.name}
             type={type}
+            ref={inputRef}
             value={field.state.value}
             disabled={disabled}
             onChange={(e) => {
@@ -88,22 +113,33 @@ export default function AutocompleteField<T extends { id: number }>({
             autoComplete="off"
           />
         </InputGroup>
-        {showSuggestions && suggestions.length > 0 && (
-          <ul className="absolute z-10 w-full mt-1 bg-popover border border-input rounded-md shadow-md max-h-60 overflow-auto">
-            {suggestions.map((item) => (
-              <li
-                key={item.id}
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                onMouseDown={() => {
-                  onSelect(item)
-                  setShowSuggestions(false)
-                }}
-              >
-                {renderSuggestion(item)}
-              </li>
-            ))}
-          </ul>
-        )}
+        {showSuggestions &&
+          suggestions.length > 0 &&
+          menuRect &&
+          createPortal(
+            <ul
+              className="fixed z-50 mt-1 bg-popover border border-input rounded-md shadow-md max-h-60 overflow-auto"
+              style={{
+                top: menuRect.top,
+                left: menuRect.left,
+                width: menuRect.width,
+              }}
+            >
+              {suggestions.map((item) => (
+                <li
+                  key={item.id}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                  onMouseDown={() => {
+                    onSelect(item)
+                    setShowSuggestions(false)
+                  }}
+                >
+                  {renderSuggestion(item)}
+                </li>
+              ))}
+            </ul>,
+            document.body,
+          )}
       </div>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>

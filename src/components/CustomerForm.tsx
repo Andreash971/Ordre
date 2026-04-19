@@ -35,7 +35,8 @@ import {
   searchCustomersByBusiness,
   searchCustomersByPhone,
 } from '#/lib/customer-server-fns'
-import { lookupPostcode } from '#/lib/bring-server-fns'
+import { lookupPostcode, suggestAddresses } from '#/lib/bring-server-fns'
+import type { AddressSuggestion } from '#/lib/bring-server-fns'
 
 type CustomerFormValues = {
   name: string
@@ -83,6 +84,27 @@ function CustomerSuggestionItem({
           {customer.company && <span>{customer.company}</span>}
         </span>
       )}
+    </>
+  )
+}
+
+function formatAddress(address: AddressSuggestion) {
+  return `${address.street_name}${address.house_number != null ? ` ${address.house_number}` : ''}${address.letter ?? ''}`
+}
+
+function AddressSuggestionItem({ address }: { address: AddressSuggestion }) {
+  return (
+    <>
+      <span className="font-medium">{formatAddress(address)}</span>
+      <span className="text-xs flex gap-1.5 mt-0.5">
+        <span>{`${address.postal_code} ${address.city}`}</span>
+        {address.municipality && (
+          <>
+            <span>|</span>
+            <span>{address.municipality}</span>
+          </>
+        )}
+      </span>
     </>
   )
 }
@@ -219,12 +241,19 @@ export default function CustomerForm({
 
         <form.Field name="address">
           {(field) => (
-            <FormInputField
+            <AutocompleteField
               field={field}
               id={`${formId}-address`}
               icon={<House className="text-foreground" />}
               placeholder="Adresse"
               disabled={disabled}
+              onSearch={(q) => suggestAddresses({ data: q })}
+              onSelect={(a) => {
+                form.setFieldValue('address', formatAddress(a))
+                form.setFieldValue('postcode', a.postal_code)
+                form.setFieldValue('city', a.city)
+              }}
+              renderSuggestion={(a) => <AddressSuggestionItem address={a} />}
             />
           )}
         </form.Field>

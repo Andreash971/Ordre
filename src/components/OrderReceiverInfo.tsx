@@ -162,7 +162,7 @@ const OrderReceiverInfo = React.forwardRef<
   return (
     <Card className={className}>
       <CardContent>
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[12rem_minmax(15rem,1fr)_1fr] lg:grid-rows-[auto_auto]">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(12rem,1fr)_minmax(15rem,1fr)_1fr] lg:grid-rows-[auto_auto]">
           <div className="lg:col-start-1 lg:row-span-2 lg:relative">
             <div className="lg:absolute lg:inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
