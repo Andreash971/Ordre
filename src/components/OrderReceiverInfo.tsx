@@ -3,7 +3,12 @@ import * as React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Calendar } from '@/components/ui/calendar'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from '@/components/ui/field'
 import {
   Popover,
   PopoverContent,
@@ -254,11 +259,17 @@ const OrderReceiverInfo = React.forwardRef<
           />
           <div className="lg:col-start-3 grid lg:grid-rows-2 gap-4">
             <Field>
-              <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
+              {showCardText ? (
+                <FieldLabel htmlFor="receiver-card">Kort</FieldLabel>
+              ) : (
+                <FieldTitle>Kort</FieldTitle>
+              )}
 
               {showCardText ? (
                 <Textarea
                   id="receiver-card"
+                  name="receiver-card"
+                  autoComplete="off"
                   placeholder="Skriv korttekst her..."
                   className="h-40 field-sizing-fixed resize-none"
                   disabled={selectedIndex === null}
@@ -280,13 +291,19 @@ const OrderReceiverInfo = React.forwardRef<
               )}
             </Field>
             <Field>
-              <FieldLabel htmlFor="receiver-instructions">
-                Spesielle Instrukser
-              </FieldLabel>
+              {showInstructionsText ? (
+                <FieldLabel htmlFor="receiver-instructions">
+                  Spesielle Instrukser
+                </FieldLabel>
+              ) : (
+                <FieldTitle>Spesielle Instrukser</FieldTitle>
+              )}
 
               {showInstructionsText ? (
                 <Textarea
                   id="receiver-instructions"
+                  name="receiver-instructions"
+                  autoComplete="off"
                   placeholder="Skriv spesielle instrukser her..."
                   className="h-40 field-sizing-fixed resize-none"
                   disabled={selectedIndex === null}
@@ -312,7 +329,7 @@ const OrderReceiverInfo = React.forwardRef<
             <FieldGroup className="flex flex-col @[32rem]/delivery:flex-row gap-4">
               {/* DATE FIELD */}
               <Field>
-                <FieldLabel>Leveringsdato</FieldLabel>
+                <FieldTitle>Leveringsdato</FieldTitle>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -360,8 +377,11 @@ const OrderReceiverInfo = React.forwardRef<
 
               {/* TIME FIELD */}
               <Field>
-                <FieldLabel>Leveringstidspunkt</FieldLabel>
+                <FieldLabel htmlFor="receiver-time-picker">
+                  Leveringstidspunkt
+                </FieldLabel>
                 <TimePicker
+                  id="receiver-time-picker"
                   value={selected?.time ?? null}
                   onChange={(val) => {
                     if (selectedIndex !== null) {

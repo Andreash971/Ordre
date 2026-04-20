@@ -22,6 +22,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -318,6 +319,9 @@ export function DataTable<TData, TValue>({
           >
             <SheetHeader>
               <SheetTitle>Detaljer</SheetTitle>
+              <SheetDescription className="sr-only">
+                Detaljer for valgt rad.
+              </SheetDescription>
             </SheetHeader>
             {sheetRow && (
               <>

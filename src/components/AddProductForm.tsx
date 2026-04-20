@@ -78,6 +78,7 @@ export default function AddProductForm({
               icon={<Package className="text-foreground" />}
               placeholder="Navn"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>
@@ -90,6 +91,7 @@ export default function AddProductForm({
               icon={<FolderOpen className="text-foreground" />}
               placeholder="Kategori"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>
@@ -103,6 +105,7 @@ export default function AddProductForm({
               placeholder="Pris"
               type="number"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>
@@ -110,7 +113,7 @@ export default function AddProductForm({
 
       <div className="flex justify-end gap-2 mt-4">
         {close && (
-          <DialogClose>
+          <DialogClose asChild>
             <Button type="button" variant="ghost" disabled={disabled}>
               Lukk
             </Button>

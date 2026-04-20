@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { Field, FieldLabel, FieldTitle } from '@/components/ui/field'
 import { TextBoxSwap } from '@/components/ui/TextBoxSwap'
 import { useOrderForm } from '#/components/order-form/OrderFormContext'
 
@@ -31,7 +31,11 @@ export default function OrderExtraInfo({
       <Card>
         <CardContent>
           <Field>
-            <FieldLabel htmlFor="textarea-card">Kort</FieldLabel>
+            {showCardText ? (
+              <FieldLabel htmlFor="textarea-card">Kort</FieldLabel>
+            ) : (
+              <FieldTitle>Kort</FieldTitle>
+            )}
 
             <TextBoxSwap
               id="textarea-card"
@@ -52,9 +56,13 @@ export default function OrderExtraInfo({
       <Card>
         <CardContent>
           <Field>
-            <FieldLabel htmlFor="textarea-instructions">
-              Spesielle Instrukser
-            </FieldLabel>
+            {showInstructionsText ? (
+              <FieldLabel htmlFor="textarea-instructions">
+                Spesielle Instrukser
+              </FieldLabel>
+            ) : (
+              <FieldTitle>Spesielle Instrukser</FieldTitle>
+            )}
 
             <TextBoxSwap
               id="textarea-instructions"
