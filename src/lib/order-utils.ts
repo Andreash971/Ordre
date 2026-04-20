@@ -9,6 +9,7 @@ export type CustomerFormValues = {
   address: string
   postcode: string
   city: string
+  careof: string
 }
 
 export type Customer = {
@@ -18,6 +19,7 @@ export type Customer = {
   address: string
   postcode: string
   city: string
+  careof: string
   cardmsg: string
   instructmsg: string
   date: string
@@ -77,7 +79,7 @@ export function buildOrderData(
     receiver: {
       name: customer.name,
       company: customer.company,
-      co: '',
+      co: customer.careof,
       address: customer.address,
       postCode: `${customer.postcode} ${customer.city}`.trim(),
       phone: customer.phone,
@@ -148,7 +150,12 @@ export function getCurrentOrders(
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
     const key = `ordre-${safeName}`
-    return { data: orderData, savedAt: now, expiresAt: now + getRetentionMs(), key }
+    return {
+      data: orderData,
+      savedAt: now,
+      expiresAt: now + getRetentionMs(),
+      key,
+    }
   })
 }
 
