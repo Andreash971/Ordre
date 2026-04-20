@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { getStoredOrders, type StoredOrder } from '#/lib/order-utils'
+import { getStoredOrders } from '#/lib/order-utils'
+import type { StoredOrder } from '#/lib/order-utils'
 import { OrderCard } from '@/components/ui/order-card'
 import {
   Empty,
@@ -25,7 +26,7 @@ function ArchivePage() {
   }, [])
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-6">
+    <main className="rise-in page-wrap px-4 pb-8 pt-6">
       {orders.length === 0 ? (
         <Empty>
           <EmptyHeader>

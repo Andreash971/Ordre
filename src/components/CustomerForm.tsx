@@ -201,6 +201,7 @@ export default function CustomerForm({
               icon={<User className="text-foreground" />}
               placeholder="Navn"
               disabled={disabled}
+              autoComplete="name"
               onSearch={(q) => searchCustomers({ data: q })}
               onSelect={(c) => fillForm(form, c)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
@@ -217,6 +218,7 @@ export default function CustomerForm({
               placeholder="Telefon"
               type="tel"
               disabled={disabled}
+              autoComplete="tel"
               onSearch={(q) => searchCustomersByPhone({ data: q })}
               onSelect={(c) => fillForm(form, c)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
@@ -232,6 +234,7 @@ export default function CustomerForm({
               icon={<BriefcaseBusiness className="text-foreground" />}
               placeholder="Firma"
               disabled={disabled}
+              autoComplete="organization"
               onSearch={(q) => searchCustomersByBusiness({ data: q })}
               onSelect={(c) => fillForm(form, c)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
@@ -247,6 +250,7 @@ export default function CustomerForm({
               icon={<House className="text-foreground" />}
               placeholder="Adresse"
               disabled={disabled}
+              autoComplete="street-address"
               onSearch={(q) => suggestAddresses({ data: q })}
               onSelect={(a) => {
                 form.setFieldValue('address', formatAddress(a))
@@ -268,6 +272,7 @@ export default function CustomerForm({
                 placeholder="Postnr."
                 type="number"
                 disabled={disabled}
+                autoComplete="postal-code"
               />
             )}
           </form.Field>
@@ -280,6 +285,7 @@ export default function CustomerForm({
                 icon={<Building2 className="text-foreground" />}
                 placeholder="Sted"
                 disabled={disabled}
+                autoComplete="address-level2"
               />
             )}
           </form.Field>
@@ -294,6 +300,7 @@ export default function CustomerForm({
                 icon={<UserCheck className="text-foreground" />}
                 placeholder="C/O"
                 disabled={disabled}
+                autoComplete="off"
               />
             )}
           </form.Field>

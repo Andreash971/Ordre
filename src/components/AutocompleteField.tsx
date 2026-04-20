@@ -29,6 +29,7 @@ interface AutocompleteFieldProps<T extends { id: number }> {
   placeholder: string
   type?: React.HTMLInputTypeAttribute
   disabled?: boolean
+  autoComplete?: React.InputHTMLAttributes<HTMLInputElement>['autoComplete']
   onSearch: (query: string) => Promise<T[]>
   onSelect: (item: T) => void
   renderSuggestion: (item: T) => React.ReactNode
@@ -41,6 +42,7 @@ export default function AutocompleteField<T extends { id: number }>({
   placeholder,
   type = 'text',
   disabled,
+  autoComplete = 'off',
   onSearch,
   onSelect,
   renderSuggestion,
@@ -151,7 +153,7 @@ export default function AutocompleteField<T extends { id: number }>({
             }}
             aria-invalid={isInvalid}
             placeholder={placeholder}
-            autoComplete="off"
+            autoComplete={autoComplete}
             role="combobox"
             aria-expanded={showSuggestions && suggestions.length > 0}
             aria-controls={`${id}-listbox`}

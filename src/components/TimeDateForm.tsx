@@ -3,7 +3,12 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from '@/components/ui/field'
 import {
   Popover,
   PopoverContent,
@@ -48,7 +53,7 @@ export default function TimeDateForm({
         <FieldGroup className="flex flex-col gap-4">
           {/* DATE FIELD */}
           <Field>
-            <FieldLabel>Leveringsdato</FieldLabel>
+            <FieldTitle>Leveringsdato</FieldTitle>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -89,7 +94,11 @@ export default function TimeDateForm({
 
           {/* TIME FIELD */}
           <Field>
-            <FieldLabel htmlFor="time-picker">Leveringstidspunkt</FieldLabel>
+            {showTime ? (
+              <FieldLabel htmlFor="time-picker">Leveringstidspunkt</FieldLabel>
+            ) : (
+              <FieldTitle>Leveringstidspunkt</FieldTitle>
+            )}
             {showTime ? (
               <div className="flex w-full">
                 <TimePicker

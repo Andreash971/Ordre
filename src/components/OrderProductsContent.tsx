@@ -149,6 +149,8 @@ export default function OrderProductsContent({
                 <Search className="h-4 w-4" />
               </InputGroupAddon>
               <InputGroupInput
+                id="product-search"
+                name="product-search"
                 placeholder="Søk etter produkt..."
                 autoComplete="off"
                 value={searchQuery}

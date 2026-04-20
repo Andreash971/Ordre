@@ -44,6 +44,8 @@ const TextBoxSwap = ({
       <InputGroup>
         <InputGroupTextarea
           id={id}
+          name={id}
+          autoComplete="off"
           placeholder={placeholder ?? ''}
           value={textValue ?? ''}
           onChange={(e) => onValueChange(e.target.value)}

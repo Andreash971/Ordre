@@ -8,6 +8,7 @@ import { DataTable } from '@/components/ui/DataTable'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -52,13 +53,16 @@ function CustomersPage() {
   }
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-6">
+    <main className="rise-in page-wrap px-4 pb-8 pt-6">
       <div className="flex items-center gap-2 mb-4">
         <InputGroup className="flex-1">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
           <InputGroupInput
+            id="customer-search"
+            name="customer-search"
+            autoComplete="off"
             placeholder="Søk etter kunde..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
@@ -81,6 +85,9 @@ function CustomersPage() {
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Legg til kunde</DialogTitle>
+            <DialogDescription>
+              Registrer en ny kunde i systemet.
+            </DialogDescription>
           </DialogHeader>
           <AddCustomerForm
             saveText="Legg til"
