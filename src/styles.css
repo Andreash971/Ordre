@@ -4,11 +4,6 @@
 @import '@fontsource-variable/inter';
 @plugin "@tailwindcss/typography";
 
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter-Variable.ttf');
-}
-
 /* **********************
 ****** Shadcn Start *****
 ********************** */

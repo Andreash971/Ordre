@@ -24,6 +24,7 @@ interface FormInputFieldProps {
   placeholder: string
   type?: React.HTMLInputTypeAttribute
   disabled?: boolean
+  autoComplete?: React.InputHTMLAttributes<HTMLInputElement>['autoComplete']
 }
 
 export default function FormInputField({
@@ -33,6 +34,7 @@ export default function FormInputField({
   placeholder,
   type = 'text',
   disabled,
+  autoComplete,
 }: FormInputFieldProps) {
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -50,6 +52,7 @@ export default function FormInputField({
           aria-invalid={isInvalid}
           placeholder={placeholder}
           disabled={disabled}
+          autoComplete={autoComplete}
         />
       </InputGroup>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}

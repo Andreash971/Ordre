@@ -130,6 +130,7 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Rediger kunde</DialogTitle>
+            <DialogDescription>Oppdater kundens informasjon.</DialogDescription>
           </DialogHeader>
           <AddCustomerForm
             saveText="Lagre"

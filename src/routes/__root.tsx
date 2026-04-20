@@ -10,6 +10,7 @@ import {
   SidebarTrigger,
 } from '../components/ui/sidebar'
 import { Separator } from '../components/ui/separator'
+import NotFound from '../components/NotFound'
 
 import AppSidebar from '../components/AppSidebar'
 
@@ -52,7 +53,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
-  notFoundComponent: () => <div>404 Not Found</div>,
+  notFoundComponent: () => <NotFound />,
 })
 
 const pageLabels: Record<string, string> = {

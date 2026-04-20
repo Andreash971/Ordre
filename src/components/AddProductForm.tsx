@@ -78,6 +78,7 @@ export default function AddProductForm({
               icon={<Package className="text-foreground" />}
               placeholder="Navn"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>
@@ -90,6 +91,7 @@ export default function AddProductForm({
               icon={<FolderOpen className="text-foreground" />}
               placeholder="Kategori"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>
@@ -103,6 +105,7 @@ export default function AddProductForm({
               placeholder="Pris"
               type="number"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>

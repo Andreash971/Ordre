@@ -60,7 +60,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
   const defaultValues: AddProductFormValues = {
     name: row.original.name,
     category: row.original.category ?? '',
-    price: row.original.price ?? '',
+    price: row.original.price,
   }
 
   async function handleEdit(values: AddProductFormValues) {
@@ -124,6 +124,9 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Rediger produkt</DialogTitle>
+            <DialogDescription>
+              Oppdater produktets informasjon.
+            </DialogDescription>
           </DialogHeader>
           <AddProductForm
             saveText="Lagre"
