@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { getStoredOrders } from '#/lib/order-utils'
+import { getStoredOrders, type StoredOrder } from '#/lib/order-utils'
 import { OrderCard } from '@/components/ui/order-card'
 import {
   Empty,
@@ -18,7 +19,10 @@ export const Route = createFileRoute('/archive')({
 })
 
 function ArchivePage() {
-  const orders = getStoredOrders()
+  const [orders, setOrders] = useState<StoredOrder[]>([])
+  useEffect(() => {
+    setOrders(getStoredOrders())
+  }, [])
 
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
