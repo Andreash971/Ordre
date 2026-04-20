@@ -85,11 +85,7 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
     <>
       {isInSheet ? (
         <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditOpen(true)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <SquarePen />
             Rediger
           </Button>

@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
-import type { DeliveryValues } from '#/lib/order-utils'
+import type { Customer, DeliveryValues } from '#/lib/order-utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from './ui/button-group'
@@ -23,22 +23,16 @@ import {
 } from './ui/item'
 import CustomerForm from '../components/CustomerForm'
 import { EmptyCard } from '@/components/ui/empty-card'
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from '@/components/ui/empty'
 import { useOrderForm } from '#/components/order-form/OrderFormContext'
+import { TooltipWrapper } from './ui/TooltipWrapper'
 
 import { CalendarIcon, User, Plus, Minus } from 'lucide-react'
-
-type Customer = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  cardmsg: string
-  instructmsg: string
-  date: string
-  time: string | null
-}
 
 interface OrderReceiverInfoProps extends React.PropsWithChildren {
   className: string
@@ -60,6 +54,7 @@ const emptyCustomer = (): Customer => ({
   address: '',
   postcode: '',
   city: '',
+  careof: '',
   cardmsg: '',
   instructmsg: '',
   date: '',
@@ -167,7 +162,7 @@ const OrderReceiverInfo = React.forwardRef<
   return (
     <Card className={className}>
       <CardContent>
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[12rem_minmax(15rem,1fr)_1fr] lg:grid-rows-[auto_auto]">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(12rem,1fr)_minmax(15rem,1fr)_1fr] lg:grid-rows-[auto_auto]">
           <div className="lg:col-start-1 lg:row-span-2 lg:relative">
             <div className="lg:absolute lg:inset-0 flex flex-col">
               <div className="flex justify-between items-center mb-4">
@@ -175,51 +170,66 @@ const OrderReceiverInfo = React.forwardRef<
                   Mottakere
                 </h2>
                 <ButtonGroup>
-                  <Button
-                    onClick={handleRemove}
-                    disabled={selectedIndex === null}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={handleAdd}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <TooltipWrapper TooltipText="Fjern mottaker">
+                    <Button
+                      onClick={handleRemove}
+                      disabled={selectedIndex === null}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </TooltipWrapper>
+                  <TooltipWrapper TooltipText="Legg til mottaker">
+                    <Button onClick={handleAdd}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipWrapper>
                 </ButtonGroup>
               </div>
               <ScrollArea className="flex-1 min-h-0 max-h-48 lg:max-h-none rounded-md border">
                 <div className="p-4">
-                  {customers.map((customer, i) => (
-                    <React.Fragment key={i}>
-                      <Item
-                        variant="outline"
-                        size="xs"
-                        className={`${
-                          selectedIndex === i
-                            ? 'bg-accent text-accent-foreground'
-                            : 'hover:bg-muted'
-                        } mb-2`}
-                        onClick={() => setSelectedIndex(i)}
-                      >
-                        <ItemMedia variant="icon">
-                          <User />
-                        </ItemMedia>
-                        <ItemContent>
-                          <ItemTitle>
-                            {customer.name || `Mottaker ${i + 1}`}
-                          </ItemTitle>
-                          <ItemDescription
-                            className={`${
-                              selectedIndex === i
-                                ? 'text-accent-foreground'
-                                : 'text-muted-foreground'
-                            }`}
-                          >
-                            {customer.phone}
-                          </ItemDescription>
-                        </ItemContent>
-                      </Item>
-                    </React.Fragment>
-                  ))}
+                  {customers.length === 0 ? (
+                    <Empty className="border border-dashed p-6">
+                      <EmptyHeader>
+                        <EmptyTitle>Ingen mottakere</EmptyTitle>
+                        <EmptyDescription>
+                          Legg til minst én mottaker.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  ) : (
+                    customers.map((customer, i) => (
+                      <React.Fragment key={i}>
+                        <Item
+                          variant="outline"
+                          size="xs"
+                          className={`${
+                            selectedIndex === i
+                              ? 'bg-accent text-accent-foreground'
+                              : 'hover:bg-muted'
+                          } mb-2`}
+                          onClick={() => setSelectedIndex(i)}
+                        >
+                          <ItemMedia variant="icon">
+                            <User />
+                          </ItemMedia>
+                          <ItemContent>
+                            <ItemTitle>
+                              {customer.name || `Mottaker ${i + 1}`}
+                            </ItemTitle>
+                            <ItemDescription
+                              className={`${
+                                selectedIndex === i
+                                  ? 'text-accent-foreground'
+                                  : 'text-muted-foreground'
+                              }`}
+                            >
+                              {customer.phone}
+                            </ItemDescription>
+                          </ItemContent>
+                        </Item>
+                      </React.Fragment>
+                    ))
+                  )}
                 </div>
               </ScrollArea>
             </div>

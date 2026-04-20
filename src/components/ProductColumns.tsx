@@ -79,11 +79,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
     <>
       {isInSheet ? (
         <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditOpen(true)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <SquarePen />
             Rediger
           </Button>

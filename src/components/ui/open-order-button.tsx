@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import type { buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import type { VariantProps } from 'class-variance-authority'
 import { openOrdersPdf, openStoredOrderPdf } from '#/lib/open-orders'
 import type {
@@ -10,6 +11,7 @@ import type {
   StoredOrder,
 } from '#/lib/order-utils'
 import type { Item } from '#/components/OrderColumns'
+import { TooltipWrapper } from './TooltipWrapper'
 
 type OpenOrderButtonProps =
   | {
@@ -45,25 +47,26 @@ export default function OpenOrderButton({
       if (storedOrder) {
         await openStoredOrderPdf(storedOrder)
       } else {
-        await openOrdersPdf(customers!, senderValues!, deliveryValues!, items!)
+        await openOrdersPdf(customers, senderValues, deliveryValues, items)
       }
     } finally {
       setIsPrinting(false)
     }
   }
 
-  const isDisabled =
-    isPrinting || (!storedOrder && (!customers || customers.length === 0))
+  const isDisabled = isPrinting || (!storedOrder && customers.length === 0)
 
   return (
-    <Button
-      onClick={handleOpenOrders}
-      disabled={isDisabled}
-      variant={variant}
-      size="lg"
-    >
-      <Printer className="h-4 w-4" />
-      {isPrinting ? 'Åpner PDF...' : 'Åpne PDF'}
-    </Button>
+    <TooltipWrapper TooltipText="Lagre ordre og åpne PDF i ny fane">
+      <Button
+        onClick={handleOpenOrders}
+        disabled={isDisabled}
+        variant={variant}
+        size="lg"
+      >
+        <Printer className="h-4 w-4" />
+        {isPrinting ? 'Åpner PDF...' : 'Åpne PDF'}
+      </Button>
+    </TooltipWrapper>
   )
 }

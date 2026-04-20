@@ -218,7 +218,7 @@ function CompanyInfoForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid grid-cols-2 gap-3 w-full pt-1"
+      className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full pt-1"
     >
       <Input
         value={company.name}
@@ -240,7 +240,7 @@ function CompanyInfoForm() {
         placeholder="Telefon"
         onChange={(e) => handleChange('phone', e.target.value)}
       />
-      <div className="col-span-2 flex justify-end">
+      <div className="col-span-full flex justify-end">
         <Button type="submit" variant="outline" size="sm">
           {saved ? 'Lagret' : 'Lagre'}
         </Button>
@@ -252,7 +252,7 @@ function CompanyInfoForm() {
 function SettingsPage() {
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
-      <div className="flex flex-col gap-4 w-lg">
+      <div className="flex flex-col gap-4 w-full max-w-lg">
         <Item variant="outline">
           <ItemMedia variant="icon">
             <Palette />

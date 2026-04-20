@@ -1,5 +1,6 @@
-import { useForm } from '@tanstack/react-form'
-import { useId } from 'react'
+import { useForm, useStore } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useId } from 'react'
 import * as z from 'zod'
 
 import {
@@ -34,6 +35,8 @@ import {
   searchCustomersByBusiness,
   searchCustomersByPhone,
 } from '#/lib/customer-server-fns'
+import { lookupPostcode, suggestAddresses } from '#/lib/bring-server-fns'
+import type { AddressSuggestion } from '#/lib/bring-server-fns'
 
 type CustomerFormValues = {
   name: string
@@ -85,6 +88,27 @@ function CustomerSuggestionItem({
   )
 }
 
+function formatAddress(address: AddressSuggestion) {
+  return `${address.street_name}${address.house_number != null ? ` ${address.house_number}` : ''}${address.letter ?? ''}`
+}
+
+function AddressSuggestionItem({ address }: { address: AddressSuggestion }) {
+  return (
+    <>
+      <span className="font-medium">{formatAddress(address)}</span>
+      <span className="text-xs flex gap-1.5 mt-0.5">
+        <span>{`${address.postal_code} ${address.city}`}</span>
+        {address.municipality && (
+          <>
+            <span>|</span>
+            <span>{address.municipality}</span>
+          </>
+        )}
+      </span>
+    </>
+  )
+}
+
 function fillForm(
   form: {
     setFieldValue: (
@@ -107,6 +131,7 @@ function fillForm(
   form.setFieldValue('address', customer.address ?? '')
   form.setFieldValue('postcode', customer.postcode ?? '')
   form.setFieldValue('city', customer.city ?? '')
+  form.setFieldValue('careof', customer.careof ?? '')
 }
 
 export default function CustomerForm({
@@ -144,6 +169,21 @@ export default function CustomerForm({
       },
     },
   })
+
+  const postcode = useStore(form.store, (s) => s.values.postcode)
+
+  const { data: bringLookup } = useQuery({
+    queryKey: ['bring-postcode', postcode],
+    queryFn: () => lookupPostcode({ data: postcode }),
+    enabled: /^\d{4}$/.test(postcode),
+    staleTime: Infinity,
+  })
+
+  useEffect(() => {
+    if (bringLookup?.city) {
+      form.setFieldValue('city', bringLookup.city)
+    }
+  }, [bringLookup?.city])
 
   const formContent = (
     <form
@@ -201,12 +241,19 @@ export default function CustomerForm({
 
         <form.Field name="address">
           {(field) => (
-            <FormInputField
+            <AutocompleteField
               field={field}
               id={`${formId}-address`}
               icon={<House className="text-foreground" />}
               placeholder="Adresse"
               disabled={disabled}
+              onSearch={(q) => suggestAddresses({ data: q })}
+              onSelect={(a) => {
+                form.setFieldValue('address', formatAddress(a))
+                form.setFieldValue('postcode', a.postal_code)
+                form.setFieldValue('city', a.city)
+              }}
+              renderSuggestion={(a) => <AddressSuggestionItem address={a} />}
             />
           )}
         </form.Field>
