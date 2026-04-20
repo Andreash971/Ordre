@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 
 import { db } from '#/db/'
@@ -148,6 +149,8 @@ export default function OrderProductsContent({
                 <Search className="h-4 w-4" />
               </InputGroupAddon>
               <InputGroupInput
+                id="product-search"
+                name="product-search"
                 placeholder="Søk etter produkt..."
                 autoComplete="off"
                 value={searchQuery}
@@ -219,6 +222,9 @@ export default function OrderProductsContent({
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
               <DialogTitle>Legg til produkt</DialogTitle>
+              <DialogDescription>
+                Fyll inn navn, kategori og pris.
+              </DialogDescription>
             </DialogHeader>
             <AddProductForm
               saveText="Legg til"

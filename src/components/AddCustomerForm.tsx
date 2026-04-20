@@ -95,6 +95,7 @@ export default function AddCustomerForm({
               icon={<User className="text-foreground" />}
               placeholder="Navn"
               disabled={disabled}
+              autoComplete="name"
             />
           )}
         </form.Field>
@@ -108,6 +109,7 @@ export default function AddCustomerForm({
               placeholder="Telefon"
               type="tel"
               disabled={disabled}
+              autoComplete="tel"
             />
           )}
         </form.Field>
@@ -120,6 +122,7 @@ export default function AddCustomerForm({
               icon={<BriefcaseBusiness className="text-foreground" />}
               placeholder="Firma"
               disabled={disabled}
+              autoComplete="organization"
             />
           )}
         </form.Field>
@@ -132,6 +135,7 @@ export default function AddCustomerForm({
               icon={<House className="text-foreground" />}
               placeholder="Adresse"
               disabled={disabled}
+              autoComplete="street-address"
             />
           )}
         </form.Field>
@@ -146,6 +150,7 @@ export default function AddCustomerForm({
                 placeholder="Postnr."
                 type="number"
                 disabled={disabled}
+                autoComplete="postal-code"
               />
             )}
           </form.Field>
@@ -158,6 +163,7 @@ export default function AddCustomerForm({
                 icon={<Building2 className="text-foreground" />}
                 placeholder="Sted"
                 disabled={disabled}
+                autoComplete="address-level2"
               />
             )}
           </form.Field>
@@ -171,6 +177,7 @@ export default function AddCustomerForm({
               icon={<UserCheck className="text-foreground" />}
               placeholder="C/O"
               disabled={disabled}
+              autoComplete="off"
             />
           )}
         </form.Field>
@@ -178,7 +185,7 @@ export default function AddCustomerForm({
 
       <div className="flex justify-end gap-2 mt-4">
         {close && (
-          <DialogClose>
+          <DialogClose asChild>
             <Button type="button" variant="ghost" disabled={disabled}>
               Lukk
             </Button>
