@@ -263,7 +263,7 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
           </View>
 
           <View style={styles.container}>
-            <Text style={styles.heading}>Spesielle Instruksjoner</Text>
+            <Text style={styles.heading}>Spesielle Instrukser</Text>
             <View style={styles.textBoxContainer}>
               <Text>{instructionsText}</Text>
             </View>
