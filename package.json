@@ -22,6 +22,7 @@
     "check": "prettier --write . && eslint --fix"
   },
   "dependencies": {
+    "@better-auth/infra": "^0.2.3",
     "@faker-js/faker": "^10.3.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@react-pdf/renderer": "^4.3.2",
@@ -41,7 +42,7 @@
     "@tanstack/react-start": "latest",
     "@tanstack/react-table": "latest",
     "@tanstack/router-plugin": "^1.132.0",
-    "better-auth": "^1.5.3",
+    "better-auth": "^1.6.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
