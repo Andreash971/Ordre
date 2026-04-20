@@ -178,7 +178,7 @@ export default function AddCustomerForm({
 
       <div className="flex justify-end gap-2 mt-4">
         {close && (
-          <DialogClose>
+          <DialogClose asChild>
             <Button type="button" variant="ghost" disabled={disabled}>
               Lukk
             </Button>
