@@ -57,7 +57,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 const pageLabels: Record<string, string> = {
-  '/': 'Ny Ordre',
+  '/': 'Oversikt',
+  '/new': 'Ny Ordre',
   '/archive': 'Arkiv',
   '/customers': 'Kunder',
   '/products': 'Produkter',

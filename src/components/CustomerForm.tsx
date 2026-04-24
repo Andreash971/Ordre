@@ -55,6 +55,7 @@ interface CustomerFormProps {
   reset?: boolean
   disabled?: boolean
   showCareof?: boolean
+  bare?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
 }
@@ -141,6 +142,7 @@ export default function CustomerForm({
   size,
   disabled,
   showCareof = false,
+  bare = false,
   defaultValues: initialValues,
   onValuesChange,
 }: CustomerFormProps) {
@@ -333,6 +335,17 @@ export default function CustomerForm({
       </TooltipWrapper>
     </>
   )
+
+  if (bare) {
+    return (
+      <div className={cn('flex flex-col gap-3', className)}>
+        {formContent}
+        {formButtons && (
+          <div className="flex justify-end gap-2">{buttons}</div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <Card size={size} className={cn('min-w-60', className)}>
