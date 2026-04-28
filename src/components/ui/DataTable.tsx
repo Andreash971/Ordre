@@ -6,7 +6,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, Row } from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,6 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData, TValue> {
     className?: string
     priority?: 'primary' | 'secondary'
@@ -69,6 +68,8 @@ interface DataTableProps<TData, TValue> {
   globalFilter?: string
   pagination?: boolean
   pageSize?: number
+  rowClassName?: (row: Row<TData>) => string | undefined
+  onRowClick?: (row: Row<TData>) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -80,6 +81,8 @@ export function DataTable<TData, TValue>({
   globalFilter,
   pagination = false,
   pageSize = 10,
+  rowClassName,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [pageIndex, setPageIndex] = useState(0)
   const [sheetRowId, setSheetRowId] = useState<string | null>(null)
@@ -168,7 +171,7 @@ export function DataTable<TData, TValue>({
       <div className="flex flex-col gap-2 flex-1 min-h-0 min-w-0 w-full">
         <div className="rounded-md border overflow-hidden flex flex-col flex-1 min-h-0 min-w-0">
           <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-auto">
-            <Table containerClassName="overflow-visible">
+            <Table className="overflow-visible">
               <TableHeader className="sticky top-0 bg-background">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
@@ -209,53 +212,65 @@ export function DataTable<TData, TValue>({
               </TableHeader>
               <TableBody>
                 {rows.length ? (
-                  rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && 'selected'}
-                      onClick={
-                        isMobile ? () => setSheetRowId(row.id) : undefined
-                      }
-                      className={isMobile ? 'cursor-pointer' : undefined}
-                    >
-                      {row
-                        .getVisibleCells()
-                        .filter(
-                          (cell) =>
-                            !isMobile ||
-                            isColumnVisibleOnMobile(cell.column.id),
-                        )
-                        .map((cell) => {
-                          const meta = cell.column.columnDef.meta
-                          const rendered = flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
+                  rows.map((row) => {
+                    const extraRowClass = rowClassName?.(row)
+                    const handleRowClick = isMobile
+                      ? () => setSheetRowId(row.id)
+                      : onRowClick
+                        ? () => onRowClick(row)
+                        : undefined
+                    const clickable = Boolean(handleRowClick)
+                    return (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && 'selected'}
+                        onClick={handleRowClick}
+                        className={cn(
+                          clickable && 'cursor-pointer',
+                          extraRowClass,
+                        )}
+                      >
+                        {row
+                          .getVisibleCells()
+                          .filter(
+                            (cell) =>
+                              !isMobile ||
+                              isColumnVisibleOnMobile(cell.column.id),
                           )
-                          const truncateDesktop = meta?.truncate && !isMobile
-                          return (
-                            <TableCell
-                              key={cell.id}
-                              className={
-                                truncateDesktop ? undefined : meta?.className
-                              }
-                            >
-                              {truncateDesktop ? (
-                                <div className={cn('truncate', meta.className)}>
-                                  {rendered}
-                                </div>
-                              ) : (
-                                rendered
-                              )}
-                            </TableCell>
-                          )
-                        })}
-                      {isMobile && (
-                        <TableCell className="w-0 pr-3 text-muted-foreground">
-                          <ChevronRight className="size-4" />
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
+                          .map((cell) => {
+                            const meta = cell.column.columnDef.meta
+                            const rendered = flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )
+                            const truncateDesktop = meta?.truncate && !isMobile
+                            return (
+                              <TableCell
+                                key={cell.id}
+                                className={
+                                  truncateDesktop ? undefined : meta?.className
+                                }
+                              >
+                                {truncateDesktop ? (
+                                  <div
+                                    className={cn('truncate', meta.className)}
+                                  >
+                                    {rendered}
+                                  </div>
+                                ) : (
+                                  rendered
+                                )}
+                              </TableCell>
+                            )
+                          })}
+                        {isMobile && (
+                          <TableCell className="w-0 pr-3 text-muted-foreground">
+                            <ChevronRight className="size-4" />
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    )
+                  })
                 ) : (
                   <TableRow>
                     <TableCell
@@ -272,7 +287,7 @@ export function DataTable<TData, TValue>({
             </Table>
           </div>
           {footer && (
-            <Table containerClassName="overflow-x-clip">
+            <Table className="overflow-x-clip">
               <TableFooter>{footer}</TableFooter>
             </Table>
           )}
