@@ -44,7 +44,10 @@ export function formatDeliveryDate(dateStr: string) {
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const shortDate = `${day}.${month}.${date.getFullYear()}`
-  return { dayText, longDate, shortDate }
+  const rawMonth = date.toLocaleDateString('nb-NO', { month: 'long' })
+  const monthName = rawMonth.charAt(0).toUpperCase() + rawMonth.slice(1)
+  const fullDate = `${dayText}, ${date.getDate()} ${monthName} ${date.getFullYear()}`
+  return { dayText, longDate, shortDate, fullDate }
 }
 
 export function buildOrderData(
@@ -88,10 +91,12 @@ export function buildOrderData(
       cardText: customer.cardmsg,
       instructionsText: customer.instructmsg,
     },
-    orderContent: (customer.time !== null
-      ? items
-      : items.filter((i) => i.name !== 'Frakt Tidspunktstillegg')
-    ).map((item) => ({
+    orderContent: items
+      .filter(
+        (i) => customer.time !== null || i.name !== 'Frakt Tidspunktstillegg',
+      )
+      .filter((i) => customer.cardmsg.trim() !== '' || i.name !== 'Kort')
+      .map((item) => ({
       product: item.name,
       quantity: item.quantity,
       price: item.price,

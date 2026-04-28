@@ -9,9 +9,11 @@ import {
 } from '@/components/ui/empty'
 import { cn } from '@/lib/utils'
 
-interface EmptyButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> {
-  icon: React.ReactNode
+interface EmptyButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'title'
+> {
+  icon?: React.ReactNode
   title: React.ReactNode
   description?: React.ReactNode
 }
@@ -35,11 +37,9 @@ export function EmptyButton({
     >
       <Empty className="border border-dashed group-hover:border-primary group-hover:bg-accent/20">
         <EmptyHeader>
-          <EmptyMedia variant="icon">{icon}</EmptyMedia>
+          {icon && <EmptyMedia variant="icon">{icon}</EmptyMedia>}
           <EmptyTitle>{title}</EmptyTitle>
-          {description ? (
-            <EmptyDescription>{description}</EmptyDescription>
-          ) : null}
+          {description && <EmptyDescription>{description}</EmptyDescription>}
         </EmptyHeader>
       </Empty>
     </button>

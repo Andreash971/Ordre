@@ -31,7 +31,6 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 declare module '@tanstack/react-table' {
-   
   interface ColumnMeta<TData, TValue> {
     className?: string
     priority?: 'primary' | 'secondary'
@@ -172,7 +171,7 @@ export function DataTable<TData, TValue>({
       <div className="flex flex-col gap-2 flex-1 min-h-0 min-w-0 w-full">
         <div className="rounded-md border overflow-hidden flex flex-col flex-1 min-h-0 min-w-0">
           <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-auto">
-            <Table containerClassName="overflow-visible">
+            <Table className="overflow-visible">
               <TableHeader className="sticky top-0 bg-background">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
@@ -222,52 +221,54 @@ export function DataTable<TData, TValue>({
                         : undefined
                     const clickable = Boolean(handleRowClick)
                     return (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && 'selected'}
-                      onClick={handleRowClick}
-                      className={cn(
-                        clickable && 'cursor-pointer',
-                        extraRowClass,
-                      )}
-                    >
-                      {row
-                        .getVisibleCells()
-                        .filter(
-                          (cell) =>
-                            !isMobile ||
-                            isColumnVisibleOnMobile(cell.column.id),
-                        )
-                        .map((cell) => {
-                          const meta = cell.column.columnDef.meta
-                          const rendered = flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && 'selected'}
+                        onClick={handleRowClick}
+                        className={cn(
+                          clickable && 'cursor-pointer',
+                          extraRowClass,
+                        )}
+                      >
+                        {row
+                          .getVisibleCells()
+                          .filter(
+                            (cell) =>
+                              !isMobile ||
+                              isColumnVisibleOnMobile(cell.column.id),
                           )
-                          const truncateDesktop = meta?.truncate && !isMobile
-                          return (
-                            <TableCell
-                              key={cell.id}
-                              className={
-                                truncateDesktop ? undefined : meta?.className
-                              }
-                            >
-                              {truncateDesktop ? (
-                                <div className={cn('truncate', meta.className)}>
-                                  {rendered}
-                                </div>
-                              ) : (
-                                rendered
-                              )}
-                            </TableCell>
-                          )
-                        })}
-                      {isMobile && (
-                        <TableCell className="w-0 pr-3 text-muted-foreground">
-                          <ChevronRight className="size-4" />
-                        </TableCell>
-                      )}
-                    </TableRow>
+                          .map((cell) => {
+                            const meta = cell.column.columnDef.meta
+                            const rendered = flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )
+                            const truncateDesktop = meta?.truncate && !isMobile
+                            return (
+                              <TableCell
+                                key={cell.id}
+                                className={
+                                  truncateDesktop ? undefined : meta?.className
+                                }
+                              >
+                                {truncateDesktop ? (
+                                  <div
+                                    className={cn('truncate', meta.className)}
+                                  >
+                                    {rendered}
+                                  </div>
+                                ) : (
+                                  rendered
+                                )}
+                              </TableCell>
+                            )
+                          })}
+                        {isMobile && (
+                          <TableCell className="w-0 pr-3 text-muted-foreground">
+                            <ChevronRight className="size-4" />
+                          </TableCell>
+                        )}
+                      </TableRow>
                     )
                   })
                 ) : (
@@ -286,7 +287,7 @@ export function DataTable<TData, TValue>({
             </Table>
           </div>
           {footer && (
-            <Table containerClassName="overflow-x-clip">
+            <Table className="overflow-x-clip">
               <TableFooter>{footer}</TableFooter>
             </Table>
           )}

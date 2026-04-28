@@ -114,7 +114,7 @@ export default function ProductPicker({
                   onPick({
                     name: p.name,
                     price: Number(p.price),
-                    category: p.category ?? '',
+                    category: p.category ?? 'Ukategorisert',
                   })
                   setSearchQuery('')
                   setShowSuggestions(false)
@@ -123,12 +123,10 @@ export default function ProductPicker({
                 <div className="min-w-0">
                   <div className="font-medium truncate">{p.name}</div>
                   {p.category ? (
-                    <div className="text-xs text-muted-foreground">
-                      {p.category}
-                    </div>
+                    <div className="text-xs">{p.category}</div>
                   ) : null}
                 </div>
-                <div className="font-mono text-xs text-muted-foreground shrink-0">
+                <div className="font-mono text-sm shrink-0">
                   {nokFormatter.format(Number(p.price))}
                 </div>
               </li>
@@ -136,7 +134,7 @@ export default function ProductPicker({
           </ul>
         ) : null}
       </div>
-      <Button type="button" variant="outline" onClick={() => setAddOpen(true)}>
+      <Button type="button" variant="default" onClick={() => setAddOpen(true)}>
         <PackagePlus />
         <span className="hidden sm:inline">{addButtonLabel}</span>
       </Button>

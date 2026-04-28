@@ -10,7 +10,8 @@ import SectionCardNotes from '#/components/new-order/SectionCardNotes'
 import SectionRecipients from '#/components/new-order/SectionRecipients'
 import SectionReview from '#/components/new-order/SectionReview'
 import type { Item } from '#/components/OrderColumns'
-import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
+import { Separator } from '@/components/ui/separator'
+import { getLocalDateString } from '#/lib/order-utils'
 import type {
   Customer,
   CustomerFormValues,
@@ -75,15 +76,6 @@ function NewOrderPage() {
     )
   }, [cardEnabled])
 
-  const deliveryLabel = delivery.date
-    ? (() => {
-        const f = formatDeliveryDate(delivery.date)
-        return delivery.time
-          ? `${f.dayText} ${f.shortDate} kl. ${delivery.time}`
-          : `${f.dayText} ${f.shortDate}`
-      })()
-    : 'Leveringsdato ikke valgt'
-
   const senderFilled = isSenderFilled(sender)
   const recipientCount = recipients.length || (senderFilled ? 1 : 0)
   const canShowReview =
@@ -93,19 +85,21 @@ function NewOrderPage() {
     )
 
   return (
-    <main className="rise-in page-wrap flex flex-col gap-4 px-4 pb-12 pt-6">
+    <main className="rise-in page-wrap flex flex-col gap-6 px-4 pb-12 pt-6">
       <h1 className="font-heading text-2xl font-medium leading-tight">
-        Registrer en ny bestilling
+        Registrer ny bestilling
       </h1>
 
-      <div className="grid gap-4 lg:grid-cols-[20rem_1fr] items-start">
+      <div className="grid gap-6 lg:grid-cols-[20rem_1fr] lg:grid-rows-[auto_auto] items-start lg:items-stretch">
         <SectionCard
+          className="col-start-1"
           number="01"
           title="Kunde"
           subtitle="Hvem er avsender / betaler?"
         >
           <CustomerForm
             bare
+            formButtons
             showCareof
             defaultValues={sender}
             onValuesChange={setSender}
@@ -113,29 +107,36 @@ function NewOrderPage() {
         </SectionCard>
 
         <SectionCard
+          className="col-start-1 row-start-2"
           number="02"
-          title="Ordrens innhold"
-          subtitle="Legg til varer"
+          title="Levering"
+          subtitle="Velg leveringsdato og tidspunkt"
+        >
+          <SectionDelivery
+            date={delivery.date}
+            time={delivery.time}
+            showTime={showTime}
+            onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
+            onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
+            onShowTimeChange={setShowTime}
+          />
+        </SectionCard>
+
+        <SectionCard
+          className="col-start-2 row-start-1 row-span-2"
+          bodyClassName="lg:flex lg:flex-1 lg:min-h-0 lg:flex-col"
+          number="03"
+          title="Ordreinnhold"
+          subtitle="Legg til varer i ordren"
         >
           <SectionItems items={items} setItems={setItems} />
         </SectionCard>
       </div>
 
-      <SectionCard number="03" title="Levering" subtitle="Velg leveringsdato og tidspunkt">
-        <SectionDelivery
-          date={delivery.date}
-          time={delivery.time}
-          showTime={showTime}
-          onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
-          onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
-          onShowTimeChange={setShowTime}
-        />
-      </SectionCard>
-
       <SectionCard
         number="04"
-        title="Kort og instruksjoner"
-        subtitle="Valgfritt — legg til kortmelding og merknader til budet"
+        title="Kort og instrukser"
+        subtitle="Inkluder og behandle kort og instrukser"
       >
         <SectionCardNotes
           cardEnabled={cardEnabled}
@@ -163,6 +164,7 @@ function NewOrderPage() {
           onRecipientsChange={setRecipients}
           defaults={{
             delivery,
+            showTime,
             cardEnabled,
             cardValue,
             instructionsEnabled,
@@ -170,6 +172,8 @@ function NewOrderPage() {
           }}
         />
       </SectionCard>
+      
+      {canShowReview ? <Separator /> : null}
 
       {canShowReview ? (
         <SectionCard
