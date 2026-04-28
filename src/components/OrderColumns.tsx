@@ -132,6 +132,12 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
+const PROTECTED_ITEMS = new Set([
+  'Frakt',
+  'Frakt Tidspunktstillegg',
+  'Kort',
+])
+
 export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'name',
@@ -166,6 +172,9 @@ export const columns: ColumnDef<Item>[] = [
     header: () => <div className="text-right"></div>,
     meta: { action: true },
     cell: ({ row, table }) => {
+      if (PROTECTED_ITEMS.has(row.original.name)) {
+        return <div className="text-right w-8" />
+      }
       return (
         <div className="text-right">
           <Button
