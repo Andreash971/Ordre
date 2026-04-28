@@ -233,7 +233,7 @@ function Dashboard() {
               {recent.map((o) => (
                 <div key={o.key} className="flex items-start gap-3 px-4 py-3">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px] text-muted-foreground">
-                    {o.data.delivery.shortDate?.slice(0, 5) ?? '—'}
+                    {o.data.delivery.shortDate.slice(0, 5)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">

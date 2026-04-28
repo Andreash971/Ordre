@@ -20,7 +20,6 @@ interface SectionCardNotesProps {
 const CARD_SIGNATURES = [
   'Med vennlig hilsen',
   'Kjærlig hilsen',
-  'Med dyp medfølelse',
   'Klem fra',
   'Hjertelig gratulerer',
   'Hilsen',
@@ -30,9 +29,7 @@ const INSTRUCTION_SUGGESTIONS = [
   'Ring før ankomst',
   'Sett på trappen hvis ingen åpner',
   'Levér til nabo ved fravær',
-  'Dørkode påkrevd',
   'Bruk bakinngangen',
-  'Unngå spesifikke blomster',
 ]
 
 function appendSignature(current: string, signature: string) {
@@ -65,16 +62,16 @@ export default function SectionCardNotes({
       {!cardEnabled ? (
         <EmptyButton
           icon={<MessageSquarePlus />}
-          title="Legg til kortmelding"
-          description="Håndskrives på et kort som følger med leveringen. Legger til 25 kr."
+          title="Legg til kort"
+          description="Inkluder kort som skal følge med leveringen."
           onClick={() => onCardEnabledChange(true)}
-          className="min-h-[180px]"
+          className="min-h-32"
         />
       ) : (
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Kortmelding
+              Korttekst
             </div>
             <Button
               type="button"
@@ -97,7 +94,7 @@ export default function SectionCardNotes({
           />
           <div className="flex flex-col gap-1.5">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Sett inn signatur
+              Forslag
             </div>
             <div className="flex flex-wrap gap-1.5">
               {CARD_SIGNATURES.map((sig) => (
@@ -122,16 +119,16 @@ export default function SectionCardNotes({
       {!instructionsEnabled ? (
         <EmptyButton
           icon={<StickyNote />}
-          title="Legg til spesielle instruksjoner"
-          description="Merknader til budet – for eksempel dørkode eller ringeknapp."
+          title="Legg til spesielle instrukser"
+          description="Inkluder merknader som skal følge med ordren."
           onClick={() => onInstructionsEnabledChange(true)}
-          className="min-h-[180px]"
+          className="min-h-32"
         />
       ) : (
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Spesielle instruksjoner
+              Spesielle instrukser
             </div>
             <Button
               type="button"

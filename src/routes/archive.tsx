@@ -28,7 +28,14 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { DataTable } from '@/components/ui/DataTable'
-import { cn } from '@/lib/utils'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export const Route = createFileRoute('/archive')({ component: ArchivePage })
 
@@ -70,10 +77,29 @@ function buildColumns(
       ),
     },
     {
+      id: 'sender',
+      header: () => <span>Avsender</span>,
+      accessorFn: (o) =>
+        `${o.data.sender.name} ${o.data.sender.company ?? ''} ${o.data.sender.phone ?? ''}`,
+      meta: { truncate: true },
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <div className="truncate font-medium">
+            {row.original.data.sender.name || '—'}
+          </div>
+          {row.original.data.sender.company ? (
+            <div className="truncate text-xs text-muted-foreground">
+              {row.original.data.sender.company}
+            </div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
       id: 'receiver',
       header: () => <span>Mottaker</span>,
       accessorFn: (o) =>
-        `${o.data.receiver.name} ${o.data.receiver.address} ${o.data.receiver.phone} ${o.data.sender.name}`,
+        `${o.data.receiver.name} ${o.data.receiver.address} ${o.data.receiver.phone}`,
       meta: { priority: 'primary', truncate: true },
       cell: ({ row }) => (
         <div className="min-w-0">
@@ -149,15 +175,12 @@ function ArchivePage() {
   return (
     <main className="rise-in page-wrap flex flex-col gap-4 px-4 pb-12 pt-6">
       <div className="flex flex-col gap-1">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          Arkiv
-        </div>
         <h1 className="font-heading text-2xl font-medium leading-tight">
-          Lagrede ordrer
+          Lagrede Ordre
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Ordrer lagres automatisk. Klikk en rad for å se detaljer, skrive ut på
-          nytt eller laste ned PDF.
+          Ordre lagres automatisk her. Klikk en rad for å se detaljer, skrive ut
+          på nytt eller laste ned PDF.
         </p>
       </div>
 
@@ -172,7 +195,7 @@ function ArchivePage() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </InputGroup>
-        <div className="font-mono text-xs text-muted-foreground">
+        <div className="font-mono text-xs text-muted-foreground self-end">
           {orders.length} lagret
         </div>
       </div>
@@ -223,7 +246,6 @@ function OrderDetail({ order }: { order: StoredOrder }) {
   const { data } = order
   const items = data.orderContent
   const sum = items.reduce((s, l) => s + l.total, 0)
-  const vat = Math.round(sum * 0.25)
   const hasCard = Boolean(data.card.cardText)
   const hasNotes = Boolean(data.card.instructionsText)
 
@@ -252,7 +274,9 @@ function OrderDetail({ order }: { order: StoredOrder }) {
           <div className="text-sm space-y-0.5">
             <div className="font-medium">{data.receiver.name || '—'}</div>
             {data.receiver.company ? (
-              <div className="text-muted-foreground">{data.receiver.company}</div>
+              <div className="text-muted-foreground">
+                {data.receiver.company}
+              </div>
             ) : null}
             {data.receiver.address ? (
               <div className="text-muted-foreground">
@@ -260,7 +284,9 @@ function OrderDetail({ order }: { order: StoredOrder }) {
               </div>
             ) : null}
             {data.receiver.postCode ? (
-              <div className="text-muted-foreground">{data.receiver.postCode}</div>
+              <div className="text-muted-foreground">
+                {data.receiver.postCode}
+              </div>
             ) : null}
             {data.receiver.phone ? (
               <div className="font-mono text-xs text-muted-foreground">
@@ -288,36 +314,44 @@ function OrderDetail({ order }: { order: StoredOrder }) {
       </div>
 
       <div className="rounded-lg border overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-3 bg-muted/40 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          <div>Vare</div>
-          <div className="text-right">Antall</div>
-          <div className="text-right">Sum</div>
-        </div>
-        <div className="divide-y">
-          {items.map((line, i) => (
-            <div
-              key={i}
-              className={cn(
-                'grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-sm',
-                SPECIAL_ITEMS.has(line.product) && 'bg-accent/10',
-              )}
-            >
-              <div className="font-medium truncate">{line.product}</div>
-              <div className="text-right font-mono">×{line.quantity}</div>
-              <div className="text-right font-mono">
-                {nokFormatter.format(line.total)}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Vare
+              </TableHead>
+              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Antall
+              </TableHead>
+              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Sum
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((line, i) => (
+              <TableRow key={i}>
+                <TableCell className="font-medium truncate">
+                  {line.product}
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  ×{line.quantity}
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  {nokFormatter.format(line.total)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {hasCard ? (
         <div className="rounded-lg border p-3">
           <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
-            Kortmelding
+            Korttekst
           </div>
-          <div className="rounded-md bg-[#f4ece0] text-[#1d1714] font-serif text-base leading-relaxed p-4 whitespace-pre-wrap shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
+          <div className="text-sm rounded-md border p-2">
             {data.card.cardText}
           </div>
         </div>
@@ -328,7 +362,7 @@ function OrderDetail({ order }: { order: StoredOrder }) {
           <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
             Spesielle instruksjoner
           </div>
-          <div className="text-sm whitespace-pre-wrap">
+          <div className="text-sm rounded-md border p-2">
             {data.card.instructionsText}
           </div>
         </div>
@@ -339,10 +373,6 @@ function OrderDetail({ order }: { order: StoredOrder }) {
           <div className="text-muted-foreground">Totalt</div>
           <div className="text-right font-mono font-medium">
             {nokFormatter.format(sum)}
-          </div>
-          <div className="text-xs text-muted-foreground">MVA (25%, inkl.)</div>
-          <div className="text-right font-mono text-xs text-muted-foreground">
-            {nokFormatter.format(vat)}
           </div>
         </div>
       </div>

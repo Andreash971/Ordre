@@ -2,6 +2,14 @@ import { FileText, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import OpenOrderButton from '@/components/ui/open-order-button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import type { Item } from '#/components/OrderColumns'
 import { formatDeliveryDate } from '#/lib/order-utils'
 import type {
@@ -13,7 +21,8 @@ import type {
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
   currency: 'NOK',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 })
 
 const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
@@ -68,7 +77,6 @@ export default function SectionReview({
   const leveringstid = items.find((i) => i.name === 'Frakt Tidspunktstillegg')
   const frakt = items.find((i) => i.name === 'Frakt')
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
-  const vat = Math.round(total * 0.25)
 
   const effectiveRecipients: Customer[] = recipients.length
     ? recipients
@@ -151,53 +159,65 @@ export default function SectionReview({
 
       {/* Items table */}
       <div className="rounded-lg border overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 bg-muted/40 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          <div>Vare</div>
-          <div className="text-right">Antall</div>
-          <div className="text-right">Pris</div>
-          <div className="text-right">Sum</div>
-        </div>
-        <div className="divide-y">
-          {items.map((item) => (
-            <div
-              key={item.name}
-              className={cn(
-                'grid grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2 text-sm',
-                SPECIAL_ITEMS.has(item.name) && 'bg-accent/10',
-              )}
-            >
-              <div className="font-medium">{item.name}</div>
-              <div className="text-right font-mono">×{item.quantity}</div>
-              <div className="text-right font-mono text-muted-foreground">
-                {nokFormatter.format(item.price)}
-              </div>
-              <div className="text-right font-mono">
-                {nokFormatter.format(item.price * item.quantity)}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Vare
+              </TableHead>
+              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Antall
+              </TableHead>
+              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Pris
+              </TableHead>
+              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Sum
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <TableRow key={item.name}>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell className="text-right font-mono">
+                  ×{item.quantity}
+                </TableCell>
+                <TableCell className="text-right font-mono text-muted-foreground">
+                  {nokFormatter.format(item.price)}
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  {nokFormatter.format(item.price * item.quantity)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
-      {cardEnabled && cardValue ? (
-        <div className="rounded-lg border p-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
-            Kortmelding
+      <div className="flex flex-row gap-4">
+        {cardEnabled && cardValue ? (
+          <div className="w-full rounded-lg border p-4">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+              Korttekst
+            </div>
+            <div className="rounded-md border font-serif text-base leading-relaxed p-4">
+              {cardValue}
+            </div>
           </div>
-          <div className="rounded-md bg-[#f4ece0] text-[#1d1714] font-serif text-base leading-relaxed p-4 whitespace-pre-wrap shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
-            {cardValue}
-          </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {instructionsEnabled && instructionsValue ? (
-        <div className="rounded-lg border p-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
-            Spesielle instruksjoner
+        {instructionsEnabled && instructionsValue ? (
+          <div className="w-full rounded-lg border p-4">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+              Spesielle instrukser
+            </div>
+            <div className="rounded-md border font-serif text-base leading-relaxed p-4">
+              {instructionsValue}
+            </div>
           </div>
-          <div className="text-sm whitespace-pre-wrap">{instructionsValue}</div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {/* Recipient cards */}
       {effectiveRecipients.length > 0 ? (
@@ -208,17 +228,16 @@ export default function SectionReview({
           <div className="grid gap-2 sm:grid-cols-2">
             {effectiveRecipients.map((r, i) => {
               const rDate = r.date || delivery.date
-              const rTime = r.time ?? delivery.time
-              const rCard = cardEnabled
-                ? r.cardmsg || cardValue
-                : ''
+              const rTime = r.time
+              const rCard = cardEnabled ? r.cardmsg || cardValue : ''
               const rNotes = instructionsEnabled
                 ? r.instructmsg || instructionsValue
                 : ''
               const dateInfo = rDate ? formatDeliveryDate(rDate) : null
               const dateOverride = Boolean(r.date && r.date !== delivery.date)
-              const timeOverride = r.time !== null && r.time !== delivery.time
-              const cardOverride = cardEnabled && r.cardmsg && r.cardmsg !== cardValue
+              const timeOverride = r.time !== delivery.time
+              const cardOverride =
+                cardEnabled && r.cardmsg && r.cardmsg !== cardValue
               const notesOverride =
                 instructionsEnabled &&
                 r.instructmsg &&
@@ -233,6 +252,14 @@ export default function SectionReview({
                       {r.name || `Mottaker ${i + 1}`}
                     </div>
                   </div>
+                  {r.address ? (
+                    <div className="my-2 text-xs text-muted-foreground truncate">
+                      {r.address}
+                      {r.postcode || r.city
+                        ? `, ${[r.postcode, r.city].filter(Boolean).join(' ')}`
+                        : ''}
+                    </div>
+                  ) : null}
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <ReviewCell
                       label="Dato"
@@ -255,14 +282,6 @@ export default function SectionReview({
                       highlight={Boolean(notesOverride)}
                     />
                   </div>
-                  {r.address ? (
-                    <div className="mt-2 text-xs text-muted-foreground truncate">
-                      {r.address}
-                      {r.postcode || r.city
-                        ? `, ${[r.postcode, r.city].filter(Boolean).join(' ')}`
-                        : ''}
-                    </div>
-                  ) : null}
                 </div>
               )
             })}
@@ -279,7 +298,7 @@ export default function SectionReview({
           </div>
           {kort ? (
             <>
-              <div className="text-muted-foreground">Kortmelding</div>
+              <div className="text-muted-foreground">Kort</div>
               <div className="text-right font-mono">
                 {nokFormatter.format(kort.price * kort.quantity)}
               </div>
@@ -287,9 +306,11 @@ export default function SectionReview({
           ) : null}
           {leveringstid ? (
             <>
-              <div className="text-muted-foreground">Leveringstid</div>
+              <div className="text-muted-foreground">Leveringstidspunkt</div>
               <div className="text-right font-mono">
-                {nokFormatter.format(leveringstid.price * leveringstid.quantity)}
+                {nokFormatter.format(
+                  leveringstid.price * leveringstid.quantity,
+                )}
               </div>
             </>
           ) : null}
@@ -301,10 +322,6 @@ export default function SectionReview({
               </div>
             </>
           ) : null}
-          <div className="text-muted-foreground">MVA (25%, inkl.)</div>
-          <div className="text-right font-mono text-muted-foreground">
-            {nokFormatter.format(vat)}
-          </div>
           <div className="col-span-2 border-t my-2" />
           <div className="font-medium">Totalt</div>
           <div className="text-right font-mono font-medium">

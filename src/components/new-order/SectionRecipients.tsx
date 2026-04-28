@@ -22,10 +22,12 @@ import {
 } from '@/components/ui/popover'
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { EmptyButton } from '@/components/ui/empty-button'
 import { cn } from '@/lib/utils'
 
 import CustomerForm from '#/components/CustomerForm'
@@ -41,6 +43,7 @@ interface SectionRecipientsProps {
   onRecipientsChange: React.Dispatch<React.SetStateAction<Customer[]>>
   defaults: {
     delivery: DeliveryValues
+    showTime: boolean
     cardEnabled: boolean
     cardValue: string
     instructionsEnabled: boolean
@@ -104,6 +107,14 @@ export default function SectionRecipients({
     )
   }
 
+  function titleButton() {
+    return (
+      <p className="flex items-center gap-2">
+        <UserPlus size={16} /> Legg til mottaker
+      </p>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-3">
       {recipients.length === 0 ? (
@@ -111,10 +122,14 @@ export default function SectionRecipients({
           <EmptyHeader>
             <EmptyTitle>Ingen mottakere</EmptyTitle>
             <EmptyDescription>
-              Når det ikke er noen mottakere sendes ordren direkte til kundens
-              standardadresse. Du kan legge til mottakere for å splitte
-              leveringen.
+              Når det ikke er noen mottakere settes avsenderen som mottaker.
             </EmptyDescription>
+            <EmptyContent>
+              <Button type="button" variant="default" onClick={addRecipient}>
+                <UserPlus />
+                Legg til mottaker
+              </Button>
+            </EmptyContent>
           </EmptyHeader>
         </Empty>
       ) : null}
@@ -132,15 +147,13 @@ export default function SectionRecipients({
         />
       ))}
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addRecipient}
-        className="self-start"
-      >
-        <UserPlus />
-        Legg til mottaker
-      </Button>
+      {recipients.length >= 1 ? (
+        <EmptyButton
+          title={titleButton()}
+          onClick={addRecipient}
+          className="max-h-16"
+        />
+      ) : null}
     </div>
   )
 }
@@ -192,8 +205,7 @@ function RecipientRow({
             {value.name || `Mottaker ${index + 1}`}
           </div>
           <div className="text-xs text-muted-foreground truncate">
-            {formattedDate?.shortDate ?? '—'} ·{' '}
-            {value.time ?? defaults.delivery.time ?? '—'} ·{' '}
+            {formattedDate?.shortDate ?? '—'} · {value.time ?? '—'} ·{' '}
             {value.address || '—'}
           </div>
         </div>
@@ -225,11 +237,11 @@ function RecipientRow({
               value={value.time}
               fallback={defaults.delivery.time}
               onChange={(t) => onChange({ time: t })}
+              disabled={!defaults.showTime}
             />
             <OverrideText
-              icon={<MessageSquare className="size-4" />}
-              label="Kortmelding"
-              placeholder="Bruk felles kortmelding"
+              label="Korttekst"
+              placeholder="Kortteksten er tom."
               value={value.cardmsg}
               fallback={defaults.cardEnabled ? defaults.cardValue : ''}
               onChange={(v) => onChange({ cardmsg: v })}
@@ -241,9 +253,8 @@ function RecipientRow({
               }
             />
             <OverrideText
-              icon={<StickyNote className="size-4" />}
               label="Instrukser"
-              placeholder="Bruk felles instrukser"
+              placeholder="Ingen instrukser for denne mottakeren."
               value={value.instructmsg}
               fallback={
                 defaults.instructionsEnabled ? defaults.instructionsValue : ''
@@ -252,7 +263,7 @@ function RecipientRow({
               disabled={!defaults.instructionsEnabled && !value.instructmsg}
               hint={
                 !defaults.instructionsEnabled
-                  ? 'Legg til instrkser i ordren for å redigere den per mottaker.'
+                  ? 'Legg til instrukser i ordren for å redigere den per mottaker.'
                   : undefined
               }
             />
@@ -298,11 +309,8 @@ function OverrideDate({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="size-4 text-muted-foreground" />
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            Leveringsdato
-          </span>
+        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          Leveringsdato
         </div>
         {isOverride ? (
           <Button
@@ -320,11 +328,10 @@ function OverrideDate({
           <Button
             type="button"
             variant="outline"
-            className="justify-start font-normal"
+            className="justify-start gap-2 font-normal"
           >
-            {formatted
-              ? `${formatted.dayText}, ${formatted.shortDate}`
-              : 'Velg dato'}
+            <CalendarIcon className="size-4 text-muted-foreground" />
+            {formatted ? formatted.fullDate : 'Velg dato'}
             {isOverride ? (
               <span className="ml-auto text-[10px] font-mono uppercase text-primary">
                 Overstyrt
@@ -360,39 +367,46 @@ function OverrideTime({
   value,
   fallback,
   onChange,
+  disabled = false,
+  hint,
 }: {
   value: string | null
   fallback: string | null
   onChange: (v: string | null) => void
+  disabled?: boolean
+  hint?: string
 }) {
-  const effective = value ?? fallback
-  const isOverride = value !== null && value !== fallback
+  const isOverride = value !== fallback
+
   return (
     <div
       className={cn(
         'flex flex-col gap-2 rounded-lg border p-3',
-        isOverride && 'border-primary/50 bg-accent/10',
+        isOverride && !disabled && 'border-primary/50 bg-accent/10',
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Clock className="size-4 text-muted-foreground" />
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            Leveringstid
-          </span>
+        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          Leveringstid
         </div>
-        {isOverride ? (
+        {isOverride && !disabled ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onChange(null)}
+            onClick={() => onChange(fallback)}
           >
             Nullstill
           </Button>
         ) : null}
       </div>
-      <TimePicker value={effective ?? null} onChange={onChange} allowNull />
+      <TimePicker
+        value={value}
+        onChange={onChange}
+        allowNull
+        disabled={disabled}
+      />
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   )
 }
@@ -405,7 +419,6 @@ function OverrideText({
   fallback,
   onChange,
   disabled = false,
-  hint,
 }: {
   icon: React.ReactNode
   label: string
@@ -414,9 +427,8 @@ function OverrideText({
   fallback: string
   onChange: (v: string) => void
   disabled?: boolean
-  hint?: string
 }) {
-  const isOverride = Boolean(value) && value !== fallback
+  const isOverride = value !== fallback
   return (
     <div
       className={cn(
@@ -436,7 +448,7 @@ function OverrideText({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onChange('')}
+            onClick={() => onChange(fallback)}
           >
             Bruk felles
           </Button>
@@ -445,9 +457,7 @@ function OverrideText({
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={
-          hint ? hint : fallback ? `Bruker felles: «${fallback}»` : placeholder
-        }
+        placeholder={placeholder}
         disabled={disabled}
         className="flex-1 resize-none"
       />

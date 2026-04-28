@@ -25,15 +25,11 @@ export default function SectionItems({ items, setItems }: SectionItemsProps) {
       const existingIndex = prev.findIndex((i) => i.name === p.name)
       if (existingIndex !== -1) {
         return prev.map((item, i) =>
-          i === existingIndex
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
+          i === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
         )
       }
       const newItem: Item = { name: p.name, price: p.price, quantity: 1 }
-      const firstSpecialIndex = prev.findIndex((i) =>
-        SPECIAL_ITEMS.has(i.name),
-      )
+      const firstSpecialIndex = prev.findIndex((i) => SPECIAL_ITEMS.has(i.name))
       if (firstSpecialIndex === -1) return [...prev, newItem]
       return [
         ...prev.slice(0, firstSpecialIndex),
@@ -46,16 +42,13 @@ export default function SectionItems({ items, setItems }: SectionItemsProps) {
   const grandTotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex-1 min-h-0 flex flex-col gap-4">
       <ProductPicker onPick={handlePick} />
 
       <DataTable
         columns={orderColumns}
         data={items}
         setData={setItems}
-        rowClassName={(row) =>
-          SPECIAL_ITEMS.has(row.original.name) ? 'bg-accent/10' : undefined
-        }
         emptyMessage="Ingen varer lagt til enda."
       />
 
