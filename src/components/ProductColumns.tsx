@@ -30,8 +30,8 @@ import { queryKeys } from '#/lib/query-keys'
 const productSchema = z.object({
   id: z.number(),
   name: z.string(),
-  category: z.string().nullable(),
-  price: z.string(),
+  category: z.string(),
+  price: z.number(),
 })
 
 export type Product = z.infer<typeof productSchema>
@@ -60,7 +60,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
   const defaultValues: AddProductFormValues = {
     name: row.original.name,
     category: row.original.category ?? '',
-    price: row.original.price,
+    price: String(row.original.price),
   }
 
   async function handleEdit(values: AddProductFormValues) {
