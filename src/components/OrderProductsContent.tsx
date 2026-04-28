@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import { ilike } from 'drizzle-orm'
-import { createServerFn } from '@tanstack/react-start'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 import OrderTable from './OrderTable'
@@ -21,34 +19,18 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 
-import { db } from '#/db/'
-import { products } from '#/db/schema'
 import AddProductForm from '#/components/AddProductForm'
 import type { AddProductFormValues } from '#/components/AddProductForm'
-import { insertProduct } from '#/lib/product-server-fns'
+import { insertProduct, searchProducts } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 import { useOrderForm } from '#/components/order-form/OrderFormContext'
+
+export { searchProducts }
 
 interface OrderProductsContentProps extends React.PropsWithChildren {
   className: string
   onItemsChange?: (items: Item[]) => void
 }
-
-export const searchProducts = createServerFn({ method: 'GET' })
-  .inputValidator((data: string) => data)
-  .handler(async ({ data: query }) => {
-    if (!query || query.length < 1) return []
-    return db
-      .select({
-        id: products.id,
-        name: products.name,
-        category: products.category,
-        price: products.price,
-      })
-      .from(products)
-      .where(ilike(products.name, `%${query}%`))
-      .limit(3)
-  })
 
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',

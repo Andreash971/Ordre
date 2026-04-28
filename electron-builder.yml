@@ -1,0 +1,29 @@
+appId: no.byhaven.ordre
+productName: Ordre
+copyright: Copyright © Andreas Henriksen
+asar: true
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - 'dist/**/*'
+  - 'package.json'
+  - '!node_modules/**/*'
+
+extraResources:
+  - from: drizzle
+    to: drizzle
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
