@@ -1,238 +1,84 @@
-Welcome to your new TanStack Start app! 
+# Ordreflyt
 
-# Getting Started
+Desktop order-management app for **Blomster i Byhaven**, a Norwegian flower shop. Manages customers, products, and orders (creation, archive, PDF export) with offline-first local storage. Postal-code and address lookup via the Bring API.
 
-To run this application:
+Built as an Electron app with a React + TanStack renderer and a SQLite (Drizzle) database in the main process.
+
+## Stack
+
+| Layer        | Tech                                                                |
+| ------------ | ------------------------------------------------------------------- |
+| Shell        | Electron 33 (sandboxed renderer, context isolation, strict CSP)     |
+| Renderer     | React 19, TanStack Router / Query / Form / Table / DB, Tailwind v4  |
+| UI           | shadcn/ui + Radix primitives, Lucide icons                          |
+| Database     | SQLite via `better-sqlite3`, schema and migrations with Drizzle ORM |
+| PDF          | `@react-pdf/renderer`                                               |
+| Build / pack | Vite (renderer), `tsc` (main), `electron-builder` (installers)      |
+
+## Project layout
+
+```
+electron/      Main process — entry, preload, IPC handlers, DB, electron-store
+  ipc/         customers, products, bring (postal lookup), store
+  db/          Drizzle schema + migration runner
+src/           Renderer
+  routes/      TanStack file-based routes (dashboard, new, archive, customers, products, settings)
+  components/  UI; new-order/ holds the multi-step order form
+  lib/         IPC wrappers (*-server-fns.ts), query keys, theme, utils
+drizzle/       SQL migrations (bundled into the installer via electron-builder)
+```
+
+## Getting started
+
+Requires Node 20+ and a working native-build toolchain (needed for `better-sqlite3`).
 
 ```bash
-npm install
-npm run dev
+npm install                    # also runs electron-builder install-app-deps
+npm run dev                    # Vite (renderer) + Electron (main) in watch mode
 ```
 
-# Building For Production
+`npm run dev` starts Vite on `http://localhost:3000`, builds the main process, then launches Electron pointed at the dev URL with DevTools open.
 
-To build this application for production:
+## Configuration
+
+Create `.env.local` in the project root (gitignored). Loaded by the main process at startup; in production the file is read from `resources/` next to the installed app.
+
+```ini
+BRING_API_KEY=...              # https://developer.bring.com (postal/address lookup)
+BRING_UID=you@example.com
+```
+
+## Database
+
+SQLite file lives in Electron's `userData` directory and is created on first launch. Migrations run automatically on startup from the bundled `drizzle/` folder.
 
 ```bash
-npm run build
+npm run db:generate            # create a new migration from schema changes
+npm run db:migrate             # apply migrations (rarely needed; startup does this)
+npm run db:studio              # open Drizzle Studio
 ```
 
-## Testing
+Schema lives in [electron/db/schema.ts](electron/db/schema.ts).
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## Build & package
 
 ```bash
-npm run test
+npm run build                  # vite build + tsc for main → dist/
+npm run build:win              # build, then produce a Windows NSIS installer in release/
 ```
 
-## Styling
+Installer config: [electron-builder.yml](electron-builder.yml).
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## Other scripts
 
-### Removing Tailwind CSS
+| Command             | What it does                            |
+| ------------------- | --------------------------------------- |
+| `npm run lint`      | ESLint (TanStack config)                |
+| `npm run check`     | Prettier write + ESLint --fix           |
+| `npm run format`    | Prettier check                          |
+| `npm run test`      | Vitest (no tests yet)                   |
+| `npm run storybook` | Storybook on port 6006 for UI primitives|
 
-If you prefer not to use Tailwind CSS:
+## Security notes
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-## Linting & Formatting
-
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
-
-## Setting up Better Auth
-
-1. Generate and set the `BETTER_AUTH_SECRET` environment variable in your `.env.local`:
-
-   ```bash
-   npx -y @better-auth/cli secret
-   ```
-
-2. Visit the [Better Auth documentation](https://www.better-auth.com) to unlock the full potential of authentication in your app.
-
-### Adding a Database (Optional)
-
-Better Auth can work in stateless mode, but to persist user data, add a database:
-
-```typescript
-// src/lib/auth.ts
-import { betterAuth } from "better-auth";
-import { Pool } from "pg";
-
-export const auth = betterAuth({
-  database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-  }),
-  // ... rest of config
-});
-```
-
-Then run migrations:
-
-```bash
-npx -y @better-auth/cli migrate
-```
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+The renderer runs sandboxed with context isolation and a strict CSP defined in [electron/main.ts](electron/main.ts). External `https://` links open in the system browser; all other navigation is blocked. The preload exposes only typed IPC channels (`window.electronAPI`) — no Node access in the renderer.
