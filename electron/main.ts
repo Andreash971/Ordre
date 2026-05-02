@@ -6,6 +6,7 @@ import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
 import { registerBringHandlers } from './ipc/bring'
+import { registerStoreHandlers } from './ipc/store'
 
 const isDev = !!process.env.ELECTRON_DEV
 
@@ -31,6 +32,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
+    titleBarStyle: 'hidden',
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -53,6 +56,7 @@ app.whenReady().then(() => {
   registerCustomerHandlers()
   registerProductHandlers()
   registerBringHandlers()
+  registerStoreHandlers()
 
   createWindow()
 

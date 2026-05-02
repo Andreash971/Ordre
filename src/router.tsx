@@ -11,7 +11,7 @@ export function getRouter() {
     routeTree,
     history: createHashHistory(),
     context: getContext(),
-    scrollRestoration: true,
+    scrollRestoration: false,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
   })

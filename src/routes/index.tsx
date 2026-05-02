@@ -1,50 +1,39 @@
 import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import {
-  ArrowUpRight,
-  CalendarClock,
-  FilePlusIcon,
-  IdCard,
-  Package,
-  TrendingUp,
-} from 'lucide-react'
+import { ArrowUpRight, FilePlusIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { OrderDetailSheet } from '@/components/OrderDetailSheet'
 import {
   formatDeliveryDate,
   getLocalDateString,
   getStoredOrders,
 } from '#/lib/order-utils'
 import type { StoredOrder } from '#/lib/order-utils'
-import { queryKeys } from '#/lib/query-keys'
-import { getAllCustomers } from '#/lib/customer-server-fns'
-import { getAllProducts } from '#/lib/product-server-fns'
 
 export const Route = createFileRoute('/')({ component: Dashboard })
 
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
   currency: 'NOK',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 })
 
 function Dashboard() {
   const [orders, setOrders] = React.useState<StoredOrder[]>([])
+  const [open, setOpen] = React.useState<StoredOrder | null>(null)
   React.useEffect(() => {
     setOrders(getStoredOrders())
   }, [])
-
-  const { data: customers } = useQuery({
-    queryKey: queryKeys.customers.all,
-    queryFn: () => getAllCustomers(),
-    staleTime: 60_000,
-  })
-  const { data: products } = useQuery({
-    queryKey: queryKeys.products.all,
-    queryFn: () => getAllProducts(),
-    staleTime: 60_000,
-  })
 
   const today = getLocalDateString()
   const upcoming = React.useMemo(
@@ -63,73 +52,31 @@ function Dashboard() {
     [orders, today],
   )
 
-  const deliveriesToday = upcoming.filter(
-    (o) => shortDateToIso(o.data.delivery.shortDate) === today,
-  )
   const recent = React.useMemo(
     () => [...orders].sort((a, b) => b.savedAt - a.savedAt).slice(0, 6),
     [orders],
   )
-  const totalValue = orders.reduce((sum, o) => {
-    return sum + o.data.orderContent.reduce((s, line) => s + line.total, 0)
-  }, 0)
+
+  const headerCellClass =
+    'font-mono text-[10px] uppercase tracking-wider text-muted-foreground'
 
   return (
     <main className="rise-in page-wrap flex flex-col gap-5 px-4 pb-12 pt-6">
-      <section className="rise-in flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            Oversikt
-          </div>
-          <h1 className="font-heading text-2xl font-medium leading-tight">
-            God dag — her er dagens bilde
-          </h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Raskt overblikk over ordrer, kunder og produkter. Start en ny
-            bestilling eller hopp inn i arkivet for å skrive ut på nytt.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/archive">Se arkiv</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/new">
-              <FilePlusIcon className="size-4" />
-              Ny ordre
-            </Link>
-          </Button>
-        </div>
-      </section>
+      <div className="flex flex-col gap-1">
+        <h1 className="font-heading text-2xl font-medium leading-tight">
+          Ordreoversikt
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Kommende leveranser og siste ordre.
+        </p>
+      </div>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 rise-in">
-        <KpiCard
-          label="Ordrer i arkiv"
-          value={String(orders.length)}
-          hint={`${deliveriesToday.length} leveres i dag`}
-          icon={<CalendarClock className="size-4" />}
-        />
-        <KpiCard
-          label="Samlet ordreverdi"
-          value={nokFormatter.format(totalValue)}
-          hint="Sum av aktive ordrer"
-          icon={<TrendingUp className="size-4" />}
-        />
-        <KpiCard
-          label="Kunder"
-          value={customers ? String(customers.length) : '—'}
-          hint="I kunderegister"
-          icon={<IdCard className="size-4" />}
-          to="/customers"
-        />
-        <KpiCard
-          label="Produkter"
-          value={products ? String(products.length) : '—'}
-          hint="I produktkatalog"
-          icon={<Package className="size-4" />}
-          to="/products"
-        />
-      </section>
+      <Button asChild size="lg" className="w-fit">
+        <Link to="/new">
+          <FilePlusIcon className="size-4" />
+          Ny ordre
+        </Link>
+      </Button>
 
       <section className="grid gap-4 lg:grid-cols-[3fr_2fr] rise-in">
         <div className="rounded-lg border">
@@ -155,62 +102,88 @@ function Dashboard() {
             </div>
           ) : (
             <div className="border-t">
-              <div className="grid grid-cols-[auto_1fr_auto_auto] gap-3 bg-muted/40 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                <div>Dato</div>
-                <div>Mottaker</div>
-                <div>Tid</div>
-                <div className="text-right">Sum</div>
-              </div>
-              <div className="divide-y">
-                {upcoming.slice(0, 8).map((o) => {
-                  const iso = shortDateToIso(o.data.delivery.shortDate)
-                  const info = iso ? formatDeliveryDate(iso) : null
-                  const sum = o.data.orderContent.reduce(
-                    (s, l) => s + l.total,
-                    0,
-                  )
-                  const isToday = iso === today
-                  return (
-                    <div
-                      key={o.key}
-                      className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-2.5 text-sm"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-mono text-xs">
-                          {info?.shortDate ?? o.data.delivery.shortDate}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {info?.dayText}
-                        </span>
-                      </div>
-                      <div className="truncate">
-                        <span className="font-medium">
-                          {o.data.receiver.name || 'Uten navn'}
-                        </span>
-                        {o.data.receiver.address ? (
-                          <span className="text-muted-foreground">
-                            {' · '}
-                            {o.data.receiver.address}
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {o.data.delivery.deliveryTime || '—'}
-                      </div>
-                      <div className="flex items-center gap-2 justify-end">
-                        <span className="text-right font-mono text-xs">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className={headerCellClass}>Dato</TableHead>
+                    <TableHead className={headerCellClass}>Mottaker</TableHead>
+                    <TableHead className={headerCellClass}>Avsender</TableHead>
+                    <TableHead className={headerCellClass}>Tid</TableHead>
+                    <TableHead className={`${headerCellClass} text-right`}>
+                      Sum
+                    </TableHead>
+                    <TableHead className="w-0 p-0" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcoming.slice(0, 8).map((o) => {
+                    const iso = shortDateToIso(o.data.delivery.shortDate)
+                    const info = iso ? formatDeliveryDate(iso) : null
+                    const sum = o.data.orderContent.reduce(
+                      (s, l) => s + l.total,
+                      0,
+                    )
+                    const isToday = iso === today
+                    return (
+                      <TableRow
+                        key={o.key}
+                        onClick={() => setOpen(o)}
+                        className="cursor-pointer"
+                      >
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-mono text-xs">
+                              {info?.shortDate ?? o.data.delivery.shortDate}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {info?.dayText}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {o.data.receiver.name || 'Uten navn'}
+                            </span>
+                            {o.data.receiver.address ? (
+                              <span className="text-xs text-muted-foreground">
+                                {o.data.receiver.address}
+                              </span>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {o.data.sender.name || '—'}
+                            </span>
+                            {o.data.sender.phone ? (
+                              <span className="text-xs text-muted-foreground">
+                                {o.data.sender.phone}
+                              </span>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">
+                          {o.data.delivery.deliveryTime || '—'}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs">
                           {nokFormatter.format(sum)}
-                        </span>
+                        </TableCell>
                         {isToday ? (
-                          <span className="inline-flex items-center rounded-md border bg-accent/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-accent-foreground">
-                            I dag
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+                          <TableCell className="w-0 whitespace-nowrap pl-2 pr-3">
+                            <span className="inline-flex items-center rounded-md border bg-accent/80 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-accent-foreground">
+                              I dag
+                            </span>
+                          </TableCell>
+                        ) : (
+                          <TableCell className="w-0 p-0" />
+                        )}
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>
@@ -219,7 +192,7 @@ function Dashboard() {
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex flex-col">
               <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Siste ordrer
+                Siste ordre
               </div>
               <div className="text-sm font-medium">{recent.length} nylige</div>
             </div>
@@ -231,8 +204,11 @@ function Dashboard() {
           ) : (
             <div className="divide-y border-t">
               {recent.map((o) => (
-                <div key={o.key} className="flex items-start gap-3 px-4 py-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px] text-muted-foreground">
+                <div
+                  key={o.key}
+                  className="flex items-start justify-center gap-3 px-4 py-3"
+                >
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px]">
                     {o.data.delivery.shortDate.slice(0, 5)}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -240,13 +216,10 @@ function Dashboard() {
                       {o.data.receiver.name || 'Uten navn'}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
+                      {o.data.sender.name}
+                      {' · '}
                       {o.data.orderContent.length} vare
                       {o.data.orderContent.length === 1 ? '' : 'r'}
-                      {' · '}
-                      lagret{' '}
-                      {new Date(o.savedAt).toLocaleDateString('nb-NO', {
-                        dateStyle: 'short',
-                      })}
                     </div>
                   </div>
                 </div>
@@ -255,37 +228,15 @@ function Dashboard() {
           )}
         </div>
       </section>
+
+      <OrderDetailSheet
+        order={open}
+        onOpenChange={(v) => {
+          if (!v) setOpen(null)
+        }}
+      />
     </main>
   )
-}
-
-function KpiCard({
-  label,
-  value,
-  hint,
-  icon,
-  to,
-}: {
-  label: string
-  value: string
-  hint: string
-  icon: React.ReactNode
-  to?: '/customers' | '/products'
-}) {
-  const body = (
-    <div className="flex flex-col gap-1 rounded-lg border p-4 transition-colors hover:bg-accent/10">
-      <div className="flex items-center justify-between">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {label}
-        </div>
-        <div className="text-muted-foreground">{icon}</div>
-      </div>
-      <div className="font-heading text-2xl font-medium">{value}</div>
-      <div className="text-xs text-muted-foreground">{hint}</div>
-    </div>
-  )
-  if (to) return <Link to={to}>{body}</Link>
-  return body
 }
 
 function shortDateToIso(short: string): string {

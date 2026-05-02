@@ -45,7 +45,7 @@ export default function OrderProductsContent({
 }: OrderProductsContentProps) {
   const { showTime, showCardText } = useOrderForm()
   const [items, setItems] = useState<Item[]>([
-    { name: 'Frakt', price: 100, quantity: 1 },
+    { name: 'Frakt', description: '', price: 100, quantity: 1 },
   ])
 
   useEffect(() => {
@@ -55,7 +55,12 @@ export default function OrderProductsContent({
           ? prev
           : [
               ...prev,
-              { name: 'Frakt Tidspunktstillegg', price: 100, quantity: 1 },
+              {
+                name: 'Frakt Tidspunktstillegg',
+                description: '',
+                price: 100,
+                quantity: 1,
+              },
             ]
         : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
     )
@@ -66,7 +71,10 @@ export default function OrderProductsContent({
       showCardText
         ? prev.some((i) => i.name === 'Kort')
           ? prev
-          : [...prev, { name: 'Kort', price: 25, quantity: 1 }]
+          : [
+              ...prev,
+              { name: 'Kort', description: '', price: 25, quantity: 1 },
+            ]
         : prev.filter((i) => i.name !== 'Kort'),
     )
   }, [showCardText])
@@ -101,10 +109,17 @@ export default function OrderProductsContent({
 
   async function handleAddProduct(values: AddProductFormValues) {
     const newRow = await addProductMutation.mutateAsync(values)
-    const newItem = {
+    const price = Number(newRow.price)
+    const newItem: Item = {
+      productId: newRow.id,
       name: values.name,
-      price: Number(newRow.price),
+      description: values.description,
+      category: values.category,
+      price,
       quantity: 1,
+      originalName: values.name,
+      originalDescription: values.description,
+      originalPrice: price,
     }
     setItems((prev) => {
       const firstSpecialIndex = prev.findIndex((i) => SPECIAL_ITEMS.has(i.name))
@@ -133,7 +148,7 @@ export default function OrderProductsContent({
               <InputGroupInput
                 id="product-search"
                 name="product-search"
-                placeholder="Søk etter produkt..."
+                placeholder="Søk etter vare..."
                 autoComplete="off"
                 value={searchQuery}
                 onChange={(e) => {
@@ -164,10 +179,18 @@ export default function OrderProductsContent({
                               : item,
                           )
                         }
-                        const newItem = {
+                        const price = Number(product.price)
+                        const description = product.description ?? ''
+                        const newItem: Item = {
+                          productId: product.id,
                           name: product.name,
-                          price: Number(product.price),
+                          description,
+                          category: product.category,
+                          price,
                           quantity: 1,
+                          originalName: product.name,
+                          originalDescription: description,
+                          originalPrice: price,
                         }
                         const firstSpecialIndex = prev.findIndex((i) =>
                           SPECIAL_ITEMS.has(i.name),
@@ -184,6 +207,11 @@ export default function OrderProductsContent({
                     }}
                   >
                     <span className="font-medium">{product.name}</span>
+                    {product.description ? (
+                      <span className="text-xs text-muted-foreground block truncate">
+                        {product.description}
+                      </span>
+                    ) : null}
                     <span className="text-xs flex gap-1.5 mt-0.5">
                       {product.category && <span>{product.category}</span>}
                       {product.category && <span>|</span>}
@@ -196,14 +224,14 @@ export default function OrderProductsContent({
           </div>
           <Button type="button" onClick={() => setAddOpen(true)}>
             <PackagePlus />
-            <span className="hidden sm:inline">Nytt produkt</span>
+            <span className="hidden sm:inline">Ny vare</span>
           </Button>
         </div>
 
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>Legg til produkt</DialogTitle>
+              <DialogTitle>Legg til vare</DialogTitle>
               <DialogDescription>
                 Fyll inn navn, kategori og pris.
               </DialogDescription>

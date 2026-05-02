@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import * as z from 'zod'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Eye, MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
@@ -24,17 +23,11 @@ import {
 
 import type { AddProductFormValues } from '#/components/AddProductForm'
 import AddProductForm from '#/components/AddProductForm'
+import type { Product } from '#/lib/api-types'
 import { deleteProduct, updateProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 
-const productSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  category: z.string(),
-  price: z.number(),
-})
-
-export type Product = z.infer<typeof productSchema>
+export type { Product }
 
 function ProductActionsCell({ row }: { row: Row<Product> }) {
   const queryClient = useQueryClient()
@@ -61,6 +54,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
     name: row.original.name,
     category: row.original.category ?? '',
     price: String(row.original.price),
+    description: row.original.description ?? '',
   }
 
   async function handleEdit(values: AddProductFormValues) {
@@ -123,10 +117,8 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Rediger produkt</DialogTitle>
-            <DialogDescription>
-              Oppdater produktets informasjon.
-            </DialogDescription>
+            <DialogTitle>Rediger vare</DialogTitle>
+            <DialogDescription>Oppdater vareinformasjonen.</DialogDescription>
           </DialogHeader>
           <AddProductForm
             saveText="Lagre"
@@ -141,7 +133,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Slett produkt</DialogTitle>
+            <DialogTitle>Slett vare</DialogTitle>
             <DialogDescription>
               Er du sikker på at du vil slette{' '}
               <span className="font-medium">{row.original.name}</span>? Dette er
@@ -171,8 +163,18 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
 export const productColumns: ColumnDef<Product>[] = [
   {
     accessorKey: 'name',
-    header: 'Navn',
-    meta: { priority: 'primary', truncate: true, className: 'max-w-[14rem]' },
+    header: 'Vare',
+    meta: { priority: 'primary', truncate: true, className: 'max-w-[20rem]' },
+    cell: ({ row }) => (
+      <div className="flex flex-col min-w-0">
+        <span className="font-medium truncate">{row.original.name}</span>
+        {row.original.description ? (
+          <span className="text-xs text-muted-foreground truncate">
+            {row.original.description}
+          </span>
+        ) : null}
+      </div>
+    ),
   },
   {
     accessorKey: 'category',

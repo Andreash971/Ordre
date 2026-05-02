@@ -48,7 +48,7 @@ function NewOrderPage() {
   const [instructionsValue, setInstructionsValue] = React.useState('')
 
   const [items, setItems] = React.useState<Item[]>([
-    { name: 'Frakt', price: 100, quantity: 1 },
+    { name: 'Frakt', description: '', price: 100, quantity: 1 },
   ])
   const [recipients, setRecipients] = React.useState<Customer[]>([])
 
@@ -60,7 +60,12 @@ function NewOrderPage() {
           ? prev
           : [
               ...prev,
-              { name: 'Frakt Tidspunktstillegg', price: 100, quantity: 1 },
+              {
+                name: 'Frakt Tidspunktstillegg',
+                description: '',
+                price: 100,
+                quantity: 1,
+              },
             ]
         : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
     )
@@ -71,7 +76,10 @@ function NewOrderPage() {
       cardEnabled
         ? prev.some((i) => i.name === 'Kort')
           ? prev
-          : [...prev, { name: 'Kort', price: 25, quantity: 1 }]
+          : [
+              ...prev,
+              { name: 'Kort', description: '', price: 25, quantity: 1 },
+            ]
         : prev.filter((i) => i.name !== 'Kort'),
     )
   }, [cardEnabled])

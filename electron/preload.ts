@@ -25,6 +25,15 @@ const api = {
     suggestAddresses: (q: string) =>
       ipcRenderer.invoke('bring:suggestAddresses', q),
   },
+  store: {
+    getAll: () => ipcRenderer.invoke('store:getAll'),
+    setTheme: (mode: string) => ipcRenderer.invoke('store:setTheme', mode),
+    setSettings: (partial: unknown) =>
+      ipcRenderer.invoke('store:setSettings', partial),
+    setOrders: (orders: unknown) =>
+      ipcRenderer.invoke('store:setOrders', orders),
+    clearOrders: () => ipcRenderer.invoke('store:clearOrders'),
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

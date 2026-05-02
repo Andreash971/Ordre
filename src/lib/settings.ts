@@ -1,3 +1,5 @@
+import { getCache, setSettingsInCache } from './store-cache'
+
 export type RetentionOption = 3 | 7 | 14 | 30 | 'never'
 export type PageSizeOption = 10 | 14 | 25 | 50
 
@@ -14,42 +16,12 @@ export type AppSettings = {
   company: CompanyInfo
 }
 
-const SETTINGS_KEY = 'app_settings'
-
-const DEFAULT_SETTINGS: AppSettings = {
-  archiveRetention: 7,
-  rowsPerPage: 14,
-  company: {
-    name: 'Blomster i Byhaven AS',
-    address: 'Olav Tryggvasonsgt. 28',
-    postCode: '7011 Trondheim',
-    phone: '73522460',
-  },
-}
-
 export function getStoredSettings(): AppSettings {
-  if (typeof window === 'undefined') return DEFAULT_SETTINGS
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY)
-    if (!raw) return DEFAULT_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<AppSettings>
-    return {
-      archiveRetention:
-        parsed.archiveRetention ?? DEFAULT_SETTINGS.archiveRetention,
-      rowsPerPage: parsed.rowsPerPage ?? DEFAULT_SETTINGS.rowsPerPage,
-      company: { ...DEFAULT_SETTINGS.company, ...(parsed.company ?? {}) },
-    }
-  } catch {
-    return DEFAULT_SETTINGS
-  }
+  return getCache().settings
 }
 
 export function updateSettings(partial: Partial<AppSettings>): void {
-  const current = getStoredSettings()
-  window.localStorage.setItem(
-    SETTINGS_KEY,
-    JSON.stringify({ ...current, ...partial }),
-  )
+  setSettingsInCache(partial)
 }
 
 export function getRetentionMs(): number {

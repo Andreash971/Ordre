@@ -16,4 +16,5 @@ export const products = sqliteTable('products', {
   name: text('name').notNull(),
   category: text('category').notNull(),
   price: real('price').notNull(),
+  description: text('description'),
 })

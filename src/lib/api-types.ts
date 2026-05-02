@@ -18,6 +18,7 @@ export type Product = {
   name: string
   category: string
   price: number
+  description: string | null
 }
 
 export type AddressSuggestion = {
@@ -50,6 +51,7 @@ export const productSchema = z.object({
   name: z.string().min(1, 'Navn er påkrevd').max(100),
   category: z.string().max(50),
   price: z.number(),
+  description: z.string().max(2000).optional(),
 })
 export type InsertProductInput = Omit<z.infer<typeof productSchema>, 'id'>
 export type UpdateProductInput = z.infer<typeof productSchema> & { id: number }
