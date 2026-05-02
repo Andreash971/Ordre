@@ -34,7 +34,7 @@ const pageLabels: Record<string, string> = {
   '/new': 'Ny Ordre',
   '/archive': 'Arkiv',
   '/customers': 'Kunder',
-  '/products': 'Produkter',
+  '/products': 'Varer',
   '/settings': 'Innstillinger',
 }
 
@@ -42,10 +42,11 @@ function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   return (
     <>
+      <div className="titlebar" />
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2">
+          <header className="flex h-16 m-3 shrink-0 items-center gap-2">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="sticky -ml-1" />
               <Separator

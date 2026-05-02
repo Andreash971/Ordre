@@ -1,30 +1,135 @@
 import { useState } from 'react'
 import * as z from 'zod'
 import type { ColumnDef, Row, RowData, Table } from '@tanstack/react-table'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useIsMobile } from '@/hooks/use-mobile'
+import AddProductForm from '#/components/AddProductForm'
+import type { AddProductFormValues } from '#/components/AddProductForm'
+import { insertProduct, updateProduct } from '#/lib/product-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
-    updateData: (rowIndex: number, columnId: keyof Item, value: number) => void
+    updateData: (
+      rowIndex: number,
+      columnId: keyof Item,
+      value: string | number,
+    ) => void
     removeRow: (rowIndex: number) => void
     updateRow: (rowIndex: number, values: Record<string, unknown>) => void
   }
 }
 
 const itemSchema = z.object({
+  productId: z.number().optional(),
   name: z.string(),
+  description: z.string().default(''),
+  category: z.string().optional(),
   price: z.number(),
   quantity: z.number(),
+  originalName: z.string().optional(),
+  originalDescription: z.string().optional(),
+  originalPrice: z.number().optional(),
 })
 
 export type Item = z.infer<typeof itemSchema>
 
+const PROTECTED_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
+
+function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
+  const { name, description } = row.original
+  const isProtected = PROTECTED_ITEMS.has(name)
+  const isNew = !isProtected && row.original.productId == null
+  const [isEditing, setIsEditing] = useState(isNew)
+  const isMobile = useIsMobile()
+
+  if (!isEditing || isProtected) {
+    return (
+      <div
+        className="flex flex-col cursor-default select-none min-w-0"
+        onClick={
+          !isProtected && isMobile ? () => setIsEditing(true) : undefined
+        }
+        onDoubleClick={
+          !isProtected && !isMobile ? () => setIsEditing(true) : undefined
+        }
+      >
+        {name ? (
+          <span className="font-medium truncate">{name}</span>
+        ) : (
+          <span className="font-medium truncate text-muted-foreground italic">
+            Ny vare
+          </span>
+        )}
+        {description ? (
+          <span className="text-xs text-muted-foreground whitespace-pre-wrap wrap-break-words">
+            {description}
+          </span>
+        ) : null}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="flex flex-col gap-1 min-w-0"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setIsEditing(false)
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') setIsEditing(false)
+      }}
+    >
+      <Input
+        value={name}
+        autoFocus={!isNew || name === ''}
+        placeholder="Navn"
+        onChange={(e) =>
+          table.options.meta?.updateData(row.index, 'name', e.target.value)
+        }
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            setIsEditing(false)
+          }
+        }}
+        className="font-medium"
+      />
+      <Textarea
+        value={description}
+        rows={2}
+        placeholder="Beskrivelse (valgfri)"
+        onChange={(e) =>
+          table.options.meta?.updateData(
+            row.index,
+            'description',
+            e.target.value,
+          )
+        }
+        className="text-xs min-h-0"
+      />
+    </div>
+  )
+}
+
 function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
-  const [isEditing, setIsEditing] = useState(false)
+  const isProtected = PROTECTED_ITEMS.has(row.original.name)
+  const isNew = !isProtected && row.original.productId == null
+  const [isEditing, setIsEditing] = useState(isNew)
   const isMobile = useIsMobile()
   const quantity = row.original.quantity
 
@@ -46,7 +151,7 @@ function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
         type="number"
         min={1}
         value={quantity}
-        autoFocus
+        placeholder="Antall"
         onChange={(e) =>
           table.options.meta?.updateData(
             row.index,
@@ -91,10 +196,14 @@ function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
 const nokFormatter = new Intl.NumberFormat('no-NB', {
   style: 'currency',
   currency: 'NOK',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 })
 
 function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
-  const [isEditing, setIsEditing] = useState(false)
+  const isProtected = PROTECTED_ITEMS.has(row.original.name)
+  const isNew = !isProtected && row.original.productId == null
+  const [isEditing, setIsEditing] = useState(isNew)
   const isMobile = useIsMobile()
   const price = row.original.price
 
@@ -116,7 +225,7 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
         type="number"
         min={0}
         value={price}
-        autoFocus
+        placeholder="Pris"
         onChange={(e) =>
           table.options.meta?.updateData(
             row.index,
@@ -132,16 +241,11 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
-const PROTECTED_ITEMS = new Set([
-  'Frakt',
-  'Frakt Tidspunktstillegg',
-  'Kort',
-])
-
 export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'name',
-    header: () => <div className="text-left">Produkt</div>,
+    header: () => <div className="text-left">Vare</div>,
+    cell: ({ row, table }) => <NameCell row={row} table={table} />,
     meta: { priority: 'primary' },
   },
   {
@@ -161,6 +265,8 @@ export const columns: ColumnDef<Item>[] = [
       const formatted = new Intl.NumberFormat('no-NB', {
         style: 'currency',
         currency: 'NOK',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
       }).format(row.original.price * row.original.quantity)
 
       return <div className="text-right">{formatted}</div>
@@ -171,22 +277,136 @@ export const columns: ColumnDef<Item>[] = [
     id: 'action',
     header: () => <div className="text-right"></div>,
     meta: { action: true },
-    cell: ({ row, table }) => {
-      if (PROTECTED_ITEMS.has(row.original.name)) {
-        return <div className="text-right w-8" />
-      }
-      return (
-        <div className="text-right">
+    cell: ({ row, table }) => <ActionCell row={row} table={table} />,
+  },
+]
+
+function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
+  const queryClient = useQueryClient()
+  const item = row.original
+  const isProtected = PROTECTED_ITEMS.has(item.name)
+  const isNew = !isProtected && item.productId == null
+  const canSaveExisting =
+    !isProtected && item.productId != null && item.originalName != null
+
+  const isDirty =
+    canSaveExisting &&
+    (item.name !== item.originalName ||
+      item.description !== (item.originalDescription ?? '') ||
+      item.price !== item.originalPrice)
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      updateProduct({
+        data: {
+          id: item.productId!,
+          name: item.name,
+          category: item.category ?? '',
+          price: item.price,
+          description: item.description,
+        },
+      }),
+    onSuccess: () => {
+      table.options.meta?.updateRow(row.index, {
+        originalName: item.name,
+        originalDescription: item.description,
+        originalPrice: item.price,
+      })
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+    },
+  })
+
+  const insertMutation = useMutation({
+    mutationFn: (values: AddProductFormValues) =>
+      insertProduct({ data: { ...values, price: Number(values.price) } }),
+    onSuccess: (inserted, values) => {
+      const price = Number(inserted.price)
+      table.options.meta?.updateRow(row.index, {
+        productId: inserted.id,
+        name: values.name,
+        description: values.description,
+        category: values.category,
+        price,
+        originalName: values.name,
+        originalDescription: values.description,
+        originalPrice: price,
+      })
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all })
+      setDialogOpen(false)
+    },
+  })
+
+  if (isProtected) return <div className="text-right w-8" />
+
+  return (
+    <div className="flex justify-end gap-1">
+      {canSaveExisting ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          disabled={!isDirty || updateMutation.isPending}
+          onClick={() => updateMutation.mutate()}
+          aria-label="Lagre endringer"
+        >
+          {updateMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+        </Button>
+      ) : null}
+      {isNew ? (
+        <>
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => table.options.meta?.removeRow(row.index)}
+            disabled={item.name.trim() === '' || insertMutation.isPending}
+            onClick={() => setDialogOpen(true)}
+            aria-label="Lagre ny vare"
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Fjern rad</span>
+            {insertMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
           </Button>
-        </div>
-      )
-    },
-  },
-]
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Lagre vare</DialogTitle>
+                <DialogDescription>
+                  Bekreft detaljene og legg til en kategori.
+                </DialogDescription>
+              </DialogHeader>
+              <AddProductForm
+                saveText="Lagre"
+                close
+                disabled={insertMutation.isPending}
+                defaultValues={{
+                  name: item.name,
+                  description: item.description,
+                  price: String(item.price),
+                  category: item.category ?? '',
+                }}
+                onSubmit={async (values) => {
+                  await insertMutation.mutateAsync(values)
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : null}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        disabled={updateMutation.isPending || insertMutation.isPending}
+        onClick={() => table.options.meta?.removeRow(row.index)}
+      >
+        <Trash2 className="h-4 w-4" />
+        <span className="sr-only">Fjern rad</span>
+      </Button>
+    </div>
+  )
+}

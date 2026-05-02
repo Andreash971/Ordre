@@ -1,3 +1,5 @@
+import { getCache, setThemeInCache } from './store-cache'
+
 export type ThemeMode = 'auto' | 'light' | 'dark'
 
 export interface ThemeOption {
@@ -13,16 +15,7 @@ export const THEME_OPTIONS: ThemeOption[] = [
 ]
 
 export function getStoredTheme(): ThemeMode {
-  if (typeof window === 'undefined') {
-    return 'auto'
-  }
-
-  const stored = window.localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark' || stored === 'auto') {
-    return stored
-  }
-
-  return 'auto'
+  return getCache().theme
 }
 
 export function applyTheme(mode: ThemeMode): void {
@@ -43,5 +36,5 @@ export function applyTheme(mode: ThemeMode): void {
 
 export function setTheme(mode: ThemeMode): void {
   applyTheme(mode)
-  window.localStorage.setItem('theme', mode)
+  setThemeInCache(mode)
 }

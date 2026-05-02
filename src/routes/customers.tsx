@@ -53,9 +53,19 @@ function CustomersPage() {
   }
 
   return (
-    <main className="rise-in page-wrap px-4 pb-8 pt-6">
-      <div className="flex items-center gap-2 mb-4">
-        <InputGroup className="flex-1">
+    <main className="rise-in page-wrap flex flex-col gap-4 px-4 pb-8 pt-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-heading text-2xl font-medium leading-tight">
+          Kunderegister
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Oversikt over alle kunder. Se, oppdater, endre, slett, eller legg til
+          nye kunder i registeret.
+        </p>
+      </div>
+
+      <div className="flex flex-row items-center justify-between w-full gap-2">
+        <InputGroup className="w-full max-w-sm">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
@@ -68,11 +78,12 @@ function CustomersPage() {
             onChange={(e) => setGlobalFilter(e.target.value)}
           />
         </InputGroup>
-        <Button onClick={() => setAddOpen(true)}>
+        <Button onClick={() => setAddOpen(true)} className="justify-self-end">
           <UserPlus />
           <span className="hidden sm:inline">Legg til kunde</span>
         </Button>
       </div>
+
       <DataTable
         columns={customerColumns}
         data={data}
@@ -81,6 +92,7 @@ function CustomersPage() {
         pagination
         pageSize={pageSize}
       />
+
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>

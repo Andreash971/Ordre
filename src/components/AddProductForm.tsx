@@ -5,7 +5,9 @@ import * as z from 'zod'
 import { CreditCard, FolderOpen, Package } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Field, FieldError } from '@/components/ui/field'
 import { FieldGroup } from '@/components/ui/field'
+import { Textarea } from '@/components/ui/textarea'
 
 import FormInputField from '#/components/FormInputField'
 import { DialogClose } from './ui/dialog'
@@ -14,6 +16,7 @@ export type AddProductFormValues = {
   name: string
   category: string
   price: string
+  description: string
 }
 
 interface AddProductFormProps {
@@ -34,7 +37,10 @@ const formSchema = z.object({
   price: z
     .string()
     .min(1, 'Pris er påkrevd')
-    .refine((v) => !isNaN(Number(v)) && Number(v) >= 0, 'Ugyldig pris'),
+    .refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Pris må være større enn 0'),
+  description: z
+    .string()
+    .max(2000, 'Beskrivelse kan ikke være lengre enn 2000 tegn'),
 })
 
 export default function AddProductForm({
@@ -50,15 +56,17 @@ export default function AddProductForm({
   const form = useForm({
     defaultValues: {
       name: initialValues?.name ?? '',
-      category: initialValues?.category ?? '',
+      category: initialValues?.category ?? 'Ukategorisert',
       price: initialValues?.price ?? '',
+      description: initialValues?.description ?? '',
     },
     validators: {
       onSubmit: formSchema,
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      await onSubmit(value)
+      const category = value.category.trim() || 'Ukategorisert'
+      await onSubmit({ ...value, category })
     },
   })
 
@@ -108,6 +116,29 @@ export default function AddProductForm({
               autoComplete="off"
             />
           )}
+        </form.Field>
+
+        <form.Field name="description">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid
+            return (
+              <Field data-invalid={isInvalid}>
+                <Textarea
+                  id={`${formId}-description`}
+                  name={field.name}
+                  rows={3}
+                  placeholder="Beskrivelse (valgfri)"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  aria-invalid={isInvalid}
+                  disabled={disabled}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            )
+          }}
         </form.Field>
       </FieldGroup>
 

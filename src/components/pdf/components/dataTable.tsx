@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { StyleSheet, Text, View } from '@react-pdf/renderer'
 import type { Style } from '@react-pdf/types'
 
@@ -7,6 +8,7 @@ interface DataTableColumn<T> {
   width?: string | number
   align?: 'left' | 'center' | 'right'
   prefix?: string
+  render?: (row: T) => React.ReactNode
 }
 
 interface DataTableProps<T extends Record<string, unknown>> {
@@ -74,19 +76,37 @@ export function DataTable<T extends Record<string, unknown>>({
       {data.map((row, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: no row id available
         <View key={i} style={styles.row}>
-          {columns.map((col) => (
-            <Text
-              key={col.key}
-              style={[
-                styles.cell,
-                { ...colSizeStyle(col.width), textAlign: col.align ?? 'left' },
-              ]}
-            >
-              {row[col.key] != null
-                ? `${col.prefix ?? ''}${String(row[col.key])}`
-                : ''}
-            </Text>
-          ))}
+          {columns.map((col) =>
+            col.render ? (
+              <View
+                key={col.key}
+                style={[
+                  styles.cell,
+                  {
+                    ...colSizeStyle(col.width),
+                    textAlign: col.align ?? 'left',
+                  },
+                ]}
+              >
+                {col.render(row)}
+              </View>
+            ) : (
+              <Text
+                key={col.key}
+                style={[
+                  styles.cell,
+                  {
+                    ...colSizeStyle(col.width),
+                    textAlign: col.align ?? 'left',
+                  },
+                ]}
+              >
+                {row[col.key] != null
+                  ? `${col.prefix ?? ''}${String(row[col.key])}`
+                  : ''}
+              </Text>
+            ),
+          )}
         </View>
       ))}
 

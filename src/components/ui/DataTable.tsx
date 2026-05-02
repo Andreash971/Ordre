@@ -109,7 +109,11 @@ export function DataTable<TData, TValue>({
       : undefined,
     manualPagination: false,
     meta: {
-      updateData: (rowIndex: number, columnId: string, value: number) => {
+      updateData: (
+        rowIndex: number,
+        columnId: string,
+        value: string | number,
+      ) => {
         setData?.((prev) =>
           prev.map((row, i) =>
             i === rowIndex ? { ...row, [columnId]: value } : row,

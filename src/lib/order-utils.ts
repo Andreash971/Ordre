@@ -1,6 +1,11 @@
 import type { Item } from '#/components/OrderColumns'
 import type { OrderData } from '#/components/pdf/order'
 import { getRetentionMs, getStoredSettings } from '#/lib/settings'
+import {
+  clearOrdersInCache,
+  getCache,
+  setOrdersInCache,
+} from '#/lib/store-cache'
 
 export type CustomerFormValues = {
   name: string
@@ -98,6 +103,7 @@ export function buildOrderData(
       .filter((i) => customer.cardmsg.trim() !== '' || i.name !== 'Kort')
       .map((item) => ({
       product: item.name,
+      description: item.description ?? '',
       quantity: item.quantity,
       price: item.price,
       total: item.price * item.quantity,
@@ -112,17 +118,13 @@ export type StoredOrder = {
   key: string
 }
 
-const STORAGE_KEY = 'ordreflyt_orders'
-
 export function exportOrdersToJson(
   customers: Customer[],
   sender: CustomerFormValues | null,
   delivery: DeliveryValues,
   items: Item[],
 ) {
-  const stored: Record<string, StoredOrder> = JSON.parse(
-    localStorage.getItem(STORAGE_KEY) ?? '{}',
-  )
+  const stored: Record<string, StoredOrder> = { ...getCache().orders }
   const now = Date.now()
   customers.forEach((customer, index) => {
     const orderData = buildOrderData(customer, sender, delivery, items)
@@ -138,7 +140,7 @@ export function exportOrdersToJson(
       key,
     }
   })
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(stored))
+  setOrdersInCache(stored)
 }
 
 export function getCurrentOrders(
@@ -165,18 +167,21 @@ export function getCurrentOrders(
 }
 
 export function getStoredOrders(): StoredOrder[] {
-  const stored: Record<string, StoredOrder> = JSON.parse(
-    localStorage.getItem(STORAGE_KEY) ?? '{}',
-  )
+  const stored = getCache().orders
   const now = Date.now()
   const active: Record<string, StoredOrder> = {}
+  let pruned = false
   for (const [k, v] of Object.entries(stored)) {
-    if (now <= v.expiresAt) active[k] = v
+    if (now <= v.expiresAt) {
+      active[k] = v
+    } else {
+      pruned = true
+    }
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(active))
+  if (pruned) setOrdersInCache(active)
   return Object.values(active)
 }
 
 export function clearArchive(): void {
-  localStorage.removeItem(STORAGE_KEY)
+  clearOrdersInCache()
 }

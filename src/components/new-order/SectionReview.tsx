@@ -292,7 +292,7 @@ export default function SectionReview({
       {/* Totals */}
       <div className="rounded-lg border p-4">
         <div className="grid grid-cols-2 gap-y-1 text-sm">
-          <div className="text-muted-foreground">Produkter</div>
+          <div className="text-muted-foreground">Varer</div>
           <div className="text-right font-mono">
             {nokFormatter.format(regularSubtotal)}
           </div>

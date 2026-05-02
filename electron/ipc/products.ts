@@ -11,13 +11,22 @@ const productSelect = {
   name: products.name,
   category: products.category,
   price: products.price,
+  description: products.description,
 }
 
 const productSchema = z.object({
   id: z.number().optional(),
-  name: z.string().min(1, 'Navn er påkrevd').max(100),
-  category: z.string().max(50),
-  price: z.number(),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Navn er påkrevd')
+    .max(100),
+  category: z
+    .string()
+    .max(50)
+    .transform((v) => (v.trim() === '' ? 'Ukategorisert' : v.trim())),
+  price: z.number().positive('Pris må være større enn 0'),
+  description: z.string().max(2000).optional(),
 })
 
 export function registerProductHandlers() {
@@ -48,6 +57,7 @@ export function registerProductHandlers() {
         name: data.name,
         category: data.category,
         price: data.price,
+        description: data.description ?? '',
       })
       .returning(productSelect)
     return row
@@ -62,6 +72,7 @@ export function registerProductHandlers() {
         name: data.name,
         category: data.category,
         price: data.price,
+        description: data.description ?? '',
       })
       .where(eq(products.id, data.id))
   })
