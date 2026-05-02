@@ -59,7 +59,7 @@ export function registerBringHandlers() {
   })
 
   ipcMain.handle('bring:suggestAddresses', async (_e, raw: unknown) => {
-    const query = z.string().min(1).parse(raw)
+    const query = z.string().min(1).max(128).parse(raw)
     const { uid, key } = getCredentials()
 
     const headers = {

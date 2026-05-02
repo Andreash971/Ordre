@@ -1,5 +1,5 @@
 {
-  "projectName": "ordreflyt",
+  "projectName": "BlomsteriByhaven-Ordre",
   "mode": "file-router",
   "typescript": true,
   "tailwind": true,
@@ -8,7 +8,7 @@
   "install": true,
   "addOnOptions": {
     "drizzle": {
-      "database": "postgresql"
+      "database": "sqlite"
     }
   },
   "includeExamples": true,
@@ -21,7 +21,6 @@
     "drizzle",
     "table",
     "tanstack-query",
-    "better-auth",
     "db",
     "storybook",
     "eslint"
