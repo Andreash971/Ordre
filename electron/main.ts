@@ -82,6 +82,18 @@ function createWindow() {
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('blob:')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          webPreferences: {
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: true,
+          },
+        },
+      }
+    }
     if (url.startsWith('https://')) void shell.openExternal(url)
     return { action: 'deny' }
   })

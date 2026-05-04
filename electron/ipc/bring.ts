@@ -20,9 +20,7 @@ const addressItemSchema = z.object({
 
 const suggestionsResponseSchema = z.object({
   addresses: z.array(addressItemSchema),
-  navigation: z
-    .object({ next: z.string().nullable().optional() })
-    .optional(),
+  navigation: z.object({ next: z.string().nullable().optional() }).optional(),
 })
 
 const MAX_PAGES = 10
@@ -59,7 +57,7 @@ export function registerBringHandlers() {
   })
 
   ipcMain.handle('bring:suggestAddresses', async (_e, raw: unknown) => {
-    const query = z.string().min(1).max(128).parse(raw)
+    const query = z.string().min(1).parse(raw)
     const { uid, key } = getCredentials()
 
     const headers = {
