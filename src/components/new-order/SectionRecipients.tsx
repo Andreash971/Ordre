@@ -80,20 +80,18 @@ export default function SectionRecipients({
   const [expanded, setExpanded] = React.useState<number | null>(0)
 
   const addRecipient = () => {
-    onRecipientsChange((prev) => {
-      const next: Customer = {
-        ...emptyRecipient(),
-        date: defaults.delivery.date,
-        time: defaults.delivery.time,
-        cardmsg: defaults.cardEnabled ? defaults.cardValue : '',
-        instructmsg: defaults.instructionsEnabled
-          ? defaults.instructionsValue
-          : '',
-      }
-      const nextArr = [...prev, next]
-      setExpanded(nextArr.length - 1)
-      return nextArr
-    })
+    const nextIndex = recipients.length
+    const next: Customer = {
+      ...emptyRecipient(),
+      date: defaults.delivery.date,
+      time: defaults.delivery.time,
+      cardmsg: defaults.cardEnabled ? defaults.cardValue : '',
+      instructmsg: defaults.instructionsEnabled
+        ? defaults.instructionsValue
+        : '',
+    }
+    onRecipientsChange((prev) => [...prev, next])
+    setExpanded(nextIndex)
   }
 
   const removeRecipient = (index: number) => {
