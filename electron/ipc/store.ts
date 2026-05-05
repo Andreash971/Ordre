@@ -4,7 +4,8 @@ import * as z from 'zod'
 import type { AppSettings, StoredOrder } from '../store'
 import { DEFAULT_SETTINGS, getStore } from '../store'
 
-const themeSchema = z.enum(['auto', 'light', 'dark'])
+// Source of truth: src/lib/theme.ts
+const themeSchema = z.enum(['auto', 'light', 'dark', 'note'])
 
 const companySchema = z.object({
   name: z.string(),

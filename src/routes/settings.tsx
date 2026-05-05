@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input'
 import { Archive, Building2, Clock, Palette, Rows3 } from 'lucide-react'
 
 import type { ThemeMode } from '@/lib/theme'
-import { THEME_OPTIONS, getStoredTheme, setTheme } from '@/lib/theme'
+import { THEMES, getStoredTheme, setTheme } from '@/lib/theme'
 import type {
   CompanyInfo,
   PageSizeOption,
@@ -59,12 +59,10 @@ function SelectTheme() {
   }
 
   // Group options: ungrouped first, then grouped
-  const ungrouped = THEME_OPTIONS.filter((o) => o.group === null)
+  const ungrouped = THEMES.filter((o) => o.group === null)
   const groups = [
     ...new Set(
-      THEME_OPTIONS.filter((o) => o.group !== null).map(
-        (o) => o.group as string,
-      ),
+      THEMES.filter((o) => o.group !== null).map((o) => o.group as string),
     ),
   ]
 
@@ -84,7 +82,7 @@ function SelectTheme() {
           </SelectGroup>
         )}
         {groups.map((group, i) => {
-          const options = THEME_OPTIONS.filter((o) => o.group === group)
+          const options = THEMES.filter((o) => o.group === group)
           return (
             <SelectGroup key={group}>
               {(ungrouped.length > 0 || i > 0) && <SelectSeparator />}
@@ -261,7 +259,7 @@ function SettingsPage() {
   return (
     <main className="rise-in page-wrap px-4 pb-8 pt-6">
       <div className="flex flex-col gap-4 w-full max-w-lg">
-        <Item variant="outline">
+        <Item variant="outline" className="dark:bg-secondary">
           <ItemMedia variant="icon">
             <Palette />
           </ItemMedia>
@@ -274,7 +272,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline">
+        <Item variant="outline" className="dark:bg-secondary">
           <ItemMedia variant="icon">
             <Clock />
           </ItemMedia>
@@ -289,7 +287,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline">
+        <Item variant="outline" className="dark:bg-secondary">
           <ItemMedia variant="icon">
             <Archive />
           </ItemMedia>
@@ -304,7 +302,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline">
+        <Item variant="outline" className="dark:bg-secondary">
           <ItemMedia variant="icon">
             <Rows3 />
           </ItemMedia>
@@ -319,7 +317,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline">
+        <Item variant="outline" className="dark:bg-secondary">
           <ItemMedia variant="icon">
             <Building2 />
           </ItemMedia>

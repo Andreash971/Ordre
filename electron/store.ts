@@ -1,7 +1,8 @@
 type RetentionOption = 3 | 7 | 14 | 30 | 'never'
 type PageSizeOption = 10 | 14 | 25 | 50
 
-export type ThemeMode = 'auto' | 'light' | 'dark'
+// Source of truth: src/lib/theme.ts
+export type ThemeMode = 'auto' | 'light' | 'dark' | 'note'
 
 export type CompanyInfo = {
   name: string
@@ -57,10 +58,9 @@ type StoreCtor = new (opts: {
   defaults?: StoreSchema
 }) => StoreInstance
 
-const dynamicImport = new Function(
-  'specifier',
-  'return import(specifier)',
-) as (specifier: string) => Promise<{ default: StoreCtor }>
+const dynamicImport = new Function('specifier', 'return import(specifier)') as (
+  specifier: string,
+) => Promise<{ default: StoreCtor }>
 
 let storePromise: Promise<StoreInstance> | null = null
 

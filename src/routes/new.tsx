@@ -76,10 +76,7 @@ function NewOrderPage() {
       cardEnabled
         ? prev.some((i) => i.name === 'Kort')
           ? prev
-          : [
-              ...prev,
-              { name: 'Kort', description: '', price: 25, quantity: 1 },
-            ]
+          : [...prev, { name: 'Kort', description: '', price: 25, quantity: 1 }]
         : prev.filter((i) => i.name !== 'Kort'),
     )
   }, [cardEnabled])
@@ -180,7 +177,7 @@ function NewOrderPage() {
           }}
         />
       </SectionCard>
-      
+
       {canShowReview ? <Separator /> : null}
 
       {canShowReview ? (

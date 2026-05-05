@@ -23,7 +23,7 @@ export default function SectionCard({
   bodyClassName,
 }: SectionCardProps) {
   return (
-    <Card className={cn('rise-in', className)}>
+    <Card className={cn('rise-in note:ring-border', className)}>
       <div className="flex flex-wrap items-start justify-between gap-3 border-b px-4 pb-4">
         <div className="flex items-start gap-3 min-w-0">
           <span className="mt-0.5 shrink-0 rounded border border-input bg-muted/60 px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">

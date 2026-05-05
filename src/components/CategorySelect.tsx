@@ -50,7 +50,7 @@ export default function CategorySelect({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              'w-full justify-between font-normal',
+              'w-full justify-between font-normal note:border-border',
               !value && 'text-muted-foreground',
               triggerClassName,
             )}
@@ -65,7 +65,7 @@ export default function CategorySelect({
           style={{ width: 'var(--radix-popover-trigger-width)' }}
         >
           <div className="p-2 border-b">
-            <InputGroup>
+            <InputGroup className="note:border-border">
               <InputGroupAddon>
                 <Search />
               </InputGroupAddon>
