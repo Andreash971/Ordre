@@ -16,10 +16,21 @@ const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
   currency: 'NOK',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 })
 
 export default function SectionItems({ items, setItems }: SectionItemsProps) {
+  const insertItem = (prev: Item[], newItem: Item): Item[] => {
+    const firstSpecialIndex = prev.findIndex((i) => SPECIAL_ITEMS.has(i.name))
+    if (firstSpecialIndex === -1) return [...prev, newItem]
+    return [
+      ...prev.slice(0, firstSpecialIndex),
+      newItem,
+      ...prev.slice(firstSpecialIndex),
+    ]
+  }
+
   const handlePick = (p: PickedProduct) => {
     setItems((prev) => {
       const existingIndex = prev.findIndex((i) => i.name === p.name)
@@ -28,22 +39,37 @@ export default function SectionItems({ items, setItems }: SectionItemsProps) {
           i === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
         )
       }
-      const newItem: Item = { name: p.name, price: p.price, quantity: 1 }
-      const firstSpecialIndex = prev.findIndex((i) => SPECIAL_ITEMS.has(i.name))
-      if (firstSpecialIndex === -1) return [...prev, newItem]
-      return [
-        ...prev.slice(0, firstSpecialIndex),
-        newItem,
-        ...prev.slice(firstSpecialIndex),
-      ]
+      const newItem: Item = {
+        productId: p.id,
+        name: p.name,
+        description: p.description,
+        category: p.category,
+        price: p.price,
+        quantity: 1,
+        originalName: p.name,
+        originalDescription: p.description,
+        originalPrice: p.price,
+      }
+      return insertItem(prev, newItem)
     })
+  }
+
+  const handleAddNew = () => {
+    setItems((prev) =>
+      insertItem(prev, {
+        name: '',
+        description: '',
+        price: 0,
+        quantity: 1,
+      }),
+    )
   }
 
   const grandTotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-4">
-      <ProductPicker onPick={handlePick} />
+      <ProductPicker onPick={handlePick} onAddNew={handleAddNew} />
 
       <DataTable
         columns={orderColumns}

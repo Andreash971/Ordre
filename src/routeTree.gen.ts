@@ -15,7 +15,6 @@ import { Route as NewRouteImport } from './routes/new'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -47,11 +46,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,7 +54,6 @@ export interface FileRoutesByFullPath {
   '/new': typeof NewRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +62,6 @@ export interface FileRoutesByTo {
   '/new': typeof NewRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,7 +71,6 @@ export interface FileRoutesById {
   '/new': typeof NewRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,16 +81,8 @@ export interface FileRouteTypes {
     | '/new'
     | '/products'
     | '/settings'
-    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/archive'
-    | '/customers'
-    | '/new'
-    | '/products'
-    | '/settings'
-    | '/api/auth/$'
+  to: '/' | '/archive' | '/customers' | '/new' | '/products' | '/settings'
   id:
     | '__root__'
     | '/'
@@ -108,7 +91,6 @@ export interface FileRouteTypes {
     | '/new'
     | '/products'
     | '/settings'
-    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +100,6 @@ export interface RootRouteChildren {
   NewRoute: typeof NewRoute
   ProductsRoute: typeof ProductsRoute
   SettingsRoute: typeof SettingsRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,13 +146,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -182,17 +156,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewRoute: NewRoute,
   ProductsRoute: ProductsRoute,
   SettingsRoute: SettingsRoute,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

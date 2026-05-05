@@ -1,0 +1,76 @@
+type RetentionOption = 3 | 7 | 14 | 30 | 'never'
+type PageSizeOption = 10 | 14 | 25 | 50
+
+// Source of truth: src/lib/theme.ts
+export type ThemeMode = 'auto' | 'light' | 'dark' | 'note'
+
+export type CompanyInfo = {
+  name: string
+  address: string
+  postCode: string
+  phone: string
+}
+
+export type AppSettings = {
+  archiveRetention: RetentionOption
+  rowsPerPage: PageSizeOption
+  company: CompanyInfo
+}
+
+export type StoredOrder = {
+  data: unknown
+  savedAt: number
+  expiresAt: number
+  key: string
+}
+
+export type StoreSchema = {
+  theme: ThemeMode
+  settings: AppSettings
+  orders: Record<string, StoredOrder>
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  archiveRetention: 7,
+  rowsPerPage: 14,
+  company: {
+    name: 'Blomster i Byhaven AS',
+    address: 'Olav Tryggvasonsgt. 28',
+    postCode: '7011 Trondheim',
+    phone: '73522460',
+  },
+}
+
+const DEFAULTS: StoreSchema = {
+  theme: 'auto',
+  settings: DEFAULT_SETTINGS,
+  orders: {},
+}
+
+type StoreInstance = {
+  get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
+  set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void
+  store: StoreSchema
+}
+
+type StoreCtor = new (opts: {
+  name?: string
+  defaults?: StoreSchema
+}) => StoreInstance
+
+const dynamicImport = new Function('specifier', 'return import(specifier)') as (
+  specifier: string,
+) => Promise<{ default: StoreCtor }>
+
+let storePromise: Promise<StoreInstance> | null = null
+
+export function getStore(): Promise<StoreInstance> {
+  if (!storePromise) {
+    storePromise = (async () => {
+      const mod = await dynamicImport('electron-store')
+      const Store = mod.default
+      return new Store({ name: 'config', defaults: DEFAULTS })
+    })()
+  }
+  return storePromise
+}

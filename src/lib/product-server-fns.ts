@@ -1,68 +1,32 @@
-import { eq } from 'drizzle-orm'
-import * as z from 'zod'
+import type {
+  Product,
+  InsertProductInput,
+  UpdateProductInput,
+} from './api-types'
 
-import { createServerFn } from '@tanstack/react-start'
-import { db } from '#/db/'
-import { products } from '#/db/schema'
+export type { Product, InsertProductInput, UpdateProductInput }
 
-export const getAllProducts = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    return db
-      .select({
-        id: products.id,
-        name: products.name,
-        category: products.category,
-        price: products.price,
-      })
-      .from(products)
-  },
-)
+const api = () => window.electronAPI.products
 
-export type Product = Awaited<ReturnType<typeof getAllProducts>>[number]
+export const getAllProducts = (): Promise<Array<Product>> => api().getAll()
 
-export const deleteProduct = createServerFn({ method: 'POST' })
-  .inputValidator((data: number) => data)
-  .handler(async ({ data: id }) => {
-    await db.delete(products).where(eq(products.id, id))
-  })
+export const searchProducts = ({
+  data,
+}: {
+  data: string
+}): Promise<Array<Product>> => api().search(data)
 
-const productSchema = z.object({
-  id: z.number().optional(),
-  name: z.string().min(1, 'Navn er påkrevd').max(100),
-  category: z.string().max(50),
-  price: z.number(),
-})
+export const deleteProduct = ({ data }: { data: number }): Promise<void> =>
+  api().delete(data)
 
-export type InsertProductInput = Omit<z.infer<typeof productSchema>, 'id'>
-export type UpdateProductInput = z.infer<typeof productSchema> & { id: number }
+export const insertProduct = ({
+  data,
+}: {
+  data: InsertProductInput
+}): Promise<Product> => api().insert(data)
 
-export const insertProduct = createServerFn({ method: 'POST' })
-  .inputValidator((data: InsertProductInput) => productSchema.parse(data))
-  .handler(async ({ data }) => {
-    const [row] = await db
-      .insert(products)
-      .values({
-        name: data.name,
-        category: data.category,
-        price: String(data.price),
-      })
-      .returning({
-        id: products.id,
-        category: products.category,
-        price: products.price,
-      })
-    return row
-  })
-
-export const updateProduct = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateProductInput) => productSchema.parse(data))
-  .handler(async ({ data }) => {
-    await db
-      .update(products)
-      .set({
-        name: data.name,
-        category: data.category,
-        price: String(data.price),
-      })
-      .where(eq(products.id, data.id!))
-  })
+export const updateProduct = ({
+  data,
+}: {
+  data: UpdateProductInput
+}): Promise<void> => api().update(data)

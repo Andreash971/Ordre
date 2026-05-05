@@ -1,47 +1,89 @@
-export type ThemeMode = 'auto' | 'light' | 'dark'
+import { getCache, setThemeInCache } from './store-cache'
 
-export interface ThemeOption {
+export type ThemeMode = 'auto' | 'light' | 'dark' | 'note'
+
+interface ThemeDefinition {
   value: ThemeMode
   label: string
   group: string | null
+  className: 'light' | 'dark' | 'note' | null
+  colorScheme: 'light' | 'dark'
 }
 
-export const THEME_OPTIONS: ThemeOption[] = [
-  { value: 'auto', label: 'Auto', group: null },
-  { value: 'light', label: 'Lys - Hvit', group: 'Lys' },
-  { value: 'dark', label: 'Mørk - Sort', group: 'Mørk' },
+export const THEMES: ReadonlyArray<ThemeDefinition> = [
+  {
+    value: 'auto',
+    label: 'Auto',
+    group: null,
+    className: null,
+    colorScheme: 'light',
+  },
+  {
+    value: 'light',
+    label: 'Hvit',
+    group: 'Lys',
+    className: 'light',
+    colorScheme: 'light',
+  },
+  {
+    value: 'note',
+    label: 'Notatbok',
+    group: 'Lys',
+    className: 'note',
+    colorScheme: 'dark',
+  },
+  {
+    value: 'dark',
+    label: 'Sort',
+    group: 'Mørk',
+    className: 'dark',
+    colorScheme: 'dark',
+  },
 ]
 
-export function getStoredTheme(): ThemeMode {
-  if (typeof window === 'undefined') {
-    return 'auto'
-  }
+const LOCALSTORAGE_KEY = 'theme'
+const THEME_VALUES = THEMES.map((t) => t.value)
 
-  const stored = window.localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark' || stored === 'auto') {
-    return stored
-  }
+export function isThemeMode(v: unknown): v is ThemeMode {
+  return typeof v === 'string' && (THEME_VALUES as Array<string>).includes(v)
+}
 
-  return 'auto'
+function resolve(mode: ThemeMode): ThemeDefinition {
+  const direct = mode === 'auto' ? null : THEMES.find((t) => t.value === mode)
+  if (direct) return direct
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  return THEMES.find((t) => t.value === (prefersDark ? 'dark' : 'light'))!
 }
 
 export function applyTheme(mode: ThemeMode): void {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const resolved = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode
+  const resolved = resolve(mode)
+  const root = document.documentElement
+  for (const t of THEMES) if (t.className) root.classList.remove(t.className)
+  if (resolved.className) root.classList.add(resolved.className)
+  root.setAttribute('data-theme', resolved.colorScheme)
+  root.style.colorScheme = resolved.colorScheme
+}
 
-  document.documentElement.classList.remove('light', 'dark')
-  document.documentElement.classList.add(resolved)
-
-  if (mode === 'auto') {
-    document.documentElement.removeAttribute('data-theme')
-  } else {
-    document.documentElement.setAttribute('data-theme', mode)
+export function initTheme(): void {
+  try {
+    const stored = window.localStorage.getItem(LOCALSTORAGE_KEY)
+    applyTheme(isThemeMode(stored) ? stored : 'auto')
+  } catch {
+    applyTheme('auto')
   }
+}
 
-  document.documentElement.style.colorScheme = resolved
+export function getStoredTheme(): ThemeMode {
+  const stored = getCache().theme
+  return isThemeMode(stored) ? stored : 'auto'
 }
 
 export function setTheme(mode: ThemeMode): void {
   applyTheme(mode)
-  window.localStorage.setItem('theme', mode)
+  setThemeInCache(mode)
+  try {
+    window.localStorage.setItem(LOCALSTORAGE_KEY, mode)
+  } catch {
+    // ignore
+  }
 }

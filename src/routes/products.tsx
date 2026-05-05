@@ -68,60 +68,72 @@ function ProductsPage() {
   }
 
   return (
-    <main className="rise-in page-wrap px-4 pb-8 pt-6">
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <InputGroup className="flex-1 min-w-[200px]">
-          <InputGroupAddon>
-            <PackageSearch />
-          </InputGroupAddon>
-          <InputGroupInput
-            id="product-table-search"
-            name="product-table-search"
-            autoComplete="off"
-            placeholder="Søk etter produkt..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-          />
-        </InputGroup>
-        <div className="flex items-center gap-1.5">
-          <CategorySelect
-            value={category}
-            onChange={setCategory}
-            categories={categories}
-            placeholder="Alle kategorier"
-            className="w-52"
-          />
-          {category ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setCategory('')}
-              aria-label="Fjern kategorifilter"
-            >
-              <X />
-            </Button>
-          ) : null}
+    <main className="rise-in page-wrap flex flex-col gap-4 px-4 pb-8 pt-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-heading text-2xl font-medium leading-tight">
+          Varekatalog
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Oversikt over alle varer. Se, oppdater, endre, slett, eller legg til
+          nye varer i katalogen.
+        </p>
+      </div>
+
+      <div className="flex flex-row items-center justify-between w-full gap-2">
+        <div className="flex flex-row items-center w-full gap-2">
+          <InputGroup className="w-full max-w-sm note:border-border">
+            <InputGroupAddon>
+              <PackageSearch />
+            </InputGroupAddon>
+            <InputGroupInput
+              id="product-table-search"
+              name="product-table-search"
+              autoComplete="off"
+              placeholder="Søk etter vare..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+            />
+          </InputGroup>
+          <div className="flex items-center gap-1.5">
+            <CategorySelect
+              value={category}
+              onChange={setCategory}
+              categories={categories}
+              placeholder="Alle kategorier"
+              className="w-52"
+            />
+            {category ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setCategory('')}
+                aria-label="Fjern kategorifilter"
+              >
+                <X />
+              </Button>
+            ) : null}
+          </div>
         </div>
-        <Button onClick={() => setAddOpen(true)}>
+        <Button onClick={() => setAddOpen(true)} className="justify-self-end">
           <PackagePlus />
-          <span className="hidden sm:inline">Legg til produkt</span>
+          <span className="hidden sm:inline">Legg til vare</span>
         </Button>
       </div>
       <DataTable
         columns={productColumns}
         data={filtered}
         globalFilter={globalFilter}
-        emptyMessage="Ingen produkter funnet."
+        emptyMessage="Ingen varer funnet."
         pagination
         pageSize={pageSize}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm note:bg-secondary">
           <DialogHeader>
-            <DialogTitle>Legg til produkt</DialogTitle>
+            <DialogTitle>Legg til vare</DialogTitle>
             <DialogDescription>
-              Registrer et nytt produkt i katalogen.
+              Registrer et nytt vare i katalogen.
             </DialogDescription>
           </DialogHeader>
           <AddProductForm
