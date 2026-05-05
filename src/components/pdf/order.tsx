@@ -5,6 +5,7 @@ import { DataTable } from '../pdf/components/dataTable'
 
 interface OrderItem extends Record<string, unknown> {
   product: string
+  description: string
   quantity: number
   price: number
   total: number
@@ -48,6 +49,7 @@ const orderDataSchema = z.object({
   orderContent: z.array(
     z.object({
       product: z.string(),
+      description: z.string().optional().default(''),
       quantity: z.number(),
       price: z.number(),
       total: z.number(),
@@ -224,7 +226,22 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
         data={orderContentData as OrderItem[]}
         style={styles.orderContent}
         columns={[
-          { key: 'product', header: 'Produkt' },
+          {
+            key: 'product',
+            header: 'Vare',
+            render: (row) => (
+              <View>
+                <Text>{row.product}</Text>
+                {row.description ? (
+                  <Text
+                    style={{ fontSize: 9, color: '#666', marginTop: 1 }}
+                  >
+                    {row.description}
+                  </Text>
+                ) : null}
+              </View>
+            ),
+          },
           {
             key: 'quantity',
             header: 'Antall',

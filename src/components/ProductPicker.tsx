@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { PackagePlus, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -8,29 +8,22 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 
-import AddProductForm from '#/components/AddProductForm'
-import type { AddProductFormValues } from '#/components/AddProductForm'
 import { searchProducts } from '#/components/OrderProductsContent'
-import { insertProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 import { cn } from '@/lib/utils'
 
 export type PickedProduct = {
+  id?: number
   name: string
   price: number
   category: string
+  description: string
 }
 
 interface ProductPickerProps {
   onPick: (product: PickedProduct) => void
+  onAddNew: () => void
   placeholder?: string
   addButtonLabel?: string
   className?: string
@@ -44,15 +37,14 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
 
 export default function ProductPicker({
   onPick,
-  placeholder = 'Søk etter produkt…',
-  addButtonLabel = 'Nytt produkt',
+  onAddNew,
+  placeholder = 'Søk etter vare…',
+  addButtonLabel = 'Ny vare',
   className,
 }: ProductPickerProps) {
-  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = React.useState('')
   const [debouncedQuery, setDebouncedQuery] = React.useState('')
   const [showSuggestions, setShowSuggestions] = React.useState(false)
-  const [addOpen, setAddOpen] = React.useState(false)
 
   React.useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250)
@@ -66,27 +58,10 @@ export default function ProductPicker({
     staleTime: 1000 * 10,
   })
 
-  const addMutation = useMutation({
-    mutationFn: (values: AddProductFormValues) =>
-      insertProduct({ data: { ...values, price: Number(values.price) } }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
-  })
-
-  async function handleAddProduct(values: AddProductFormValues) {
-    const inserted = await addMutation.mutateAsync(values)
-    onPick({
-      name: values.name,
-      price: Number(inserted.price),
-      category: values.category,
-    })
-    setAddOpen(false)
-  }
-
   return (
     <div className={cn('flex gap-2', className)}>
       <div className="relative flex-1">
-        <InputGroup>
+        <InputGroup className="note:border-border">
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
@@ -112,9 +87,11 @@ export default function ProductPicker({
                 className="flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
                 onMouseDown={() => {
                   onPick({
+                    id: p.id,
                     name: p.name,
                     price: Number(p.price),
-                    category: p.category ?? 'Ukategorisert',
+                    category: p.category,
+                    description: p.description ?? '',
                   })
                   setSearchQuery('')
                   setShowSuggestions(false)
@@ -134,27 +111,10 @@ export default function ProductPicker({
           </ul>
         ) : null}
       </div>
-      <Button type="button" variant="default" onClick={() => setAddOpen(true)}>
+      <Button type="button" variant="default" onClick={onAddNew}>
         <PackagePlus />
         <span className="hidden sm:inline">{addButtonLabel}</span>
       </Button>
-
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Legg til produkt</DialogTitle>
-            <DialogDescription>
-              Fyll inn navn, kategori og pris.
-            </DialogDescription>
-          </DialogHeader>
-          <AddProductForm
-            saveText="Legg til"
-            close
-            disabled={addMutation.isPending}
-            onSubmit={handleAddProduct}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

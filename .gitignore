@@ -11,3 +11,8 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+release
+dev.db
+dev.db-journal
+dev.db-wal
+dev.db-shm
