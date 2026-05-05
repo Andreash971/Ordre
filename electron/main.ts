@@ -31,10 +31,12 @@ function loadEnvFile() {
 function installSecurityHandlers() {
   const csp = [
     "default-src 'self'",
-    isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
+    isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
-    "font-src 'self'",
+    "font-src 'self' https://cdn.jsdelivr.net",
     isDev
       ? "connect-src 'self' http://localhost:3000 ws://localhost:3000"
       : "connect-src 'none'",

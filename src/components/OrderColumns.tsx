@@ -373,7 +373,7 @@ function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
             )}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="sm:max-w-sm">
+            <DialogContent className="sm:max-w-sm note:bg-secondary">
               <DialogHeader>
                 <DialogTitle>Lagre vare</DialogTitle>
                 <DialogDescription>

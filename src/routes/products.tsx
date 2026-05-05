@@ -81,7 +81,7 @@ function ProductsPage() {
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
         <div className="flex flex-row items-center w-full gap-2">
-          <InputGroup className="w-full max-w-sm">
+          <InputGroup className="w-full max-w-sm note:border-border">
             <InputGroupAddon>
               <PackageSearch />
             </InputGroupAddon>
@@ -129,7 +129,7 @@ function ProductsPage() {
         pageSize={pageSize}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm note:bg-secondary">
           <DialogHeader>
             <DialogTitle>Legg til vare</DialogTitle>
             <DialogDescription>

@@ -5,10 +5,11 @@ import { RouterProvider } from '@tanstack/react-router'
 import { getRouter } from './router'
 import TanStackQueryProvider from './integrations/tanstack-query/root-provider'
 import { hydrateStoreCache } from './lib/store-cache'
-import { applyTheme, getStoredTheme } from './lib/theme'
+import { applyTheme, getStoredTheme, initTheme } from './lib/theme'
 
 import './styles.css'
 
+initTheme()
 await hydrateStoreCache()
 applyTheme(getStoredTheme())
 

@@ -61,7 +61,7 @@ export default function ProductPicker({
   return (
     <div className={cn('flex gap-2', className)}>
       <div className="relative flex-1">
-        <InputGroup>
+        <InputGroup className="note:border-border">
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
@@ -90,7 +90,7 @@ export default function ProductPicker({
                     id: p.id,
                     name: p.name,
                     price: Number(p.price),
-                    category: p.category ?? 'Ukategorisert',
+                    category: p.category,
                     description: p.description ?? '',
                   })
                   setSearchQuery('')

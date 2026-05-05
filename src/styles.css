@@ -4,14 +4,54 @@
 @import '@fontsource-variable/inter';
 @plugin "@tailwindcss/typography";
 
+/* NOTE FONTS */
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/fraunces:vf@latest/latin-wght-normal.woff2)
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sora Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/sora:vf@latest/latin-wght-normal.woff2)
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Victor Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 700;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/victor-mono:vf@latest/latin-wght-normal.woff2)
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+
 /* **********************
 ****** Shadcn Start *****
 ********************** */
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant note (&:where(.note, .note *));
 
 @theme inline {
-  --font-sans: 'Inter Variable', sans-serif;
+  --font-heading: var(--font-heading);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
   --color-background: var(--background);
@@ -53,12 +93,12 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --font-heading: var(--font-sans);
 }
 
 :root {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, system-ui, monospace;
+  --font-heading: var(--font-sans);
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Victor Mono Variable', ui-monospace, system-ui, monospace;
   --font-serif: ui-serif, system-ui, serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -95,6 +135,10 @@
 }
 
 .dark {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Victor Mono Variable', ui-monospace, system-ui, monospace;
+  --font-serif: ui-serif, system-ui, serif;
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -126,6 +170,46 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+.note {
+  --font-heading: 'Fraunces Variable', var(--font-sans);
+  --font-sans:
+    'Sora Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Victor Mono Variable', ui-monospace, system-ui, monospace;
+  --font-serif: ui-serif, system-ui, serif;
+  --background: oklch(0.958 0.0124 91.52);
+  --foreground: oklch(0.3288 0.048 129.66);
+  --card: oklch(0.9127 0.0249 91.62);
+  --card-foreground: oklch(0.3288 0.048 129.66);
+  --popover: oklch(0.958 0.0124 91.52);
+  --popover-foreground: oklch(0.3288 0.048 129.66);
+  --primary: oklch(0.3288 0.048 129.66);
+  --primary-foreground: oklch(0.958 0.0124 91.52);
+  --secondary: oklch(0.9127 0.0249 91.62);
+  --secondary-foreground: oklch(0.3288 0.048 129.66);
+  --muted: oklch(0.935 0.018 91.57);
+  --muted-foreground: oklch(0.55 0.028 129.66);
+  --accent: oklch(0.7294 0.0655 89.12);
+  --accent-foreground: oklch(0.3288 0.048 129.66);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.7573 0.0134 130.8);
+  --input: oklch(0.958 0.0124 91.52);
+  --ring: oklch(0.7294 0.0655 89.12);
+  --chart-1: oklch(0.82 0.085 91);
+  --chart-2: oklch(0.7 0.088 100);
+  --chart-3: oklch(0.58 0.072 115);
+  --chart-4: oklch(0.48 0.06 125);
+  --chart-5: oklch(0.38 0.05 129.66);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.9127 0.0249 91.62);
+  --sidebar-foreground: oklch(0.3288 0.048 129.66);
+  --sidebar-primary: oklch(0.3288 0.048 129.66);
+  --sidebar-primary-foreground: oklch(0.958 0.0124 91.52);
+  --sidebar-accent: oklch(0.7294 0.0655 89.12);
+  --sidebar-accent-foreground: oklch(0.3288 0.048 129.66);
+  --sidebar-border: oklch(0.7573 0.0134 130.8);
+  --sidebar-ring: oklch(0.7294 0.0655 89.12);
 }
 
 @layer base {

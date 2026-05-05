@@ -65,7 +65,7 @@ function CustomersPage() {
       </div>
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
-        <InputGroup className="w-full max-w-sm">
+        <InputGroup className="w-full max-w-sm note:border-border">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
@@ -94,7 +94,7 @@ function CustomersPage() {
       />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm note:bg-secondary">
           <DialogHeader>
             <DialogTitle>Legg til kunde</DialogTitle>
             <DialogDescription>
