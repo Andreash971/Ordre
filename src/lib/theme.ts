@@ -1,12 +1,34 @@
 import { getCache, setThemeInCache } from './store-cache'
 
-export type ThemeMode = 'auto' | 'light' | 'dark' | 'note'
+export type ThemeMode =
+  | 'auto'
+  | 'light'
+  | 'dark'
+  | 'gray'
+  | 'darkblue'
+  | 'midnight'
+  | 'note'
+  | 'sandstone'
+  | 'bog'
+  | 'ironstone'
+  | 'darkforest'
 
 interface ThemeDefinition {
   value: ThemeMode
   label: string
   group: string | null
-  className: 'light' | 'dark' | 'note' | null
+  className:
+    | 'light'
+    | 'dark'
+    | 'gray'
+    | 'darkblue'
+    | 'midnight'
+    | 'note'
+    | 'sandstone'
+    | 'bog'
+    | 'ironstone'
+    | 'darkforest'
+    | null
   colorScheme: 'light' | 'dark'
 }
 
@@ -26,6 +48,13 @@ export const THEMES: ReadonlyArray<ThemeDefinition> = [
     colorScheme: 'light',
   },
   {
+    value: 'gray',
+    label: 'Grå',
+    group: 'Lys',
+    className: 'gray',
+    colorScheme: 'light',
+  },
+  {
     value: 'note',
     label: 'Notatbok',
     group: 'Lys',
@@ -33,10 +62,52 @@ export const THEMES: ReadonlyArray<ThemeDefinition> = [
     colorScheme: 'dark',
   },
   {
+    value: 'sandstone',
+    label: 'Sandstein',
+    group: 'Lys',
+    className: 'sandstone',
+    colorScheme: 'light',
+  },
+  {
     value: 'dark',
     label: 'Sort',
     group: 'Mørk',
     className: 'dark',
+    colorScheme: 'dark',
+  },
+  {
+    value: 'darkblue',
+    label: 'Mørkeblå',
+    group: 'Mørk',
+    className: 'darkblue',
+    colorScheme: 'dark',
+  },
+  {
+    value: 'midnight',
+    label: 'Midnatt',
+    group: 'Mørk',
+    className: 'midnight',
+    colorScheme: 'dark',
+  },
+  {
+    value: 'ironstone',
+    label: 'Jernsten',
+    group: 'Mørk',
+    className: 'ironstone',
+    colorScheme: 'dark',
+  },
+  {
+    value: 'darkforest',
+    label: 'Mørk Skog',
+    group: 'Mørk',
+    className: 'darkforest',
+    colorScheme: 'dark',
+  },
+  {
+    value: 'bog',
+    label: 'Myrskog',
+    group: 'Mørk',
+    className: 'bog',
     colorScheme: 'dark',
   },
 ]

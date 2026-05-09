@@ -78,7 +78,7 @@ export default function SectionItems({ items, setItems }: SectionItemsProps) {
         emptyMessage="Ingen varer lagt til enda."
       />
 
-      <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
+      <div className="flex items-center justify-between rounded-lg border bg-muted/30 gray:bg-background px-4 py-3">
         <span className="text-sm font-medium">Totalt</span>
         <div className="font-mono text-base font-medium">
           {nokFormatter.format(grandTotal)}
