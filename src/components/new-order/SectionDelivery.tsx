@@ -185,7 +185,7 @@ export default function SectionDelivery({
       <DeliverySummary
         date={date}
         time={time}
-        className="md:col-span-2 lg:col-span-1"
+        className="md:col-span-2 lg:col-span-1 gray:bg-background"
       />
     </div>
   )

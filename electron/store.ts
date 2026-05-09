@@ -2,7 +2,18 @@ type RetentionOption = 3 | 7 | 14 | 30 | 'never'
 type PageSizeOption = 10 | 14 | 25 | 50
 
 // Source of truth: src/lib/theme.ts
-export type ThemeMode = 'auto' | 'light' | 'dark' | 'note'
+export type ThemeMode =
+  | 'auto'
+  | 'light'
+  | 'dark'
+  | 'gray'
+  | 'darkblue'
+  | 'midnight'
+  | 'note'
+  | 'sandstone'
+  | 'bog'
+  | 'ironstone'
+  | 'darkforest'
 
 export type CompanyInfo = {
   name: string

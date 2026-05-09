@@ -65,7 +65,7 @@ function CustomersPage() {
       </div>
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
-        <InputGroup className="w-full max-w-sm note:border-border">
+        <InputGroup className="w-full max-w-sm note:border-border gray:bg-white/70 gray:border-border">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
