@@ -457,7 +457,7 @@ function OverrideText({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="flex-1 resize-none"
+        className="flex-1 resize-none gray:bg-background gray:border-border"
       />
     </div>
   )

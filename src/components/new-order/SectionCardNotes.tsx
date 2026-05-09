@@ -90,7 +90,7 @@ export default function SectionCardNotes({
             placeholder="Skriv korttekst her…"
             value={cardValue}
             onChange={(e) => onCardValueChange(e.target.value)}
-            className="min-h-32 resize-none"
+            className="min-h-32 resize-none gray:bg-background gray:border-border"
           />
           <div className="flex flex-col gap-1.5">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -147,7 +147,7 @@ export default function SectionCardNotes({
             placeholder="Skriv instrukser her…"
             value={instructionsValue}
             onChange={(e) => onInstructionsValueChange(e.target.value)}
-            className="min-h-32 resize-none"
+            className="min-h-32 resize-none gray:bg-background gray:border-border"
           />
           <div className="flex flex-col gap-1.5">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

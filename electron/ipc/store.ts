@@ -5,7 +5,19 @@ import type { AppSettings, StoredOrder } from '../store'
 import { DEFAULT_SETTINGS, getStore } from '../store'
 
 // Source of truth: src/lib/theme.ts
-const themeSchema = z.enum(['auto', 'light', 'dark', 'note'])
+const themeSchema = z.enum([
+  'auto',
+  'light',
+  'dark',
+  'gray',
+  'darkblue',
+  'midnight',
+  'note',
+  'sandstone',
+  'bog',
+  'ironstone',
+  'darkforest',
+])
 
 const companySchema = z.object({
   name: z.string(),
