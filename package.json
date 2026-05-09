@@ -30,6 +30,7 @@
   "dependencies": {
     "@faker-js/faker": "^10.3.0",
     "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/victor-mono": "^5.2.8",
     "@react-pdf/renderer": "^4.3.2",
     "@storybook/react-vite": "^10.2.15",
     "@tailwindcss/vite": "^4.1.18",

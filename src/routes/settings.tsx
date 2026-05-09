@@ -259,7 +259,7 @@ function SettingsPage() {
   return (
     <main className="rise-in page-wrap px-4 pb-8 pt-6">
       <div className="flex flex-col gap-4 w-full max-w-lg">
-        <Item variant="outline" className="dark:bg-secondary">
+        <Item variant="outline" className="dark:bg-card">
           <ItemMedia variant="icon">
             <Palette />
           </ItemMedia>
@@ -272,7 +272,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-secondary">
+        <Item variant="outline" className="dark:bg-card">
           <ItemMedia variant="icon">
             <Clock />
           </ItemMedia>
@@ -287,7 +287,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-secondary">
+        <Item variant="outline" className="dark:bg-card">
           <ItemMedia variant="icon">
             <Archive />
           </ItemMedia>
@@ -302,7 +302,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-secondary">
+        <Item variant="outline" className="dark:bg-card">
           <ItemMedia variant="icon">
             <Rows3 />
           </ItemMedia>
@@ -317,7 +317,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-secondary">
+        <Item variant="outline" className="dark:bg-card">
           <ItemMedia variant="icon">
             <Building2 />
           </ItemMedia>
