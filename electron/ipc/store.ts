@@ -41,10 +41,16 @@ const pageSizeSchema = z.union([
   z.literal(50),
 ])
 
+const quickSelectSchema = z.object({
+  cardSignatures: z.array(z.string()).optional(),
+  instructionSuggestions: z.array(z.string()).optional(),
+})
+
 const partialSettingsSchema = z.object({
   archiveRetention: retentionSchema.optional(),
   rowsPerPage: pageSizeSchema.optional(),
   company: companySchema.partial().optional(),
+  quickSelect: quickSelectSchema.optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -89,6 +95,16 @@ export function registerStoreHandlers() {
         ...DEFAULT_SETTINGS.company,
         ...current.company,
         ...(partial.company ?? {}),
+      },
+      quickSelect: {
+        cardSignatures:
+          partial.quickSelect?.cardSignatures ??
+          current.quickSelect?.cardSignatures ??
+          DEFAULT_SETTINGS.quickSelect.cardSignatures,
+        instructionSuggestions:
+          partial.quickSelect?.instructionSuggestions ??
+          current.quickSelect?.instructionSuggestions ??
+          DEFAULT_SETTINGS.quickSelect.instructionSuggestions,
       },
     }
     store.set('settings', next)

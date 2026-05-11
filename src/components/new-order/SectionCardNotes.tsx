@@ -4,6 +4,7 @@ import { MessageSquarePlus, StickyNote, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyButton } from '@/components/ui/empty-button'
+import { getStoredSettings } from '@/lib/settings'
 
 interface SectionCardNotesProps {
   cardEnabled: boolean
@@ -16,21 +17,6 @@ interface SectionCardNotesProps {
   onInstructionsEnabledChange: (enabled: boolean) => void
   onInstructionsValueChange: (value: string) => void
 }
-
-const CARD_SIGNATURES = [
-  'Med vennlig hilsen',
-  'Kjærlig hilsen',
-  'Klem fra',
-  'Hjertelig gratulerer',
-  'Hilsen',
-]
-
-const INSTRUCTION_SUGGESTIONS = [
-  'Ring før ankomst',
-  'Sett på trappen hvis ingen åpner',
-  'Levér til nabo ved fravær',
-  'Bruk bakinngangen',
-]
 
 function appendSignature(current: string, signature: string) {
   const trimmed = current.trimEnd()
@@ -56,6 +42,8 @@ export default function SectionCardNotes({
   onInstructionsEnabledChange,
   onInstructionsValueChange,
 }: SectionCardNotesProps) {
+  const { cardSignatures, instructionSuggestions } =
+    getStoredSettings().quickSelect
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {/* Kort */}
@@ -97,7 +85,7 @@ export default function SectionCardNotes({
               Forslag
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {CARD_SIGNATURES.map((sig) => (
+              {cardSignatures.map((sig) => (
                 <Button
                   key={sig}
                   type="button"
@@ -154,7 +142,7 @@ export default function SectionCardNotes({
               Forslag
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {INSTRUCTION_SUGGESTIONS.map((s) => (
+              {instructionSuggestions.map((s) => (
                 <Button
                   key={s}
                   type="button"
