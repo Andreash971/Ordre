@@ -10,10 +10,16 @@ export type CompanyInfo = {
   phone: string
 }
 
+export type QuickSelectSettings = {
+  cardSignatures: string[]
+  instructionSuggestions: string[]
+}
+
 export type AppSettings = {
   archiveRetention: RetentionOption
   rowsPerPage: PageSizeOption
   company: CompanyInfo
+  quickSelect: QuickSelectSettings
 }
 
 export function getStoredSettings(): AppSettings {

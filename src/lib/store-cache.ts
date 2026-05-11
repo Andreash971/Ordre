@@ -1,8 +1,24 @@
-import type { AppSettings } from './settings'
+import type { AppSettings, QuickSelectSettings } from './settings'
 import type { ThemeMode } from './theme'
 import type { StoredOrder } from './order-utils'
 
 export const ORDERS_CHANGED_EVENT = 'orders-changed'
+
+const DEFAULT_QUICK_SELECT: QuickSelectSettings = {
+  cardSignatures: [
+    'Med vennlig hilsen',
+    'Kjærlig hilsen',
+    'Klem fra',
+    'Hjertelig gratulerer',
+    'Hilsen',
+  ],
+  instructionSuggestions: [
+    'Ring før ankomst',
+    'Sett på trappen hvis ingen åpner',
+    'Levér til nabo ved fravær',
+    'Bruk bakinngangen',
+  ],
+}
 
 const DEFAULT_SETTINGS: AppSettings = {
   archiveRetention: 7,
@@ -13,6 +29,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     postCode: '7011 Trondheim',
     phone: '73522460',
   },
+  quickSelect: DEFAULT_QUICK_SELECT,
 }
 
 type Cache = {
@@ -44,6 +61,9 @@ export function setSettingsInCache(partial: Partial<AppSettings>): void {
       partial.archiveRetention ?? cache.settings.archiveRetention,
     rowsPerPage: partial.rowsPerPage ?? cache.settings.rowsPerPage,
     company: { ...cache.settings.company, ...(partial.company ?? {}) },
+    quickSelect: partial.quickSelect
+      ? { ...cache.settings.quickSelect, ...partial.quickSelect }
+      : cache.settings.quickSelect,
   }
   void window.electronAPI.store.setSettings(partial)
 }
@@ -66,7 +86,11 @@ export async function hydrateStoreCache(): Promise<void> {
 
   const remote = await window.electronAPI.store.getAll()
   cache.theme = remote.theme
-  cache.settings = remote.settings
+  cache.settings = {
+    ...DEFAULT_SETTINGS,
+    ...remote.settings,
+    quickSelect: remote.settings.quickSelect ?? DEFAULT_QUICK_SELECT,
+  }
   cache.orders = remote.orders
 
   try {
