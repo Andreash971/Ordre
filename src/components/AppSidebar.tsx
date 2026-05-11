@@ -51,7 +51,7 @@ export default function AppSidebar() {
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="px-4 py-3 mt-6">
+      <SidebarHeader className="px-4 py-3">
         <p className="w-48 text-2xl font-semibold font-sans ironstone:font-heading group-data-[collapsible=icon]:hidden">
           Blomster i Byhaven
         </p>

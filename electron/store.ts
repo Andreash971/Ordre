@@ -22,10 +22,16 @@ export type CompanyInfo = {
   phone: string
 }
 
+export type QuickSelectSettings = {
+  cardSignatures: string[]
+  instructionSuggestions: string[]
+}
+
 export type AppSettings = {
   archiveRetention: RetentionOption
   rowsPerPage: PageSizeOption
   company: CompanyInfo
+  quickSelect: QuickSelectSettings
 }
 
 export type StoredOrder = {
@@ -49,6 +55,21 @@ export const DEFAULT_SETTINGS: AppSettings = {
     address: 'Olav Tryggvasonsgt. 28',
     postCode: '7011 Trondheim',
     phone: '73522460',
+  },
+  quickSelect: {
+    cardSignatures: [
+      'Med vennlig hilsen',
+      'Kjærlig hilsen',
+      'Klem fra',
+      'Hjertelig gratulerer',
+      'Hilsen',
+    ],
+    instructionSuggestions: [
+      'Ring før ankomst',
+      'Sett på trappen hvis ingen åpner',
+      'Levér til nabo ved fravær',
+      'Bruk bakinngangen',
+    ],
   },
 }
 
