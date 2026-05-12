@@ -307,7 +307,7 @@ function OverrideDate({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Leveringsdato
         </div>
         {isOverride ? (
@@ -331,7 +331,7 @@ function OverrideDate({
             <CalendarIcon className="size-4 text-muted-foreground" />
             {formatted ? formatted.fullDate : 'Velg dato'}
             {isOverride ? (
-              <span className="ml-auto text-[10px] font-mono uppercase text-primary">
+              <span className="ml-auto text-xs font-mono uppercase text-primary">
                 Overstyrt
               </span>
             ) : null}
@@ -384,7 +384,7 @@ function OverrideTime({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Leveringstid
         </div>
         {isOverride && !disabled ? (
@@ -437,7 +437,7 @@ function OverrideText({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">{icon}</span>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             {label}
           </span>
         </div>

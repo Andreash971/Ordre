@@ -97,8 +97,8 @@ export default function SectionReview({
     <div className="flex flex-col gap-4">
       {/* Top cards */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border p-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+        <div className="rounded-lg border p-4 bg-background">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
             Fakturering
           </div>
           {sender ? (
@@ -128,8 +128,8 @@ export default function SectionReview({
           )}
         </div>
 
-        <div className="rounded-lg border p-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+        <div className="rounded-lg border p-4 bg-background">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
             Standard levering
           </div>
           {deliveryInfo ? (
@@ -158,20 +158,20 @@ export default function SectionReview({
       </div>
 
       {/* Items table */}
-      <div className="rounded-lg border overflow-hidden">
+      <div className="rounded-lg border overflow-hidden bg-background">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Vare
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Antall
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Pris
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Sum
               </TableHead>
             </TableRow>
@@ -198,7 +198,7 @@ export default function SectionReview({
       <div className="flex flex-row gap-4">
         {cardEnabled && cardValue ? (
           <div className="w-full rounded-lg border p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
               Korttekst
             </div>
             <div className="rounded-md border font-serif text-base leading-relaxed p-4">
@@ -209,7 +209,7 @@ export default function SectionReview({
 
         {instructionsEnabled && instructionsValue ? (
           <div className="w-full rounded-lg border p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
               Spesielle instrukser
             </div>
             <div className="rounded-md border font-serif text-base leading-relaxed p-4">
@@ -222,7 +222,7 @@ export default function SectionReview({
       {/* Recipient cards */}
       {effectiveRecipients.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Mottakere ({effectiveRecipients.length})
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -243,9 +243,9 @@ export default function SectionReview({
                 r.instructmsg &&
                 r.instructmsg !== instructionsValue
               return (
-                <div key={i} className="rounded-lg border p-3">
+                <div key={i} className="rounded-lg border p-3 bg-background">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="flex size-6 items-center justify-center rounded-full bg-muted font-mono text-[10px]">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-muted font-mono text-xs">
                       {String(i + 1).padStart(2, '0')}
                     </div>
                     <div className="font-medium truncate">
@@ -290,7 +290,7 @@ export default function SectionReview({
       ) : null}
 
       {/* Totals */}
-      <div className="rounded-lg border p-4">
+      <div className="rounded-lg border p-4 bg-background">
         <div className="grid grid-cols-2 gap-y-1 text-sm">
           <div className="text-muted-foreground">Varer</div>
           <div className="text-right font-mono">
@@ -361,7 +361,7 @@ function ReviewCell({
   return (
     <div
       className={cn(
-        'rounded-md border px-2 py-1.5',
+        'rounded-md border px-2 py-1.5 bg-card',
         highlight && 'border-primary/50 bg-accent/10',
       )}
     >

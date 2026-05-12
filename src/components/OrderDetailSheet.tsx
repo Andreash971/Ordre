@@ -33,7 +33,7 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
   return (
     <div className="flex flex-col gap-4 p-4">
       <SheetHeader className="px-0">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Ordre
         </div>
         <SheetTitle className="font-heading text-xl">
@@ -49,7 +49,7 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border p-3">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-1">
             Mottaker
           </div>
           <div className="text-sm space-y-0.5">
@@ -77,7 +77,7 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
           </div>
         </div>
         <div className="rounded-lg border p-3">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-1">
             Avsender
           </div>
           <div className="text-sm space-y-0.5">
@@ -98,13 +98,13 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Vare
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Antall
               </TableHead>
-              <TableHead className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <TableHead className="text-right font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 Sum
               </TableHead>
             </TableRow>
@@ -129,7 +129,7 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
 
       {hasCard ? (
         <div className="rounded-lg border p-3">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
             Korttekst
           </div>
           <div className="text-sm rounded-md border p-2">
@@ -140,7 +140,7 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
 
       {hasNotes ? (
         <div className="rounded-lg border p-3">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+          <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-1">
             Spesielle instruksjoner
           </div>
           <div className="text-sm rounded-md border p-2">

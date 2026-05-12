@@ -58,7 +58,7 @@ export default function SectionCardNotes({
       ) : (
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               Korttekst
             </div>
             <Button
@@ -81,7 +81,7 @@ export default function SectionCardNotes({
             className="min-h-32 resize-none gray:bg-background gray:border-border"
           />
           <div className="flex flex-col gap-1.5">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               Forslag
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -115,7 +115,7 @@ export default function SectionCardNotes({
       ) : (
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               Spesielle instrukser
             </div>
             <Button
@@ -138,7 +138,7 @@ export default function SectionCardNotes({
             className="min-h-32 resize-none gray:bg-background gray:border-border"
           />
           <div className="flex flex-col gap-1.5">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               Forslag
             </div>
             <div className="flex flex-wrap gap-1.5">

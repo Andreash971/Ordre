@@ -21,15 +21,15 @@ export default function DeliverySummary({
         className,
       )}
     >
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
         Valgt levering
       </div>
       {formatted ? (
         <>
-          <div className="font-medium">
+          <div className="text-base font-medium">
             {formatted.dayText}, {formatted.longDate}
           </div>
-          <div className="text-muted-foreground font-mono">
+          <div className="text-muted-foreground">
             {time ? `kl. ${time}` : 'Ingen tid valgt'}
           </div>
         </>
