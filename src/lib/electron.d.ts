@@ -3,6 +3,18 @@ import type { AppSettings } from './settings'
 import type { ThemeMode } from './theme'
 import type { StoredOrder } from './order-utils'
 
+export interface Printer {
+  name: string
+  isDefault: boolean
+}
+
+export interface DiscoveredPrinter {
+  name: string
+  host: string
+  port: number
+  addresses: string[]
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -36,6 +48,11 @@ declare global {
         setSettings: (partial: Partial<AppSettings>) => Promise<AppSettings>
         setOrders: (orders: Record<string, StoredOrder>) => Promise<void>
         clearOrders: () => Promise<void>
+      }
+      printer: {
+        list: () => Promise<Printer[]>
+        discover: () => Promise<DiscoveredPrinter[]>
+        print: (pdfBytes: ArrayBuffer, printerName?: string) => Promise<void>
       }
     }
   }
