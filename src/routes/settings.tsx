@@ -69,7 +69,7 @@ function SelectTheme() {
 
   return (
     <Select value={mode} onValueChange={handleChange}>
-      <SelectTrigger className="w-full max-w-48">
+      <SelectTrigger className="w-full max-w-48 gray:border-border gray:bg-input">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -114,7 +114,7 @@ function SelectRetention() {
 
   return (
     <Select value={String(value)} onValueChange={handleChange}>
-      <SelectTrigger className="w-full max-w-48">
+      <SelectTrigger className="w-full max-w-48 gray:border-border gray:bg-input">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -177,7 +177,7 @@ function SelectRowsPerPage() {
 
   return (
     <Select value={String(value)} onValueChange={handleChange}>
-      <SelectTrigger className="w-full max-w-48">
+      <SelectTrigger className="w-full max-w-48 gray:border-border gray:bg-input">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -221,6 +221,7 @@ function CompanyInfoForm() {
         value={company.name}
         placeholder="Bedriftsnavn"
         onChange={(e) => handleChange('name', e.target.value)}
+        className="gray:border-border gray:bg-input"
       />
       <Input
         id="company-address"
@@ -229,6 +230,7 @@ function CompanyInfoForm() {
         value={company.address}
         placeholder="Adresse"
         onChange={(e) => handleChange('address', e.target.value)}
+        className="gray:border-border gray:bg-input"
       />
       <Input
         id="company-postcode"
@@ -237,6 +239,7 @@ function CompanyInfoForm() {
         value={company.postCode}
         placeholder="Postnummer og sted"
         onChange={(e) => handleChange('postCode', e.target.value)}
+        className="gray:border-border gray:bg-input"
       />
       <Input
         id="company-phone"
@@ -246,6 +249,7 @@ function CompanyInfoForm() {
         value={company.phone}
         placeholder="Telefon"
         onChange={(e) => handleChange('phone', e.target.value)}
+        className="gray:border-border gray:bg-input"
       />
       <div className="col-span-full flex justify-end">
         <Button type="submit" variant="outline" size="sm">
@@ -280,7 +284,7 @@ function QuickSelectList({
         {items.map((item, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-sm"
+            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-sm gray:bg-input"
           >
             {item}
             <button
@@ -296,6 +300,7 @@ function QuickSelectList({
       </div>
       <div className="flex gap-2">
         <Input
+          className="gray:border-border gray:bg-input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Legg til forslag…"
@@ -357,7 +362,7 @@ function QuickSelectForm() {
   return (
     <div className="grid gap-4 w-full pt-1">
       <div className="flex flex-col gap-2">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Kort
         </div>
         <QuickSelectList
@@ -367,7 +372,7 @@ function QuickSelectForm() {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Instrukser
         </div>
         <QuickSelectList
@@ -384,7 +389,7 @@ function SettingsPage() {
   return (
     <main className="rise-in page-wrap px-4 pb-8 pt-6">
       <div className="flex flex-col gap-4 w-full max-w-lg">
-        <Item variant="outline" className="dark:bg-card">
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
             <Palette />
           </ItemMedia>
@@ -397,7 +402,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card">
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
             <Clock />
           </ItemMedia>
@@ -412,7 +417,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card">
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
             <Archive />
           </ItemMedia>
@@ -427,7 +432,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card">
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
             <Rows3 />
           </ItemMedia>
@@ -442,7 +447,22 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card">
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
+            <Zap />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Hurtigvalg</ItemTitle>
+            <ItemDescription>
+              Forslagsknapper som vises under Kort og Instrukser ved ny ordre.
+            </ItemDescription>
+          </ItemContent>
+          <ItemFooter>
+            <QuickSelectForm />
+          </ItemFooter>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
             <Building2 />
           </ItemMedia>
@@ -455,21 +475,6 @@ function SettingsPage() {
           </ItemContent>
           <ItemFooter>
             <CompanyInfoForm />
-          </ItemFooter>
-        </Item>
-
-        <Item variant="outline" className="dark:bg-card">
-          <ItemMedia variant="icon">
-            <Zap />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Hurtigvalg</ItemTitle>
-            <ItemDescription>
-              Forslagsknapper som vises under Kort og Instrukser ved ny ordre.
-            </ItemDescription>
-          </ItemContent>
-          <ItemFooter>
-            <QuickSelectForm />
           </ItemFooter>
         </Item>
       </div>

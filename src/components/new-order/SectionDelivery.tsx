@@ -67,7 +67,7 @@ export default function SectionDelivery({
     <div className="flex flex-col gap-4">
       {/* Date picker */}
       <div className="flex flex-col gap-3">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Leveringsdato
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -115,7 +115,7 @@ export default function SectionDelivery({
 
       {/* Time picker */}
       <div className="flex flex-col gap-3">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Leveringstid
         </div>
 

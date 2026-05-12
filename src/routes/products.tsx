@@ -81,7 +81,7 @@ function ProductsPage() {
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
         <div className="flex flex-row items-center w-full gap-2">
-          <InputGroup className="w-full max-w-sm note:border-border">
+          <InputGroup className="w-full max-w-sm gray:bg-white/70 gray:border-border note:border-border">
             <InputGroupAddon>
               <PackageSearch />
             </InputGroupAddon>
