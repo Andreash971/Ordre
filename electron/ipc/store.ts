@@ -51,6 +51,7 @@ const partialSettingsSchema = z.object({
   rowsPerPage: pageSizeSchema.optional(),
   company: companySchema.partial().optional(),
   quickSelect: quickSelectSchema.optional(),
+  defaultPrinter: z.string().nullable().optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -106,6 +107,10 @@ export function registerStoreHandlers() {
           current.quickSelect?.instructionSuggestions ??
           DEFAULT_SETTINGS.quickSelect.instructionSuggestions,
       },
+      defaultPrinter:
+        partial.defaultPrinter !== undefined
+          ? partial.defaultPrinter
+          : (current.defaultPrinter ?? DEFAULT_SETTINGS.defaultPrinter),
     }
     store.set('settings', next)
     return next

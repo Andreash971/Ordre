@@ -7,6 +7,11 @@ import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
 import { registerBringHandlers } from './ipc/bring'
 import { registerStoreHandlers } from './ipc/store'
+import {
+  spawnPrinterSidecar,
+  killPrinterSidecar,
+  registerPrinterHandlers,
+} from './ipc/printer'
 
 const isDev = !!process.env.ELECTRON_DEV
 
@@ -119,6 +124,8 @@ app.whenReady().then(() => {
   registerProductHandlers()
   registerBringHandlers()
   registerStoreHandlers()
+  registerPrinterHandlers()
+  spawnPrinterSidecar()
 
   installSecurityHandlers()
   createWindow()
@@ -127,6 +134,8 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
+
+app.on('before-quit', () => killPrinterSidecar())
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

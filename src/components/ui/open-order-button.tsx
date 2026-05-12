@@ -3,7 +3,12 @@ import { Printer } from 'lucide-react'
 import type { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import type { VariantProps } from 'class-variance-authority'
-import { openOrdersPdf, openStoredOrderPdf } from '#/lib/open-orders'
+import {
+  openOrdersPdf,
+  openStoredOrderPdf,
+  printOrdersPdf,
+  printStoredOrderPdf,
+} from '#/lib/open-orders'
 import type {
   Customer,
   CustomerFormValues,
@@ -12,6 +17,7 @@ import type {
 } from '#/lib/order-utils'
 import type { Item } from '#/components/OrderColumns'
 import { TooltipWrapper } from './TooltipWrapper'
+import { getStoredSettings } from '#/lib/settings'
 
 type OpenOrderButtonProps =
   | {
@@ -40,8 +46,9 @@ export default function OpenOrderButton({
   variant = 'default',
 }: OpenOrderButtonProps) {
   const [isPrinting, setIsPrinting] = useState(false)
+  const defaultPrinter = getStoredSettings().defaultPrinter
 
-  const handleOpenOrders = async () => {
+  const handleOpenPdf = async () => {
     setIsPrinting(true)
     try {
       if (storedOrder) {
@@ -54,12 +61,53 @@ export default function OpenOrderButton({
     }
   }
 
+  const handlePrint = async () => {
+    setIsPrinting(true)
+    try {
+      if (storedOrder) {
+        await printStoredOrderPdf(storedOrder)
+      } else {
+        await printOrdersPdf(customers, senderValues, deliveryValues, items)
+      }
+    } finally {
+      setIsPrinting(false)
+    }
+  }
+
   const isDisabled = isPrinting || (!storedOrder && customers.length === 0)
+
+  if (defaultPrinter) {
+    return (
+      <div className="flex gap-1">
+        <TooltipWrapper TooltipText={`Skriv ut til ${defaultPrinter}`}>
+          <Button
+            onClick={handlePrint}
+            disabled={isDisabled}
+            variant={variant}
+            size="lg"
+          >
+            <Printer className="h-4 w-4" />
+            {isPrinting ? 'Skriver ut…' : 'Skriv ut'}
+          </Button>
+        </TooltipWrapper>
+        <TooltipWrapper TooltipText="Åpne PDF i ny fane">
+          <Button
+            onClick={handleOpenPdf}
+            disabled={isDisabled}
+            variant="outline"
+            size="lg"
+          >
+            Åpne PDF
+          </Button>
+        </TooltipWrapper>
+      </div>
+    )
+  }
 
   return (
     <TooltipWrapper TooltipText="Lagre ordre og åpne PDF i ny fane">
       <Button
-        onClick={handleOpenOrders}
+        onClick={handleOpenPdf}
         disabled={isDisabled}
         variant={variant}
         size="lg"
