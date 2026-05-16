@@ -1,6 +1,5 @@
 import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
-import fs from 'node:fs'
 
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
@@ -14,24 +13,6 @@ import {
 } from './ipc/printer'
 
 const isDev = !!process.env.ELECTRON_DEV
-
-function loadEnvFile() {
-  const candidates = isDev
-    ? [path.join(process.cwd(), '.env.local')]
-    : [
-        path.join(process.resourcesPath, '.env.local'),
-        path.join(path.dirname(app.getPath('exe')), '.env.local'),
-      ]
-  const envPath = candidates.find((p) => fs.existsSync(p))
-  if (!envPath) return
-  for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i)
-    if (!m) continue
-    const [, k, vRaw] = m
-    if (process.env[k]) continue
-    process.env[k] = vRaw.replace(/^["'](.*)["']$/, '$1')
-  }
-}
 
 function installSecurityHandlers() {
   const csp = [
@@ -50,7 +31,7 @@ function installSecurityHandlers() {
     "frame-ancestors 'none'",
     "base-uri 'none'",
     "form-action 'none'",
-    "worker-src 'self'",
+    isDev ? "worker-src 'self' blob:" : "worker-src 'self'",
   ].join('; ')
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -118,7 +99,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  loadEnvFile()
   runMigrations()
   registerCustomerHandlers()
   registerProductHandlers()
