@@ -34,6 +34,12 @@ const api = {
       ipcRenderer.invoke('store:setOrders', orders),
     clearOrders: () => ipcRenderer.invoke('store:clearOrders'),
   },
+  printer: {
+    list: () => ipcRenderer.invoke('printer:list'),
+    discover: () => ipcRenderer.invoke('printer:discover'),
+    print: (pdfBytes: ArrayBuffer, printerName?: string) =>
+      ipcRenderer.invoke('printer:print', pdfBytes, printerName),
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

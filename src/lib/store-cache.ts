@@ -23,6 +23,7 @@ const DEFAULT_QUICK_SELECT: QuickSelectSettings = {
 const DEFAULT_SETTINGS: AppSettings = {
   archiveRetention: 7,
   rowsPerPage: 14,
+  defaultPrinter: null,
   company: {
     name: 'Blomster i Byhaven AS',
     address: 'Olav Tryggvasonsgt. 28',
@@ -60,6 +61,10 @@ export function setSettingsInCache(partial: Partial<AppSettings>): void {
     archiveRetention:
       partial.archiveRetention ?? cache.settings.archiveRetention,
     rowsPerPage: partial.rowsPerPage ?? cache.settings.rowsPerPage,
+    defaultPrinter:
+      partial.defaultPrinter !== undefined
+        ? partial.defaultPrinter
+        : cache.settings.defaultPrinter,
     company: { ...cache.settings.company, ...(partial.company ?? {}) },
     quickSelect: partial.quickSelect
       ? { ...cache.settings.quickSelect, ...partial.quickSelect }
