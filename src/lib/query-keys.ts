@@ -3,7 +3,8 @@ export const queryKeys = {
     all: ['customers'] as const,
     search: (q: string) => ['customers', 'search', q] as const,
     searchByPhone: (q: string) => ['customers', 'searchPhone', q] as const,
-    searchByBusiness: (q: string) => ['customers', 'searchBusiness', q] as const,
+    searchByBusiness: (q: string) =>
+      ['customers', 'searchBusiness', q] as const,
   },
   products: {
     all: ['products'] as const,

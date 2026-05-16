@@ -75,8 +75,8 @@ async function printPdf(filePath: string, printerName?: string): Promise<void> {
 const parentPort = (
   process as unknown as {
     parentPort: {
-      on(event: 'message', cb: (event: { data: unknown }) => void): void
-      postMessage(data: unknown): void
+      on: (event: 'message', cb: (event: { data: unknown }) => void) => void
+      postMessage: (data: unknown) => void
     }
   }
 ).parentPort
@@ -95,7 +95,12 @@ parentPort.on('message', async ({ data: raw }) => {
       send({ id, ok: true, result: printers })
     } else if (type === 'discover-network') {
       const bonjour = new Bonjour()
-      const found: Array<{ name: string; host: string; port: number; addresses: string[] }> = []
+      const found: Array<{
+        name: string
+        host: string
+        port: number
+        addresses: string[]
+      }> = []
 
       const collect = (service: Service) => {
         if (!found.some((p) => p.name === service.name)) {
@@ -118,13 +123,15 @@ parentPort.on('message', async ({ data: raw }) => {
       bonjour.destroy()
 
       send({ id, ok: true, result: found })
-    } else if (type === 'print-pdf') {
+    } else {
       await printPdf(msg.filePath, msg.printerName)
       send({ id, ok: true, result: null })
-    } else {
-      send({ id, ok: false, error: `Unknown type: ${(msg as { type: string }).type}` })
     }
   } catch (err) {
-    send({ id, ok: false, error: err instanceof Error ? err.message : String(err) })
+    send({
+      id,
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    })
   }
 })

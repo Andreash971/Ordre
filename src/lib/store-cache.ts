@@ -96,11 +96,13 @@ export async function hydrateStoreCache(): Promise<void> {
 
   const remote = await window.electronAPI.store.getAll()
   cache.theme = remote.theme
+  // Persisted settings from older app versions may lack newer fields; merge defaults.
+  const remoteSettings = remote.settings as Partial<AppSettings>
   cache.settings = {
     ...DEFAULT_SETTINGS,
-    ...remote.settings,
-    quickSelect: remote.settings.quickSelect ?? DEFAULT_QUICK_SELECT,
-    bringApi: remote.settings.bringApi ?? DEFAULT_SETTINGS.bringApi,
+    ...remoteSettings,
+    quickSelect: remoteSettings.quickSelect ?? DEFAULT_QUICK_SELECT,
+    bringApi: remoteSettings.bringApi ?? DEFAULT_SETTINGS.bringApi,
   }
   cache.orders = remote.orders
 

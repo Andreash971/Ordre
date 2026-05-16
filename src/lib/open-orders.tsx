@@ -12,6 +12,13 @@ import { exportOrdersToJson, getCurrentOrders } from '#/lib/order-utils'
 import type { Item } from '#/components/OrderColumns'
 import { getStoredSettings } from '#/lib/settings'
 
+async function pdfElementToBuffer(
+  element: React.ReactElement<DocumentProps>,
+): Promise<ArrayBuffer> {
+  const blob = await pdf(element).toBlob()
+  return blob.arrayBuffer()
+}
+
 export async function openOrdersPdf(
   customers: Customer[],
   sender: CustomerFormValues | null,
@@ -27,10 +34,8 @@ export async function openOrdersPdf(
       ))}
     </Document>
   )
-  const blob = await pdf(element).toBlob()
-  const url = URL.createObjectURL(blob)
-  window.open(url)
-  setTimeout(() => URL.revokeObjectURL(url), 10000)
+  const buffer = await pdfElementToBuffer(element)
+  await window.electronAPI.pdf.open(buffer)
 }
 
 export async function openStoredOrderPdf(order: StoredOrder) {
@@ -39,17 +44,8 @@ export async function openStoredOrderPdf(order: StoredOrder) {
       <OrderPage key={order.key} data={order.data} />
     </Document>
   )
-  const blob = await pdf(element).toBlob()
-  const url = URL.createObjectURL(blob)
-  window.open(url)
-  setTimeout(() => URL.revokeObjectURL(url), 10000)
-}
-
-async function pdfElementToBuffer(
-  element: React.ReactElement<DocumentProps>,
-): Promise<ArrayBuffer> {
-  const blob = await pdf(element).toBlob()
-  return blob.arrayBuffer()
+  const buffer = await pdfElementToBuffer(element)
+  await window.electronAPI.pdf.open(buffer)
 }
 
 export async function printOrdersPdf(

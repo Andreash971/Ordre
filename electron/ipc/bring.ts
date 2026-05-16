@@ -30,10 +30,7 @@ const TARGET = 5
 
 async function getCredentials() {
   const store = await getStore()
-  const { uid, apiKey } = store.get('settings').bringApi ?? {
-    uid: '',
-    apiKey: '',
-  }
+  const { uid, apiKey } = store.get('settings').bringApi
   if (!uid || !apiKey) throw new Error('Bring API credentials missing')
   return { uid, key: apiKey }
 }
