@@ -1,4 +1,4 @@
-# Ordreflyt
+# Blomster i Byhaven - Ordre
 
 Desktop order-management app for **Blomster i Byhaven**, a Norwegian flower shop. Manages customers, products, and orders (creation, archive, PDF export) with offline-first local storage. Postal-code and address lookup via the Bring API.
 
