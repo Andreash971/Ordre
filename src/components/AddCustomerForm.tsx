@@ -1,5 +1,6 @@
-import { useForm } from '@tanstack/react-form'
-import { useId } from 'react'
+import { useForm, useStore } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useId } from 'react'
 import * as z from 'zod'
 
 import {
@@ -16,7 +17,10 @@ import { Button } from '@/components/ui/button'
 import { FieldGroup } from '@/components/ui/field'
 import { DialogClose } from '@/components/ui/dialog'
 
+import AutocompleteField from '#/components/AutocompleteField'
 import FormInputField from '#/components/FormInputField'
+import { lookupPostcode, suggestAddresses } from '#/lib/bring-server-fns'
+import type { AddressSuggestion } from '#/lib/bring-server-fns'
 
 export type AddCustomerFormValues = {
   name: string
@@ -35,6 +39,27 @@ interface AddCustomerFormProps {
   close?: boolean
   defaultValues?: Partial<AddCustomerFormValues>
   onSubmit: (values: AddCustomerFormValues) => Promise<void> | void
+}
+
+function formatAddress(address: AddressSuggestion) {
+  return `${address.street_name}${address.house_number != null ? ` ${address.house_number}` : ''}${address.letter ?? ''}`
+}
+
+function AddressSuggestionItem({ address }: { address: AddressSuggestion }) {
+  return (
+    <>
+      <span className="font-medium">{formatAddress(address)}</span>
+      <span className="text-xs flex gap-1.5 mt-0.5">
+        <span>{`${address.postal_code} ${address.city}`}</span>
+        {address.municipality && (
+          <>
+            <span>|</span>
+            <span>{address.municipality}</span>
+          </>
+        )}
+      </span>
+    </>
+  )
 }
 
 const formSchema = z.object({
@@ -78,6 +103,21 @@ export default function AddCustomerForm({
       await onSubmit(value)
     },
   })
+
+  const postcode = useStore(form.store, (s) => s.values.postcode)
+
+  const { data: bringLookup } = useQuery({
+    queryKey: ['bring-postcode', postcode],
+    queryFn: () => lookupPostcode({ data: postcode }),
+    enabled: /^\d{4}$/.test(postcode),
+    staleTime: Infinity,
+  })
+
+  useEffect(() => {
+    if (bringLookup?.city) {
+      form.setFieldValue('city', bringLookup.city)
+    }
+  }, [bringLookup?.city])
 
   return (
     <form
@@ -129,13 +169,20 @@ export default function AddCustomerForm({
 
         <form.Field name="address">
           {(field) => (
-            <FormInputField
+            <AutocompleteField
               field={field}
               id={`${formId}-address`}
               icon={<House className="text-foreground" />}
               placeholder="Adresse"
               disabled={disabled}
               autoComplete="street-address"
+              onSearch={(q) => suggestAddresses({ data: q })}
+              onSelect={(a) => {
+                form.setFieldValue('address', formatAddress(a))
+                form.setFieldValue('postcode', a.postal_code)
+                form.setFieldValue('city', a.city)
+              }}
+              renderSuggestion={(a) => <AddressSuggestionItem address={a} />}
             />
           )}
         </form.Field>
