@@ -1,5 +1,5 @@
 {
-  "name": "ordreflyt",
+  "name": "bib-ordre",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -93,13 +93,5 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.5",
     "wait-on": "^8.0.1"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss",
-      "better-sqlite3",
-      "electron"
-    ]
   }
 }

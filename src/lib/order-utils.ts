@@ -102,12 +102,12 @@ export function buildOrderData(
       )
       .filter((i) => customer.cardmsg.trim() !== '' || i.name !== 'Kort')
       .map((item) => ({
-      product: item.name,
-      description: item.description ?? '',
-      quantity: item.quantity,
-      price: item.price,
-      total: item.price * item.quantity,
-    })),
+        product: item.name,
+        description: item.description,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.price * item.quantity,
+      })),
   }
 }
 

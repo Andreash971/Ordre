@@ -16,11 +16,7 @@ const productSelect = {
 
 const productSchema = z.object({
   id: z.number().optional(),
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Navn er påkrevd')
-    .max(100),
+  name: z.string().trim().min(1, 'Navn er påkrevd').max(100),
   category: z
     .string()
     .max(50)

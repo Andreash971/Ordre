@@ -54,6 +54,9 @@ declare global {
         discover: () => Promise<DiscoveredPrinter[]>
         print: (pdfBytes: ArrayBuffer, printerName?: string) => Promise<void>
       }
+      pdf: {
+        open: (pdfBytes: ArrayBuffer) => Promise<string>
+      }
     }
   }
 }

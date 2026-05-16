@@ -92,8 +92,11 @@ const DEFAULTS: StoreSchema = {
 }
 
 type StoreInstance = {
-  get<K extends keyof StoreSchema>(key: K): StoreSchema[K]
-  set<K extends keyof StoreSchema>(key: K, value: StoreSchema[K]): void
+  get: <TKey extends keyof StoreSchema>(key: TKey) => StoreSchema[TKey]
+  set: <TKey extends keyof StoreSchema>(
+    key: TKey,
+    value: StoreSchema[TKey],
+  ) => void
   store: StoreSchema
 }
 

@@ -1,4 +1,4 @@
-# Ordreflyt
+# Blomster i Byhaven - Ordre
 
 Desktop order-management app for **Blomster i Byhaven**, a Norwegian flower shop. Manages customers, products, and orders (creation, archive, PDF export) with offline-first local storage. Postal-code and address lookup via the Bring API.
 
@@ -71,13 +71,13 @@ Installer config: [electron-builder.yml](electron-builder.yml).
 
 ## Other scripts
 
-| Command             | What it does                            |
-| ------------------- | --------------------------------------- |
-| `npm run lint`      | ESLint (TanStack config)                |
-| `npm run check`     | Prettier write + ESLint --fix           |
-| `npm run format`    | Prettier check                          |
-| `npm run test`      | Vitest (no tests yet)                   |
-| `npm run storybook` | Storybook on port 6006 for UI primitives|
+| Command             | What it does                             |
+| ------------------- | ---------------------------------------- |
+| `npm run lint`      | ESLint (TanStack config)                 |
+| `npm run check`     | Prettier write + ESLint --fix            |
+| `npm run format`    | Prettier check                           |
+| `npm run test`      | Vitest (no tests yet)                    |
+| `npm run storybook` | Storybook on port 6006 for UI primitives |
 
 ## Security notes
 

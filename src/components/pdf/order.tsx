@@ -1,3 +1,4 @@
+// @ts-expect-error - React import required at runtime by @react-pdf/renderer
 import React from 'react'
 import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer'
 import { z } from 'zod'
@@ -233,9 +234,7 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
               <View>
                 <Text>{row.product}</Text>
                 {row.description ? (
-                  <Text
-                    style={{ fontSize: 9, color: '#666', marginTop: 1 }}
-                  >
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 1 }}>
                     {row.description}
                   </Text>
                 ) : null}

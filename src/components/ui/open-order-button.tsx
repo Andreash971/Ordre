@@ -79,6 +79,16 @@ export default function OpenOrderButton({
   if (defaultPrinter) {
     return (
       <div className="flex gap-1">
+        <TooltipWrapper TooltipText="Åpne PDF i din PDF-leser">
+          <Button
+            onClick={handleOpenPdf}
+            disabled={isDisabled}
+            variant="outline"
+            size="lg"
+          >
+            Lag PDF
+          </Button>
+        </TooltipWrapper>
         <TooltipWrapper TooltipText={`Skriv ut til ${defaultPrinter}`}>
           <Button
             onClick={handlePrint}
@@ -90,22 +100,12 @@ export default function OpenOrderButton({
             {isPrinting ? 'Skriver ut…' : 'Skriv ut'}
           </Button>
         </TooltipWrapper>
-        <TooltipWrapper TooltipText="Åpne PDF i ny fane">
-          <Button
-            onClick={handleOpenPdf}
-            disabled={isDisabled}
-            variant="outline"
-            size="lg"
-          >
-            Åpne PDF
-          </Button>
-        </TooltipWrapper>
       </div>
     )
   }
 
   return (
-    <TooltipWrapper TooltipText="Lagre ordre og åpne PDF i ny fane">
+    <TooltipWrapper TooltipText="Åpne PDF i din PDF-leser">
       <Button
         onClick={handleOpenPdf}
         disabled={isDisabled}
@@ -113,7 +113,7 @@ export default function OpenOrderButton({
         size="lg"
       >
         <Printer className="h-4 w-4" />
-        {isPrinting ? 'Åpner PDF...' : 'Åpne PDF'}
+        {isPrinting ? 'Laster PDF...' : 'Lag PDF'}
       </Button>
     </TooltipWrapper>
   )

@@ -90,14 +90,8 @@ export function registerStoreHandlers() {
     const store = await getStore()
     const current = store.get('settings')
     const next: AppSettings = {
-      archiveRetention:
-        partial.archiveRetention ??
-        current.archiveRetention ??
-        DEFAULT_SETTINGS.archiveRetention,
-      rowsPerPage:
-        partial.rowsPerPage ??
-        current.rowsPerPage ??
-        DEFAULT_SETTINGS.rowsPerPage,
+      archiveRetention: partial.archiveRetention ?? current.archiveRetention,
+      rowsPerPage: partial.rowsPerPage ?? current.rowsPerPage,
       company: {
         ...DEFAULT_SETTINGS.company,
         ...current.company,
@@ -106,17 +100,15 @@ export function registerStoreHandlers() {
       quickSelect: {
         cardSignatures:
           partial.quickSelect?.cardSignatures ??
-          current.quickSelect?.cardSignatures ??
-          DEFAULT_SETTINGS.quickSelect.cardSignatures,
+          current.quickSelect.cardSignatures,
         instructionSuggestions:
           partial.quickSelect?.instructionSuggestions ??
-          current.quickSelect?.instructionSuggestions ??
-          DEFAULT_SETTINGS.quickSelect.instructionSuggestions,
+          current.quickSelect.instructionSuggestions,
       },
       defaultPrinter:
         partial.defaultPrinter !== undefined
           ? partial.defaultPrinter
-          : (current.defaultPrinter ?? DEFAULT_SETTINGS.defaultPrinter),
+          : current.defaultPrinter,
       bringApi: {
         ...DEFAULT_SETTINGS.bringApi,
         ...current.bringApi,

@@ -640,6 +640,21 @@ function SettingsPage() {
 
         <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
+            <Rows3 />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Rader per side</ItemTitle>
+            <ItemDescription>
+              Antall rader som vises i tabeller.
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <SelectRowsPerPage />
+          </ItemActions>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
             <Clock />
           </ItemMedia>
           <ItemContent>
@@ -665,21 +680,6 @@ function SettingsPage() {
           </ItemContent>
           <ItemActions>
             <ClearArchiveButton />
-          </ItemActions>
-        </Item>
-
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
-          <ItemMedia variant="icon">
-            <Rows3 />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Rader per side</ItemTitle>
-            <ItemDescription>
-              Antall rader som vises i tabeller.
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <SelectRowsPerPage />
           </ItemActions>
         </Item>
 
