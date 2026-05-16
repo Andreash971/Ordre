@@ -1,4 +1,4 @@
-import { ipcMain, utilityProcess } from 'electron'
+import { ipcMain, shell, utilityProcess } from 'electron'
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs'
@@ -58,6 +58,25 @@ export function registerPrinterHandlers() {
   ipcMain.handle('printer:discover', () =>
     relay({ type: 'discover-network', timeoutMs: 5000 }),
   )
+
+  ipcMain.handle('pdf:open', async (_e, rawBytes: unknown) => {
+    const buf =
+      rawBytes instanceof Buffer
+        ? rawBytes
+        : Buffer.from(rawBytes as ArrayBuffer)
+
+    const filePath = path.join(os.tmpdir(), `ordre-${Date.now()}.pdf`)
+    fs.writeFileSync(filePath, buf)
+    const result = await shell.openPath(filePath)
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(filePath)
+      } catch {
+        // ignore cleanup errors
+      }
+    }, 60_000)
+    return result
+  })
 
   ipcMain.handle(
     'printer:print',

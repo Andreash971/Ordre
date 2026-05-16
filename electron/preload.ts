@@ -40,6 +40,10 @@ const api = {
     print: (pdfBytes: ArrayBuffer, printerName?: string) =>
       ipcRenderer.invoke('printer:print', pdfBytes, printerName),
   },
+  pdf: {
+    open: (pdfBytes: ArrayBuffer): Promise<string> =>
+      ipcRenderer.invoke('pdf:open', pdfBytes),
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

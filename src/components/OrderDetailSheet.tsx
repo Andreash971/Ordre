@@ -158,19 +158,21 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-4">
         <div className="text-xs text-muted-foreground">
           Lagret{' '}
           {new Date(order.savedAt).toLocaleDateString('nb-NO', {
             dateStyle: 'medium',
           })}
           {' · '}
-          utløper{' '}
+          Utløper{' '}
           {new Date(order.expiresAt).toLocaleDateString('nb-NO', {
             dateStyle: 'medium',
           })}
         </div>
-        <OpenOrderButton storedOrder={order} />
+        <div className="flex gap-2 self-end">
+          <OpenOrderButton storedOrder={order} />
+        </div>
       </div>
     </div>
   )

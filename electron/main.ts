@@ -24,8 +24,8 @@ function installSecurityHandlers() {
     "img-src 'self' data:",
     "font-src 'self' https://cdn.jsdelivr.net",
     isDev
-      ? "connect-src 'self' http://localhost:3000 ws://localhost:3000"
-      : "connect-src 'none'",
+      ? "connect-src 'self' data: http://localhost:3000 ws://localhost:3000"
+      : "connect-src 'self' data:",
     "object-src 'none'",
     "frame-src 'none'",
     "frame-ancestors 'none'",
@@ -68,18 +68,6 @@ function createWindow() {
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('blob:')) {
-      return {
-        action: 'allow',
-        overrideBrowserWindowOptions: {
-          webPreferences: {
-            contextIsolation: true,
-            nodeIntegration: false,
-            sandbox: true,
-          },
-        },
-      }
-    }
     if (url.startsWith('https://')) void shell.openExternal(url)
     return { action: 'deny' }
   })
