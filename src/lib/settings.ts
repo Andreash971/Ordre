@@ -20,6 +20,7 @@ export type AppSettings = {
   rowsPerPage: PageSizeOption
   company: CompanyInfo
   quickSelect: QuickSelectSettings
+  defaultPrinter: string | null
 }
 
 export function getStoredSettings(): AppSettings {

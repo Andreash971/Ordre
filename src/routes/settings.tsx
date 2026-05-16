@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import {
@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 
-import { Archive, Building2, Clock, Palette, Rows3, X, Zap } from 'lucide-react'
+import { Archive, Building2, Clock, Palette, Printer, Rows3, X, Zap } from 'lucide-react'
 
 import type { ThemeMode } from '@/lib/theme'
 import { THEMES, getStoredTheme, setTheme } from '@/lib/theme'
@@ -44,6 +44,7 @@ import type {
   RetentionOption,
 } from '@/lib/settings'
 import { getStoredSettings, updateSettings } from '@/lib/settings'
+import type { DiscoveredPrinter, Printer as PrinterInfo } from '@/lib/electron'
 import { clearArchive } from '@/lib/order-utils'
 
 export const Route = createFileRoute('/settings')({
@@ -385,6 +386,96 @@ function QuickSelectForm() {
   )
 }
 
+function PrinterSettings() {
+  const [printers, setPrinters] = useState<Array<PrinterInfo | DiscoveredPrinter>>([])
+  const [defaultPrinter, setDefaultPrinter] = useState<string | null>(
+    () => getStoredSettings().defaultPrinter,
+  )
+  const [loading, setLoading] = useState(false)
+  const [discovering, setDiscovering] = useState(false)
+
+  useEffect(() => {
+    handleRefresh()
+  }, [])
+
+  async function handleRefresh() {
+    setLoading(true)
+    try {
+      const list = await window.electronAPI.printer.list()
+      setPrinters(list)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleDiscover() {
+    setDiscovering(true)
+    try {
+      const found = await window.electronAPI.printer.discover()
+      setPrinters((prev) => {
+        const existing = new Set(prev.map((p) => p.name))
+        return [...prev, ...found.filter((p) => !existing.has(p.name))]
+      })
+    } finally {
+      setDiscovering(false)
+    }
+  }
+
+  function handleSelect(name: string) {
+    const next = name === '__none__' ? null : name
+    setDefaultPrinter(next)
+    updateSettings({ defaultPrinter: next })
+  }
+
+  return (
+    <div className="flex flex-col gap-3 w-full pt-1">
+      <div className="flex gap-2">
+        <Select
+          value={defaultPrinter ?? '__none__'}
+          onValueChange={handleSelect}
+        >
+          <SelectTrigger className="flex-1 gray:border-border gray:bg-input">
+            <SelectValue placeholder="Ingen skriver valgt" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="__none__">Ingen (deaktivert)</SelectItem>
+              {printers.map((p) => (
+                <SelectItem key={p.name} value={p.name}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={loading}
+        >
+          {loading ? 'Laster…' : 'Oppdater'}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleDiscover}
+          disabled={discovering}
+        >
+          {discovering ? 'Søker…' : 'Søk nettverk'}
+        </Button>
+      </div>
+      {defaultPrinter && (
+        <p className="text-xs text-muted-foreground">
+          Standardskriver: <span className="font-medium">{defaultPrinter}</span>
+        </p>
+      )}
+    </div>
+  )
+}
+
 function SettingsPage() {
   return (
     <main className="rise-in page-wrap px-4 pb-8 pt-6">
@@ -459,6 +550,21 @@ function SettingsPage() {
           </ItemContent>
           <ItemFooter>
             <QuickSelectForm />
+          </ItemFooter>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
+            <Printer />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Skriver</ItemTitle>
+            <ItemDescription>
+              Velg standardskriver for direkte utskrift av ordre.
+            </ItemDescription>
+          </ItemContent>
+          <ItemFooter>
+            <PrinterSettings />
           </ItemFooter>
         </Item>
 

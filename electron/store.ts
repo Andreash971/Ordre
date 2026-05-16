@@ -32,6 +32,7 @@ export type AppSettings = {
   rowsPerPage: PageSizeOption
   company: CompanyInfo
   quickSelect: QuickSelectSettings
+  defaultPrinter: string | null
 }
 
 export type StoredOrder = {
@@ -50,6 +51,7 @@ export type StoreSchema = {
 export const DEFAULT_SETTINGS: AppSettings = {
   archiveRetention: 7,
   rowsPerPage: 14,
+  defaultPrinter: null,
   company: {
     name: 'Blomster i Byhaven AS',
     address: 'Olav Tryggvasonsgt. 28',
