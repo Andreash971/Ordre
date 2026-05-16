@@ -12,7 +12,7 @@ let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
 export function getDb() {
   if (_db) return _db
 
-  const dbPath = path.join(app.getPath('userData'), 'ordreflyt.db')
+  const dbPath = path.join(app.getPath('userData'), 'bib-ordre.db')
   fs.mkdirSync(path.dirname(dbPath), { recursive: true })
   const sqlite = new Database(dbPath)
   sqlite.pragma('journal_mode = WAL')
