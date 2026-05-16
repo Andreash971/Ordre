@@ -52,7 +52,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
 
   const defaultValues: AddProductFormValues = {
     name: row.original.name,
-    category: row.original.category ?? '',
+    category: row.original.category,
     price: String(row.original.price),
     description: row.original.description ?? '',
   }

@@ -46,12 +46,18 @@ const quickSelectSchema = z.object({
   instructionSuggestions: z.array(z.string()).optional(),
 })
 
+const bringApiSchema = z.object({
+  uid: z.string(),
+  apiKey: z.string(),
+})
+
 const partialSettingsSchema = z.object({
   archiveRetention: retentionSchema.optional(),
   rowsPerPage: pageSizeSchema.optional(),
   company: companySchema.partial().optional(),
   quickSelect: quickSelectSchema.optional(),
   defaultPrinter: z.string().nullable().optional(),
+  bringApi: bringApiSchema.partial().optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -111,6 +117,11 @@ export function registerStoreHandlers() {
         partial.defaultPrinter !== undefined
           ? partial.defaultPrinter
           : (current.defaultPrinter ?? DEFAULT_SETTINGS.defaultPrinter),
+      bringApi: {
+        ...DEFAULT_SETTINGS.bringApi,
+        ...current.bringApi,
+        ...(partial.bringApi ?? {}),
+      },
     }
     store.set('settings', next)
     return next

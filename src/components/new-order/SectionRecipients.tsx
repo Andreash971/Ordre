@@ -4,9 +4,6 @@ import {
   CalendarIcon,
   ChevronDown,
   ChevronUp,
-  Clock,
-  MessageSquare,
-  StickyNote,
   Trash2,
   UserPlus,
 } from 'lucide-react'
@@ -244,11 +241,6 @@ function RecipientRow({
               fallback={defaults.cardEnabled ? defaults.cardValue : ''}
               onChange={(v) => onChange({ cardmsg: v })}
               disabled={!defaults.cardEnabled && !value.cardmsg}
-              hint={
-                !defaults.cardEnabled
-                  ? 'Legg til kort i ordren for å redigere den per mottaker.'
-                  : undefined
-              }
             />
             <OverrideText
               label="Instrukser"
@@ -259,11 +251,6 @@ function RecipientRow({
               }
               onChange={(v) => onChange({ instructmsg: v })}
               disabled={!defaults.instructionsEnabled && !value.instructmsg}
-              hint={
-                !defaults.instructionsEnabled
-                  ? 'Legg til instrukser i ordren for å redigere den per mottaker.'
-                  : undefined
-              }
             />
           </div>
 
@@ -410,7 +397,6 @@ function OverrideTime({
 }
 
 function OverrideText({
-  icon,
   label,
   placeholder,
   value,
@@ -418,7 +404,6 @@ function OverrideText({
   onChange,
   disabled = false,
 }: {
-  icon: React.ReactNode
   label: string
   placeholder: string
   value: string
@@ -435,8 +420,7 @@ function OverrideText({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">{icon}</span>
+        <div className="flex items-center">
           <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
             {label}
           </span>

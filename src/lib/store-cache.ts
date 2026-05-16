@@ -31,6 +31,10 @@ const DEFAULT_SETTINGS: AppSettings = {
     phone: '73522460',
   },
   quickSelect: DEFAULT_QUICK_SELECT,
+  bringApi: {
+    uid: '',
+    apiKey: '',
+  },
 }
 
 type Cache = {
@@ -69,6 +73,7 @@ export function setSettingsInCache(partial: Partial<AppSettings>): void {
     quickSelect: partial.quickSelect
       ? { ...cache.settings.quickSelect, ...partial.quickSelect }
       : cache.settings.quickSelect,
+    bringApi: { ...cache.settings.bringApi, ...(partial.bringApi ?? {}) },
   }
   void window.electronAPI.store.setSettings(partial)
 }
@@ -95,6 +100,7 @@ export async function hydrateStoreCache(): Promise<void> {
     ...DEFAULT_SETTINGS,
     ...remote.settings,
     quickSelect: remote.settings.quickSelect ?? DEFAULT_QUICK_SELECT,
+    bringApi: remote.settings.bringApi ?? DEFAULT_SETTINGS.bringApi,
   }
   cache.orders = remote.orders
 

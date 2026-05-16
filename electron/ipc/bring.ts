@@ -1,6 +1,8 @@
 import { ipcMain } from 'electron'
 import * as z from 'zod'
 
+import { getStore } from '../store'
+
 const postcodeSchema = z.string().regex(/^\d{4}$/)
 
 const bringResponseSchema = z.object({
@@ -26,17 +28,20 @@ const suggestionsResponseSchema = z.object({
 const MAX_PAGES = 10
 const TARGET = 5
 
-function getCredentials() {
-  const uid = process.env.BRING_UID
-  const key = process.env.BRING_API_KEY
-  if (!uid || !key) throw new Error('Bring API credentials missing')
-  return { uid, key }
+async function getCredentials() {
+  const store = await getStore()
+  const { uid, apiKey } = store.get('settings').bringApi ?? {
+    uid: '',
+    apiKey: '',
+  }
+  if (!uid || !apiKey) throw new Error('Bring API credentials missing')
+  return { uid, key: apiKey }
 }
 
 export function registerBringHandlers() {
   ipcMain.handle('bring:lookupPostcode', async (_e, raw: unknown) => {
     const postcode = postcodeSchema.parse(raw)
-    const { uid, key } = getCredentials()
+    const { uid, key } = await getCredentials()
 
     const res = await fetch(
       `https://api.bring.com/address/api/no/postal-codes/${postcode}`,
@@ -58,7 +63,7 @@ export function registerBringHandlers() {
 
   ipcMain.handle('bring:suggestAddresses', async (_e, raw: unknown) => {
     const query = z.string().min(1).parse(raw)
-    const { uid, key } = getCredentials()
+    const { uid, key } = await getCredentials()
 
     const headers = {
       Accept: 'application/json',
