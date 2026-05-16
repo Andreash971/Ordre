@@ -15,12 +15,18 @@ export type QuickSelectSettings = {
   instructionSuggestions: string[]
 }
 
+export type BringApiCredentials = {
+  uid: string
+  apiKey: string
+}
+
 export type AppSettings = {
   archiveRetention: RetentionOption
   rowsPerPage: PageSizeOption
   company: CompanyInfo
   quickSelect: QuickSelectSettings
   defaultPrinter: string | null
+  bringApi: BringApiCredentials
 }
 
 export function getStoredSettings(): AppSettings {

@@ -340,9 +340,7 @@ export default function CustomerForm({
     return (
       <div className={cn('flex flex-col gap-3', className)}>
         {formContent}
-        {formButtons && (
-          <div className="flex justify-end gap-2">{buttons}</div>
-        )}
+        {formButtons && <div className="flex justify-end gap-2">{buttons}</div>}
       </div>
     )
   }

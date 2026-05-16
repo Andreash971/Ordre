@@ -5,8 +5,7 @@ import * as z from 'zod'
 import { CreditCard, FolderOpen, Package } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Field, FieldError } from '@/components/ui/field'
-import { FieldGroup } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
 
 import FormInputField from '#/components/FormInputField'
@@ -37,7 +36,10 @@ const formSchema = z.object({
   price: z
     .string()
     .min(1, 'Pris er påkrevd')
-    .refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Pris må være større enn 0'),
+    .refine(
+      (v) => !isNaN(Number(v)) && Number(v) > 0,
+      'Pris må være større enn 0',
+    ),
   description: z
     .string()
     .max(2000, 'Beskrivelse kan ikke være lengre enn 2000 tegn'),

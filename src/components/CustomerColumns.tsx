@@ -176,29 +176,29 @@ export const customerColumns: ColumnDef<Customer>[] = [
   {
     accessorKey: 'name',
     header: 'Navn',
-    meta: { priority: 'primary', truncate: true, className: 'max-w-[8rem]' },
+    meta: { priority: 'primary', truncate: true, className: 'max-w-[16rem]' },
   },
   { accessorKey: 'phone', header: 'Telefon' },
   {
     accessorKey: 'company',
     header: 'Firma',
-    meta: { truncate: true, className: 'max-w-[6rem]' },
+    meta: { truncate: true, className: 'max-w-[14rem]' },
   },
   {
     accessorKey: 'address',
     header: 'Adresse',
-    meta: { truncate: true, className: 'max-w-[8rem]' },
+    meta: { truncate: true, className: 'max-w-[18rem]' },
   },
   { accessorKey: 'postcode', header: 'Postnr.' },
   {
     accessorKey: 'city',
     header: 'Sted',
-    meta: { truncate: true, className: 'max-w-[5rem]' },
+    meta: { truncate: true, className: 'max-w-[10rem]' },
   },
   {
     accessorKey: 'careof',
     header: 'C/O',
-    meta: { truncate: true, className: 'max-w-[5rem]' },
+    meta: { truncate: true, className: 'max-w-[10rem]' },
   },
   {
     id: 'actions',
