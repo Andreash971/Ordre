@@ -12,6 +12,7 @@ dist-ssr
 __unconfig*
 todos.json
 release
+out
 dev.db
 dev.db-journal
 dev.db-wal

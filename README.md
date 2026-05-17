@@ -13,7 +13,8 @@ Built as an Electron app with a React + TanStack renderer and a SQLite (Drizzle)
 | UI           | shadcn/ui + Radix primitives, Lucide icons                          |
 | Database     | SQLite via `better-sqlite3`, schema and migrations with Drizzle ORM |
 | PDF          | `@react-pdf/renderer`                                               |
-| Build / pack | Vite (renderer), `tsc` (main), `electron-builder` (installers)      |
+| Build / pack | Vite (renderer), `tsc` (main), Electron Forge (installers)          |
+| Updates      | `update-electron-app` against self-hosted Nucleus update server     |
 
 ## Project layout
 
@@ -25,7 +26,8 @@ src/           Renderer
   routes/      TanStack file-based routes (dashboard, new, archive, customers, products, settings)
   components/  UI; new-order/ holds the multi-step order form
   lib/         IPC wrappers (*-server-fns.ts), query keys, theme, utils
-drizzle/       SQL migrations (bundled into the installer via electron-builder)
+drizzle/       SQL migrations (bundled into the installer as extraResource)
+assets/        Build assets — icons, entitlements, installer artwork
 ```
 
 ## Getting started
@@ -33,7 +35,7 @@ drizzle/       SQL migrations (bundled into the installer via electron-builder)
 Requires Node 20+ and a working native-build toolchain (needed for `better-sqlite3`).
 
 ```bash
-npm install                    # also runs electron-builder install-app-deps
+npm install                    # native modules (better-sqlite3) build automatically
 npm run dev                    # Vite (renderer) + Electron (main) in watch mode
 ```
 
@@ -62,12 +64,75 @@ Schema lives in [electron/db/schema.ts](electron/db/schema.ts).
 
 ## Build & package
 
+Packaging and publishing use [Electron Forge](https://www.electronforge.io/).
+Targets are Windows (Squirrel `.exe`) and macOS arm64 (`.zip` for auto-update +
+the underlying `.app`).
+
 ```bash
 npm run build                  # vite build + tsc for main → dist/
-npm run build:win              # build, then produce a Windows NSIS installer in release/
+npm run package                # produce an unpacked app under out/
+npm run make                   # produce a Squirrel installer (Win) or .zip (Mac) under out/make/
+npm run publish                # make + push to Nucleus (requires env vars below)
 ```
 
-Installer config: [electron-builder.yml](electron-builder.yml).
+Forge config: [forge.config.cjs](forge.config.cjs). Build assets (icons, entitlements):
+[assets/README.md](assets/README.md).
+
+### Code signing
+
+Both platforms are **unsigned** until certificates are provisioned. SmartScreen
+(Windows) and Gatekeeper (macOS) warnings are expected for users. The Forge
+config picks up signing automatically when these env vars are present:
+
+| Variable                      | Used for                                    |
+| ----------------------------- | ------------------------------------------- |
+| `MAC_CSC_LINK`                | Path / URL to macOS `.p12` certificate      |
+| `MAC_CSC_KEY_PASSWORD`        | Password for the `.p12`                     |
+| `APPLE_ID`                    | Apple ID for notarization                   |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization      |
+| `APPLE_TEAM_ID`               | Apple Developer Team ID                     |
+| `WIN_CSC_LINK`                | Path to Windows `.pfx` certificate          |
+| `WIN_CSC_KEY_PASSWORD`        | Password for the `.pfx`                     |
+
+### Releases
+
+Releases are driven by version tags. CI ([.github/workflows/release.yml](.github/workflows/release.yml))
+runs on `windows-latest` and `macos-14` in parallel, packages the app, and
+pushes artifacts to the self-hosted Nucleus instance at
+`https://update.phenriksen.no/`.
+
+```bash
+npm version patch              # bumps package.json, creates v0.1.1 tag
+git push --follow-tags
+```
+
+### Auto-updates
+
+Packaged builds poll Nucleus every hour via `update-electron-app`
+(see [electron/main.ts](electron/main.ts)). Squirrel.Windows applies updates
+silently on next launch; Squirrel.Mac downloads in the background and prompts
+to restart.
+
+### Required GitHub Secrets
+
+Set these on the repo (Settings → Secrets and variables → Actions):
+
+- `NUCLEUS_HOST` — `https://update.phenriksen.no`
+- `NUCLEUS_APP_ID` — app ID from the Nucleus dashboard
+- `NUCLEUS_CHANNEL_ID` — channel ID (e.g. the `stable` channel)
+- `NUCLEUS_TOKEN` — access token with publish rights to that channel
+
+Signing secrets (`MAC_CSC_LINK`, `APPLE_ID`, `WIN_CSC_LINK`, …) can be added
+later; the workflow tolerates them being unset.
+
+### One-time Nucleus setup
+
+On the Nucleus dashboard:
+
+1. Create an app — name `BiB Ordre`, slug `bib-ordre`.
+2. Create a channel (e.g. `stable`).
+3. Generate an access token scoped to publish to that channel.
+4. Copy `appId`, `channelId`, `token`, and the host URL into GitHub Secrets.
 
 ## Other scripts
 

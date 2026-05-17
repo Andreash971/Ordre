@@ -1,5 +1,6 @@
 import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
+import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
 
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
@@ -13,6 +14,17 @@ import {
 } from './ipc/printer'
 
 const isDev = !!process.env.ELECTRON_DEV
+
+if (!isDev && process.platform !== 'linux') {
+  updateElectronApp({
+    updateSource: {
+      type: UpdateSourceType.StaticStorage,
+      baseUrl: `https://update.phenriksen.no/${process.platform}/${process.arch}`,
+    },
+    updateInterval: '1 hour',
+    logger: console,
+  })
+}
 
 function installSecurityHandlers() {
   const csp = [
