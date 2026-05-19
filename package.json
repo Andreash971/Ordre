@@ -1,7 +1,7 @@
 {
   "name": "bib-ordre",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "BiB Ordre — Order management for Blomster i Byhaven",
   "productName": "BiB Ordre",
