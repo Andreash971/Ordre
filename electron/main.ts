@@ -15,11 +15,14 @@ import {
 
 const isDev = !!process.env.ELECTRON_DEV
 
+const NUCLEUS_APP_SLUG = 'BiB-Ordre'
+const NUCLEUS_CHANNEL_ID = '4703d316c7b60bab0653abdb15e8b60e'
+
 if (!isDev && process.platform !== 'linux') {
   updateElectronApp({
     updateSource: {
       type: UpdateSourceType.StaticStorage,
-      baseUrl: `https://update.phenriksen.no/${process.platform}/${process.arch}`,
+      baseUrl: `https://update.phenriksen.no/${NUCLEUS_APP_SLUG}/${NUCLEUS_CHANNEL_ID}/${process.platform}/${process.arch}`,
     },
     updateInterval: '1 hour',
     logger: console,
