@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import {
   createRootRouteWithContext,
   Outlet,
@@ -13,12 +14,11 @@ import NotFound from '../components/NotFound'
 
 import AppSidebar from '../components/AppSidebar'
 
-import { TanStackDevtools } from '@tanstack/react-devtools'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
-import { formDevtoolsPlugin } from '@tanstack/react-form-devtools'
-
 import type { QueryClient } from '@tanstack/react-query'
+
+const DevtoolsPanel = import.meta.env.DEV
+  ? lazy(() => import('../components/DevtoolsPanel'))
+  : null
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -58,14 +58,11 @@ function RootLayout() {
           <Outlet />
         </SidebarInset>
       </SidebarProvider>
-      <TanStackDevtools
-        config={{ position: 'bottom-right' }}
-        plugins={[
-          { name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> },
-          { name: 'Tanstack Query', render: <ReactQueryDevtoolsPanel /> },
-          formDevtoolsPlugin(),
-        ]}
-      />
+      {DevtoolsPanel && (
+        <Suspense fallback={null}>
+          <DevtoolsPanel />
+        </Suspense>
+      )}
     </>
   )
 }
