@@ -31,6 +31,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Decode Windows signing certificate
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          WIN_CSC_LINK_BASE64: ${{ secrets.WIN_CSC_LINK_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WIN_CSC_LINK_BASE64)) {
+            Write-Host '::warning::WIN_CSC_LINK_BASE64 secret is not set — Windows build will be unsigned.'
+            exit 0
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP 'bib-ordre-signing.pfx'
+          [IO.File]::WriteAllBytes(
+            $pfxPath,
+            [Convert]::FromBase64String($env:WIN_CSC_LINK_BASE64)
+          )
+          "WIN_CSC_LINK=$pfxPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Wrote signing cert to $pfxPath"
+
       - name: Build and publish to Nucleus
         run: npm run publish
         env:
@@ -38,11 +56,12 @@ jobs:
           NUCLEUS_APP_ID: ${{ secrets.NUCLEUS_APP_ID }}
           NUCLEUS_CHANNEL_ID: ${{ secrets.NUCLEUS_CHANNEL_ID }}
           NUCLEUS_TOKEN: ${{ secrets.NUCLEUS_TOKEN }}
-          # Code signing — empty until certs are provisioned, signing is skipped
+          # macOS signing — empty secrets leave the mac build unsigned
           MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
           MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          # Windows signing — WIN_CSC_LINK is set by the decode step above
+          # via $GITHUB_ENV; only the password is passed here.
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
