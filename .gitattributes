@@ -1,0 +1,5 @@
+# Keep PowerShell scripts in CRLF + their original encoding (UTF-8 BOM) so
+# Windows PowerShell 5.1 parses them reliably. Without this, a user with
+# core.autocrlf=input would see them checked out as LF, which PS 5.1 can
+# misparse around backtick/escape sequences.
+*.ps1 text eol=crlf working-tree-encoding=UTF-8
