@@ -21,4 +21,4 @@ dev.db-shm
 # Code signing — never commit private keys
 *.pfx
 *.p12
-certs/
+*.key
