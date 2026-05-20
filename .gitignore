@@ -17,3 +17,8 @@ dev.db
 dev.db-journal
 dev.db-wal
 dev.db-shm
+
+# Code signing — never commit private keys
+*.pfx
+*.p12
+certs/
