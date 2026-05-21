@@ -48,9 +48,9 @@ const macSigning = MAC_CSC_LINK
 
 module.exports = {
   packagerConfig: {
-    appBundleId: 'no.blomsteribyhaven.ordre',
-    name: 'BiB Ordre',
-    executableName: 'bib-ordre',
+    appBundleId: 'no.andreas.ordre',
+    name: 'Ordre',
+    executableName: 'ordre',
     ...(hasIcnsIcon || hasIcoIcon ? { icon: iconBase } : {}),
     asar: true,
     extraResource: ['drizzle'],
@@ -92,10 +92,10 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        name: 'bib-ordre',
+        name: 'ordre',
         // Nucleus requires the version string in the uploaded filename
         // for cache-busting, so embed package.json's version here.
-        setupExe: `BiB-Ordre-Setup-${appVersion}.exe`,
+        setupExe: `Ordre-Setup-${appVersion}.exe`,
         iconUrl: 'https://update.phenriksen.no/static/icon.ico',
         ...(fs.existsSync(setupIconPath) ? { setupIcon: setupIconPath } : {}),
         ...(fs.existsSync(loadingGifPath)
