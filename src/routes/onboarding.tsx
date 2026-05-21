@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
@@ -13,9 +13,18 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 import type { CompanyInfo } from '@/lib/settings'
 import { completeOnboarding, updateSettings } from '@/lib/settings'
+import type { DiscoveredPrinter, Printer as PrinterInfo } from '@/lib/electron'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingPage,
@@ -50,6 +59,39 @@ function OnboardingPage() {
     phone: false,
   })
   const [submitting, setSubmitting] = useState(false)
+  const [printers, setPrinters] = useState<
+    Array<PrinterInfo | DiscoveredPrinter>
+  >([])
+  const [printersLoading, setPrintersLoading] = useState(false)
+  const [discovering, setDiscovering] = useState(false)
+  const [selectedPrinter, setSelectedPrinter] = useState<string | null>(null)
+
+  useEffect(() => {
+    void refreshPrinters()
+  }, [])
+
+  async function refreshPrinters() {
+    setPrintersLoading(true)
+    try {
+      const list = await window.electronAPI.printer.list()
+      setPrinters(list)
+    } finally {
+      setPrintersLoading(false)
+    }
+  }
+
+  async function discoverPrinters() {
+    setDiscovering(true)
+    try {
+      const found = await window.electronAPI.printer.discover()
+      setPrinters((prev) => {
+        const existing = new Set(prev.map((p) => p.name))
+        return [...prev, ...found.filter((p) => !existing.has(p.name))]
+      })
+    } finally {
+      setDiscovering(false)
+    }
+  }
 
   const trimmed: FormState = {
     name: form.name.trim(),
@@ -84,7 +126,7 @@ function OnboardingPage() {
     })
     if (!isValid || submitting) return
     setSubmitting(true)
-    updateSettings({ company: trimmed })
+    updateSettings({ company: trimmed, defaultPrinter: selectedPrinter })
     completeOnboarding()
     void navigate({ to: '/' })
   }
@@ -123,7 +165,7 @@ function OnboardingPage() {
 
             <Separator />
 
-            <section className="flex flex-col gap-3 mb-8">
+            <section className="flex flex-col gap-3">
               <div>
                 <h3 className="text-sm font-medium">Bedriftsinformasjon</h3>
                 <p className="text-xs text-muted-foreground">
@@ -171,6 +213,59 @@ function OnboardingPage() {
                 onBlur={() => handleBlur('phone')}
                 error={touched.phone ? errors.phone : undefined}
               />
+            </section>
+
+            <Separator />
+
+            <section className="flex flex-col gap-3 mb-8">
+              <div>
+                <h3 className="text-sm font-medium">Skriver (valgfritt)</h3>
+                <p className="text-xs text-muted-foreground">
+                  Velg en standardskriver for direkte utskrift av ordre.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select
+                  value={selectedPrinter ?? '__none__'}
+                  onValueChange={(v) =>
+                    setSelectedPrinter(v === '__none__' ? null : v)
+                  }
+                >
+                  <SelectTrigger className="flex-1 gray:border-border gray:bg-input">
+                    <SelectValue placeholder="Ingen skriver valgt" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="__none__">
+                        Ingen (deaktivert)
+                      </SelectItem>
+                      {printers.map((p) => (
+                        <SelectItem key={p.name} value={p.name}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void refreshPrinters()}
+                  disabled={printersLoading}
+                >
+                  {printersLoading ? 'Laster…' : 'Oppdater'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void discoverPrinters()}
+                  disabled={discovering}
+                >
+                  {discovering ? 'Søker…' : 'Søk nettverk'}
+                </Button>
+              </div>
             </section>
           </CardContent>
           <CardFooter className="flex justify-end">

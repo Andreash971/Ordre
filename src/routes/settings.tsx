@@ -228,10 +228,7 @@ function CompanyInfoForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-4 w-full pt-1"
-    >
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full pt-1">
       <div className="flex flex-col gap-2">
         <div>
           <h4 className="text-sm font-medium">Visningsnavn</h4>

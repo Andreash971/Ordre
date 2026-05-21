@@ -22,3 +22,7 @@ dev.db-shm
 *.pfx
 *.p12
 *.key
+
+# Local-only — signing certs and personal documentation
+certs/
+docs/
