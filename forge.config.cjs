@@ -15,6 +15,8 @@ const {
   WIN_CSC_KEY_PASSWORD,
 } = process.env
 
+const { version: appVersion } = require('./package.json')
+
 const iconBase = path.resolve(__dirname, 'assets/icon')
 const hasIcnsIcon = fs.existsSync(`${iconBase}.icns`)
 const hasIcoIcon = fs.existsSync(`${iconBase}.ico`)
@@ -25,7 +27,10 @@ const macSigning = MAC_CSC_LINK
   ? {
       osxSign: {
         optionsForFile: () => ({
-          entitlements: path.resolve(__dirname, 'assets/entitlements.mac.plist'),
+          entitlements: path.resolve(
+            __dirname,
+            'assets/entitlements.mac.plist',
+          ),
           hardenedRuntime: true,
           'gatekeeper-assess': false,
         }),
@@ -88,10 +93,14 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         name: 'bib-ordre',
-        setupExe: 'BiB-Ordre-Setup.exe',
+        // Nucleus requires the version string in the uploaded filename
+        // for cache-busting, so embed package.json's version here.
+        setupExe: `BiB-Ordre-Setup-${appVersion}.exe`,
         iconUrl: 'https://update.phenriksen.no/static/icon.ico',
         ...(fs.existsSync(setupIconPath) ? { setupIcon: setupIconPath } : {}),
-        ...(fs.existsSync(loadingGifPath) ? { loadingGif: loadingGifPath } : {}),
+        ...(fs.existsSync(loadingGifPath)
+          ? { loadingGif: loadingGifPath }
+          : {}),
         ...(WIN_CSC_LINK
           ? {
               certificateFile: WIN_CSC_LINK,
