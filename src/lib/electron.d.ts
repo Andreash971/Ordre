@@ -43,11 +43,13 @@ declare global {
           theme: ThemeMode
           settings: AppSettings
           orders: Record<string, StoredOrder>
+          onboardingCompleted: boolean
         }>
         setTheme: (mode: ThemeMode) => Promise<void>
         setSettings: (partial: Partial<AppSettings>) => Promise<AppSettings>
         setOrders: (orders: Record<string, StoredOrder>) => Promise<void>
         clearOrders: () => Promise<void>
+        setOnboardingCompleted: (completed: boolean) => Promise<void>
       }
       printer: {
         list: () => Promise<Printer[]>

@@ -1,6 +1,8 @@
-# Blomster i Byhaven - Ordre
+# Ordre
 
-Desktop order-management app for **Blomster i Byhaven**, a Norwegian flower shop. Manages customers, products, and orders (creation, archive, PDF export) with offline-first local storage. Postal-code and address lookup via the Bring API.
+Desktop order-management app for a small Norwegian flower shop. Manages customers, products, and orders (creation, archive, PDF export) with offline-first local storage. Postal-code and address lookup via the Bring API.
+
+On first launch the app prompts you to enter your company information (display name shown in the sidebar and on document headers, plus the legal name and address used in the document address block). All of it is editable later under **Innstillinger → Bedriftsinformasjon**.
 
 Built as an Electron app with a React + TanStack renderer and a SQLite (Drizzle) database in the main process.
 
@@ -129,7 +131,7 @@ later; the workflow tolerates them being unset.
 
 On the Nucleus dashboard:
 
-1. Create an app — name `BiB Ordre`, slug `bib-ordre`.
+1. Create an app — pick the name and slug used by your Nucleus deployment.
 2. Create a channel (e.g. `stable`).
 3. Generate an access token scoped to publish to that channel.
 4. Copy `appId`, `channelId`, `token`, and the host URL into GitHub Secrets.

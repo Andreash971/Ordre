@@ -1,15 +1,14 @@
 {
-  "name": "bib-ordre",
+  "name": "ordre",
   "private": true,
   "version": "1.0.1",
   "type": "module",
-  "description": "BiB Ordre — Order management for Blomster i Byhaven",
-  "productName": "BiB Ordre",
+  "description": "Order management and printing",
+  "productName": "Ordre",
   "author": {
-    "name": "Andreas Henriksen",
-    "email": "andreas@phenriksen.no"
+    "name": "Andreas Henriksen"
   },
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0",
   "main": "dist/electron/main.js",
   "imports": {
     "#/*": "./src/*"

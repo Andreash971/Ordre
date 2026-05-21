@@ -17,6 +17,7 @@ export type ThemeMode =
 
 export type CompanyInfo = {
   name: string
+  displayName: string
   address: string
   postCode: string
   phone: string
@@ -52,6 +53,7 @@ export type StoreSchema = {
   theme: ThemeMode
   settings: AppSettings
   orders: Record<string, StoredOrder>
+  onboardingCompleted: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -59,25 +61,15 @@ export const DEFAULT_SETTINGS: AppSettings = {
   rowsPerPage: 14,
   defaultPrinter: null,
   company: {
-    name: 'Blomster i Byhaven AS',
-    address: 'Olav Tryggvasonsgt. 28',
-    postCode: '7011 Trondheim',
-    phone: '73522460',
+    name: '',
+    displayName: '',
+    address: '',
+    postCode: '',
+    phone: '',
   },
   quickSelect: {
-    cardSignatures: [
-      'Med vennlig hilsen',
-      'Kjærlig hilsen',
-      'Klem fra',
-      'Hjertelig gratulerer',
-      'Hilsen',
-    ],
-    instructionSuggestions: [
-      'Ring før ankomst',
-      'Sett på trappen hvis ingen åpner',
-      'Levér til nabo ved fravær',
-      'Bruk bakinngangen',
-    ],
+    cardSignatures: [],
+    instructionSuggestions: [],
   },
   bringApi: {
     uid: '',
@@ -89,6 +81,7 @@ const DEFAULTS: StoreSchema = {
   theme: 'auto',
   settings: DEFAULT_SETTINGS,
   orders: {},
+  onboardingCompleted: false,
 }
 
 type StoreInstance = {

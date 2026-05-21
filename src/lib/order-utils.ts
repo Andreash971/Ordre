@@ -67,6 +67,7 @@ export function buildOrderData(
   return {
     company: {
       name: company.name,
+      displayName: company.displayName,
       address: company.address,
       postCode: company.postCode,
       phone: company.phone,

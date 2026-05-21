@@ -18,6 +18,7 @@ const optionalString = z.string().transform((val) => val || null)
 const orderDataSchema = z.object({
   company: z.object({
     name: spaceString,
+    displayName: spaceString,
     address: spaceString,
     postCode: spaceString,
     phone: spaceString,
@@ -167,6 +168,7 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
   const {
     company: {
       name: companyName,
+      displayName: companyDisplayName,
       address: companyAddress,
       postCode: companyPostCode,
       phone: companyPhone,
@@ -196,7 +198,7 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
       {/* HEADER */}
       <View fixed style={styles.header}>
         <View style={styles.leftHeader}>
-          <Text style={styles.logo}>Blomster i Byhaven</Text>
+          <Text style={styles.logo}>{companyDisplayName}</Text>
           <Text style={styles.title}>Ordre</Text>
         </View>
         <View style={styles.rightHeader}>

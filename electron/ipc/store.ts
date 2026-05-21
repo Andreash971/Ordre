@@ -21,6 +21,7 @@ const themeSchema = z.enum([
 
 const companySchema = z.object({
   name: z.string(),
+  displayName: z.string(),
   address: z.string(),
   postCode: z.string(),
   phone: z.string(),
@@ -76,7 +77,14 @@ export function registerStoreHandlers() {
       theme: store.get('theme'),
       settings: store.get('settings'),
       orders: store.get('orders'),
+      onboardingCompleted: store.get('onboardingCompleted'),
     }
+  })
+
+  ipcMain.handle('store:setOnboardingCompleted', async (_e, raw: unknown) => {
+    const completed = z.boolean().parse(raw)
+    const store = await getStore()
+    store.set('onboardingCompleted', completed)
   })
 
   ipcMain.handle('store:setTheme', async (_e, raw: unknown) => {

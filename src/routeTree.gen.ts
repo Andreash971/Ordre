@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProductsRouteImport } from './routes/products'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ArchiveRouteImport } from './routes/archive'
@@ -24,6 +25,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewRoute = NewRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
   '/new': typeof NewRoute
+  '/onboarding': typeof OnboardingRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
   '/new': typeof NewRoute
+  '/onboarding': typeof OnboardingRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/archive': typeof ArchiveRoute
   '/customers': typeof CustomersRoute
   '/new': typeof NewRoute
+  '/onboarding': typeof OnboardingRoute
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
 }
@@ -79,16 +88,25 @@ export interface FileRouteTypes {
     | '/archive'
     | '/customers'
     | '/new'
+    | '/onboarding'
     | '/products'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/archive' | '/customers' | '/new' | '/products' | '/settings'
+  to:
+    | '/'
+    | '/archive'
+    | '/customers'
+    | '/new'
+    | '/onboarding'
+    | '/products'
+    | '/settings'
   id:
     | '__root__'
     | '/'
     | '/archive'
     | '/customers'
     | '/new'
+    | '/onboarding'
     | '/products'
     | '/settings'
   fileRoutesById: FileRoutesById
@@ -98,6 +116,7 @@ export interface RootRouteChildren {
   ArchiveRoute: typeof ArchiveRoute
   CustomersRoute: typeof CustomersRoute
   NewRoute: typeof NewRoute
+  OnboardingRoute: typeof OnboardingRoute
   ProductsRoute: typeof ProductsRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -116,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/new': {
@@ -154,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArchiveRoute: ArchiveRoute,
   CustomersRoute: CustomersRoute,
   NewRoute: NewRoute,
+  OnboardingRoute: OnboardingRoute,
   ProductsRoute: ProductsRoute,
   SettingsRoute: SettingsRoute,
 }

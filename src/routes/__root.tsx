@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import {
   createRootRouteWithContext,
+  Navigate,
   Outlet,
   useRouterState,
 } from '@tanstack/react-router'
@@ -13,6 +14,7 @@ import { Separator } from '../components/ui/separator'
 import NotFound from '../components/NotFound'
 
 import AppSidebar from '../components/AppSidebar'
+import { getOnboardingCompleted } from '../lib/settings'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -40,6 +42,25 @@ const pageLabels: Record<string, string> = {
 
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const onboardingCompleted = getOnboardingCompleted()
+
+  if (!onboardingCompleted && pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" />
+  }
+
+  if (pathname === '/onboarding') {
+    return (
+      <>
+        <Outlet />
+        {DevtoolsPanel && (
+          <Suspense fallback={null}>
+            <DevtoolsPanel />
+          </Suspense>
+        )}
+      </>
+    )
+  }
+
   return (
     <>
       <SidebarProvider>

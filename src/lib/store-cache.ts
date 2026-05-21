@@ -3,21 +3,11 @@ import type { ThemeMode } from './theme'
 import type { StoredOrder } from './order-utils'
 
 export const ORDERS_CHANGED_EVENT = 'orders-changed'
+export const SETTINGS_CHANGED_EVENT = 'settings-changed'
 
 const DEFAULT_QUICK_SELECT: QuickSelectSettings = {
-  cardSignatures: [
-    'Med vennlig hilsen',
-    'Kjærlig hilsen',
-    'Klem fra',
-    'Hjertelig gratulerer',
-    'Hilsen',
-  ],
-  instructionSuggestions: [
-    'Ring før ankomst',
-    'Sett på trappen hvis ingen åpner',
-    'Levér til nabo ved fravær',
-    'Bruk bakinngangen',
-  ],
+  cardSignatures: [],
+  instructionSuggestions: [],
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -25,10 +15,11 @@ const DEFAULT_SETTINGS: AppSettings = {
   rowsPerPage: 14,
   defaultPrinter: null,
   company: {
-    name: 'Blomster i Byhaven AS',
-    address: 'Olav Tryggvasonsgt. 28',
-    postCode: '7011 Trondheim',
-    phone: '73522460',
+    name: '',
+    displayName: '',
+    address: '',
+    postCode: '',
+    phone: '',
   },
   quickSelect: DEFAULT_QUICK_SELECT,
   bringApi: {
@@ -41,12 +32,14 @@ type Cache = {
   theme: ThemeMode
   settings: AppSettings
   orders: Record<string, StoredOrder>
+  onboardingCompleted: boolean
 }
 
 const cache: Cache = {
   theme: 'auto',
   settings: DEFAULT_SETTINGS,
   orders: {},
+  onboardingCompleted: false,
 }
 
 let hydrated = false
@@ -76,6 +69,7 @@ export function setSettingsInCache(partial: Partial<AppSettings>): void {
     bringApi: { ...cache.settings.bringApi, ...(partial.bringApi ?? {}) },
   }
   void window.electronAPI.store.setSettings(partial)
+  window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT))
 }
 
 export function setOrdersInCache(orders: Record<string, StoredOrder>): void {
@@ -90,6 +84,11 @@ export function clearOrdersInCache(): void {
   window.dispatchEvent(new CustomEvent(ORDERS_CHANGED_EVENT))
 }
 
+export function completeOnboardingInCache(): void {
+  cache.onboardingCompleted = true
+  void window.electronAPI.store.setOnboardingCompleted(true)
+}
+
 export async function hydrateStoreCache(): Promise<void> {
   if (hydrated) return
   hydrated = true
@@ -101,10 +100,12 @@ export async function hydrateStoreCache(): Promise<void> {
   cache.settings = {
     ...DEFAULT_SETTINGS,
     ...remoteSettings,
+    company: { ...DEFAULT_SETTINGS.company, ...(remoteSettings.company ?? {}) },
     quickSelect: remoteSettings.quickSelect ?? DEFAULT_QUICK_SELECT,
     bringApi: remoteSettings.bringApi ?? DEFAULT_SETTINGS.bringApi,
   }
   cache.orders = remote.orders
+  cache.onboardingCompleted = remote.onboardingCompleted
 
   try {
     window.localStorage.setItem('theme', cache.theme)

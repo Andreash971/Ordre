@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Sidebar,
@@ -19,6 +20,9 @@ import {
   Package,
   Settings,
 } from 'lucide-react'
+
+import { getStoredSettings } from '@/lib/settings'
+import { SETTINGS_CHANGED_EVENT } from '@/lib/store-cache'
 
 const Links = [
   {
@@ -49,11 +53,21 @@ export default function AppSidebar() {
     if (isMobile) setOpenMobile(false)
   }
 
+  const [displayName, setDisplayName] = useState(
+    () => getStoredSettings().company.displayName,
+  )
+  useEffect(() => {
+    const handler = () =>
+      setDisplayName(getStoredSettings().company.displayName)
+    window.addEventListener(SETTINGS_CHANGED_EVENT, handler)
+    return () => window.removeEventListener(SETTINGS_CHANGED_EVENT, handler)
+  }, [])
+
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="px-4 py-3">
         <p className="w-48 text-2xl font-semibold font-heading group-data-[collapsible=icon]:hidden">
-          Blomster i Byhaven
+          {displayName}
         </p>
         <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground group-data-[collapsible=icon]:hidden">
           Ordre

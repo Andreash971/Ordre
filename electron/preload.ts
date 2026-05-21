@@ -33,6 +33,8 @@ const api = {
     setOrders: (orders: unknown) =>
       ipcRenderer.invoke('store:setOrders', orders),
     clearOrders: () => ipcRenderer.invoke('store:clearOrders'),
+    setOnboardingCompleted: (completed: boolean) =>
+      ipcRenderer.invoke('store:setOnboardingCompleted', completed),
   },
   printer: {
     list: () => ipcRenderer.invoke('printer:list'),
