@@ -8,8 +8,9 @@
 
 $ErrorActionPreference = 'Stop'
 
-$CN      = if ($env:CERT_CN)      { $env:CERT_CN }      else { 'Andreas Henriksen' }
-$Org     = if ($env:CERT_ORG)     { $env:CERT_ORG }     else { 'Blomster i Byhaven' }
+# Set CERT_CN and CERT_ORG before running for a real cert; defaults are placeholders only.
+$CN      = if ($env:CERT_CN)      { $env:CERT_CN }      else { 'Your Name' }
+$Org     = if ($env:CERT_ORG)     { $env:CERT_ORG }     else { 'Your Organisation' }
 $Country = if ($env:CERT_COUNTRY) { $env:CERT_COUNTRY } else { 'NO' }
 $Years   = if ($env:CERT_YEARS)   { [int]$env:CERT_YEARS } else { 10 }
 

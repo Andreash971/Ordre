@@ -17,8 +17,9 @@ set -euo pipefail
 CERT_DIR="$(cd "$(dirname "$0")/.." && pwd)/certs"
 mkdir -p "$CERT_DIR"
 
-CN="${CERT_CN:-Andreas Henriksen}"
-ORG="${CERT_ORG:-Blomster i Byhaven}"
+# Set CERT_CN and CERT_ORG before running for a real cert; defaults are placeholders only.
+CN="${CERT_CN:-Your Name}"
+ORG="${CERT_ORG:-Your Organisation}"
 COUNTRY="${CERT_COUNTRY:-NO}"
 DAYS="${CERT_DAYS:-3650}"  # ~10 years
 

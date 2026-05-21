@@ -100,8 +100,8 @@ config picks up signing automatically when these env vars are present:
 
 Releases are driven by version tags. CI ([.github/workflows/release.yml](.github/workflows/release.yml))
 runs on `windows-latest` and `macos-14` in parallel, packages the app, and
-pushes artifacts to the self-hosted Nucleus instance at
-`https://update.phenriksen.no/`.
+pushes artifacts to a self-hosted Nucleus instance you control (set
+`NUCLEUS_HOST` to your own update host — see Required GitHub Secrets below).
 
 ```bash
 npm version patch              # bumps package.json, creates v0.1.1 tag
@@ -119,7 +119,7 @@ to restart.
 
 Set these on the repo (Settings → Secrets and variables → Actions):
 
-- `NUCLEUS_HOST` — `https://update.phenriksen.no`
+- `NUCLEUS_HOST` — base URL of your Nucleus deployment (e.g. `https://update.example.com`)
 - `NUCLEUS_APP_ID` — app ID from the Nucleus dashboard
 - `NUCLEUS_CHANNEL_ID` — channel ID (e.g. the `stable` channel)
 - `NUCLEUS_TOKEN` — access token with publish rights to that channel
