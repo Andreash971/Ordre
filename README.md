@@ -16,7 +16,7 @@ Built as an Electron app with a React + TanStack renderer and a SQLite (Drizzle)
 | Database     | SQLite via `better-sqlite3`, schema and migrations with Drizzle ORM |
 | PDF          | `@react-pdf/renderer`                                               |
 | Build / pack | Vite (renderer), `tsc` (main), Electron Forge (installers)          |
-| Updates      | `update-electron-app` against self-hosted Nucleus update server     |
+| Updates      | `update-electron-app` against `update.electronjs.org` (GitHub Releases) |
 
 ## Project layout
 
@@ -67,14 +67,15 @@ Schema lives in [electron/db/schema.ts](electron/db/schema.ts).
 ## Build & package
 
 Packaging and publishing use [Electron Forge](https://www.electronforge.io/).
-Targets are Windows (Squirrel `.exe`) and macOS arm64 (`.zip` for auto-update +
-the underlying `.app`).
+Target is Windows (Squirrel `.exe`). macOS builds were removed pending code
+signing — they can be reintroduced by re-adding `@electron-forge/maker-zip`
+plus the `darwin` matrix entry once Apple Developer ID certs are available.
 
 ```bash
 npm run build                  # vite build + tsc for main → dist/
 npm run package                # produce an unpacked app under out/
-npm run make                   # produce a Squirrel installer (Win) or .zip (Mac) under out/make/
-npm run publish                # make + push to Nucleus (requires env vars below)
+npm run make                   # produce a Squirrel installer under out/make/
+npm run publish                # make + upload a draft release to GitHub
 ```
 
 Forge config: [forge.config.cjs](forge.config.cjs). Build assets (icons, entitlements):
@@ -82,26 +83,22 @@ Forge config: [forge.config.cjs](forge.config.cjs). Build assets (icons, entitle
 
 ### Code signing
 
-Both platforms are **unsigned** until certificates are provisioned. SmartScreen
-(Windows) and Gatekeeper (macOS) warnings are expected for users. The Forge
-config picks up signing automatically when these env vars are present:
+Windows builds are **unsigned** unless a signing cert is provided — SmartScreen
+warnings are expected for users without it. The Forge config picks up signing
+automatically when these env vars are present:
 
-| Variable                      | Used for                                    |
-| ----------------------------- | ------------------------------------------- |
-| `MAC_CSC_LINK`                | Path / URL to macOS `.p12` certificate      |
-| `MAC_CSC_KEY_PASSWORD`        | Password for the `.p12`                     |
-| `APPLE_ID`                    | Apple ID for notarization                   |
-| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization      |
-| `APPLE_TEAM_ID`               | Apple Developer Team ID                     |
-| `WIN_CSC_LINK`                | Path to Windows `.pfx` certificate          |
-| `WIN_CSC_KEY_PASSWORD`        | Password for the `.pfx`                     |
+| Variable               | Used for                           |
+| ---------------------- | ---------------------------------- |
+| `WIN_CSC_LINK`         | Path to Windows `.pfx` certificate |
+| `WIN_CSC_KEY_PASSWORD` | Password for the `.pfx`            |
 
 ### Releases
 
 Releases are driven by version tags. CI ([.github/workflows/release.yml](.github/workflows/release.yml))
-runs on `windows-latest` and `macos-14` in parallel, packages the app, and
-pushes artifacts to a self-hosted Nucleus instance you control (set
-`NUCLEUS_HOST` to your own update host — see Required GitHub Secrets below).
+runs on `windows-latest`, packages the app, and publishes a **draft prerelease**
+on GitHub via `@electron-forge/publisher-github` with the Squirrel `.exe`,
+`.nupkg`, and `RELEASES` files attached. Review the draft on the GitHub
+Releases page and click **Publish** to make it visible to auto-updaters.
 
 ```bash
 npm version patch              # bumps package.json, creates v0.1.1 tag
@@ -110,31 +107,26 @@ git push --follow-tags
 
 ### Auto-updates
 
-Packaged builds poll Nucleus every hour via `update-electron-app`
-(see [electron/main.ts](electron/main.ts)). Squirrel.Windows applies updates
-silently on next launch; Squirrel.Mac downloads in the background and prompts
-to restart.
+Packaged Windows builds poll [update.electronjs.org](https://update.electronjs.org/)
+every hour via `update-electron-app` (see [electron/main.ts](electron/main.ts)).
+The service serves updates directly from the `Andreash971/Ordre` GitHub
+Releases. Squirrel.Windows applies the update silently on next launch.
+
+`update.electronjs.org` requires the repository to be **public**. While the
+repo is private, the update check will 404 (silently logged); installer
+downloads from the Releases page still work.
 
 ### Required GitHub Secrets
 
-Set these on the repo (Settings → Secrets and variables → Actions):
+The publish step uses the workflow's built-in `GITHUB_TOKEN` to create releases
+— no additional secret needed for the publisher itself.
 
-- `NUCLEUS_HOST` — base URL of your Nucleus deployment (e.g. `https://update.example.com`)
-- `NUCLEUS_APP_ID` — app ID from the Nucleus dashboard
-- `NUCLEUS_CHANNEL_ID` — channel ID (e.g. the `stable` channel)
-- `NUCLEUS_TOKEN` — access token with publish rights to that channel
+Optional Windows signing secrets:
 
-Signing secrets (`MAC_CSC_LINK`, `APPLE_ID`, `WIN_CSC_LINK`, …) can be added
-later; the workflow tolerates them being unset.
+- `WIN_CSC_LINK_BASE64` — base64-encoded `.pfx` certificate
+- `WIN_CSC_KEY_PASSWORD` — password for the `.pfx`
 
-### One-time Nucleus setup
-
-On the Nucleus dashboard:
-
-1. Create an app — pick the name and slug used by your Nucleus deployment.
-2. Create a channel (e.g. `stable`).
-3. Generate an access token scoped to publish to that channel.
-4. Copy `appId`, `channelId`, `token`, and the host URL into GitHub Secrets.
+The workflow tolerates them being unset (builds unsigned).
 
 ## Other scripts
 

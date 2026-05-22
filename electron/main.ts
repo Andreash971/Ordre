@@ -1,6 +1,6 @@
 import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
-import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
+import { updateElectronApp } from 'update-electron-app'
 
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
@@ -15,15 +15,9 @@ import {
 
 const isDev = !!process.env.ELECTRON_DEV
 
-const NUCLEUS_APP_SLUG = 'BiB-Ordre'
-const NUCLEUS_CHANNEL_ID = '4703d316c7b60bab0653abdb15e8b60e'
-
-if (!isDev && process.platform !== 'linux') {
+if (!isDev && process.platform === 'win32') {
   updateElectronApp({
-    updateSource: {
-      type: UpdateSourceType.StaticStorage,
-      baseUrl: `https://update.phenriksen.no/${NUCLEUS_APP_SLUG}/${NUCLEUS_CHANNEL_ID}/${process.platform}/${process.arch}`,
-    },
+    repo: 'Andreash971/Ordre',
     updateInterval: '1 hour',
     logger: console,
   })
