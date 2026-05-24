@@ -15,7 +15,8 @@
   },
   "scripts": {
     "dev:renderer": "vite --port 3000",
-    "build:main": "tsc -p electron/tsconfig.json && node -e \"require('fs').mkdirSync('dist/electron',{recursive:true});require('fs').writeFileSync('dist/electron/package.json',JSON.stringify({type:'commonjs'}))\"",
+    "clean:main": "node -e \"require('fs').rmSync('dist/electron',{recursive:true,force:true})\"",
+    "build:main": "npm run clean:main && tsc -p electron/tsconfig.json && node -e \"require('fs').mkdirSync('dist/electron',{recursive:true});require('fs').writeFileSync('dist/electron/package.json',JSON.stringify({type:'commonjs'}))\"",
     "dev": "concurrently -k -n vite,electron -c blue,green \"npm:dev:renderer\" \"wait-on http://localhost:3000 && npm run build:main && cross-env ELECTRON_DEV=1 electron dist/electron/main.js\"",
     "build": "vite build && npm run build:main",
     "package": "npm run build && electron-forge package",
