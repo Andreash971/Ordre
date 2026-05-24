@@ -19,7 +19,21 @@ const pending = new Map<
 
 export function spawnPrinterSidecar() {
   const sidecarPath = path.join(__dirname, '..', 'sidecar', 'printer.js')
-  sidecar = utilityProcess.fork(sidecarPath)
+  sidecar = utilityProcess.fork(sidecarPath, [], { stdio: 'pipe' })
+
+  sidecar.stderr?.on('data', (chunk: Buffer) => {
+    console.error(`[printer-sidecar stderr] ${chunk.toString().trimEnd()}`)
+  })
+
+  sidecar.stdout?.on('data', (chunk: Buffer) => {
+    console.log(`[printer-sidecar stdout] ${chunk.toString().trimEnd()}`)
+  })
+
+  sidecar.on('error', (type, location, report) => {
+    console.error(
+      `[printer-sidecar] fatal ${type} at ${location}\n${report}`,
+    )
+  })
 
   sidecar.on('message', (msg: SidecarMessage) => {
     const handler = pending.get(msg.id)
@@ -30,7 +44,9 @@ export function spawnPrinterSidecar() {
   })
 
   sidecar.on('exit', (code) => {
-    console.log(`[printer-sidecar] exited with code ${code}`)
+    console.log(
+      `[printer-sidecar] exited with code ${code} (path: ${sidecarPath})`,
+    )
     sidecar = null
   })
 }
