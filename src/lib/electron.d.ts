@@ -10,9 +10,10 @@ export interface Printer {
 
 export interface DiscoveredPrinter {
   name: string
-  host: string
-  port: number
-  addresses: string[]
+  host?: string
+  port?: number
+  addresses?: string[]
+  source?: 'mdns' | 'configured' | 'wsd'
 }
 
 declare global {

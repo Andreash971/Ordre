@@ -145,7 +145,7 @@ function OnboardingPage() {
           <CardContent className="flex flex-col gap-6">
             <section className="flex flex-col gap-3">
               <div>
-                <h3 className="text-sm font-medium">Visningsnavn</h3>
+                <h3 className="text-sm font-medium">Tittelinformasjon</h3>
                 <p className="text-xs text-muted-foreground">
                   Vises i sidemenyen og øverst på utskrifter. Vanligvis det
                   korte merkenavnet uten selskapsform.
