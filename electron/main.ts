@@ -1,6 +1,11 @@
 import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
+import started from 'electron-squirrel-startup'
 import { updateElectronApp } from 'update-electron-app'
+
+if (started) {
+  app.quit()
+}
 
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
