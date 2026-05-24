@@ -72,7 +72,7 @@ export function registerPrinterHandlers() {
   ipcMain.handle('printer:list', () => relay({ type: 'list-printers' }))
 
   ipcMain.handle('printer:discover', () =>
-    relay({ type: 'discover-network', timeoutMs: 5000 }),
+    relay({ type: 'discover-network', timeoutMs: 8000 }),
   )
 
   ipcMain.handle('pdf:open', async (_e, rawBytes: unknown) => {
