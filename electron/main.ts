@@ -22,7 +22,7 @@ const isDev = !!process.env.ELECTRON_DEV
 if (!isDev && process.platform === 'win32') {
   updateElectronApp({
     repo: 'Andreash971/Ordre',
-    updateInterval: '5 minutes',
+    updateInterval: '1 hour',
     logger: console,
   })
 }
