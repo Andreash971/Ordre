@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import SectionCard from '#/components/SectionCard'
 import CustomerForm from '#/components/CustomerForm'
@@ -12,6 +13,8 @@ import SectionReview from '#/components/new-order/SectionReview'
 import type { Item } from '#/components/OrderColumns'
 import { Separator } from '@/components/ui/separator'
 import { getLocalDateString } from '#/lib/order-utils'
+import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 import type {
   Customer,
   CustomerFormValues,
@@ -35,7 +38,25 @@ function isSenderFilled(s: CustomerFormValues) {
 export const Route = createFileRoute('/new')({ component: NewOrderPage })
 
 function NewOrderPage() {
+  const queryClient = useQueryClient()
   const [sender, setSender] = React.useState<CustomerFormValues>(EMPTY_SENDER)
+  const saveCustomerMutation = useMutation({
+    mutationFn: async ({
+      values,
+      id,
+    }: {
+      values: CustomerFormValues
+      id: number | null
+    }) => {
+      if (id != null) {
+        await updateCustomer({ data: { id, ...values } })
+      } else {
+        await insertCustomer({ data: values })
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+  })
   const [delivery, setDelivery] = React.useState<DeliveryValues>({
     date: getLocalDateString(),
     time: null,
@@ -108,6 +129,9 @@ function NewOrderPage() {
             showCareof
             defaultValues={sender}
             onValuesChange={setSender}
+            onSubmit={(values, { id }) =>
+              saveCustomerMutation.mutateAsync({ values, id })
+            }
           />
         </SectionCard>
 

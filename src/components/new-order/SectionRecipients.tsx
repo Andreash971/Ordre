@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { nb } from 'date-fns/locale'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarIcon,
   ChevronDown,
@@ -29,6 +30,8 @@ import { cn } from '@/lib/utils'
 
 import CustomerForm from '#/components/CustomerForm'
 import { formatDeliveryDate } from '#/lib/order-utils'
+import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
+import { queryKeys } from '#/lib/query-keys'
 import type {
   Customer,
   CustomerFormValues,
@@ -75,6 +78,28 @@ export default function SectionRecipients({
   defaults,
 }: SectionRecipientsProps) {
   const [expanded, setExpanded] = React.useState<number | null>(0)
+  const queryClient = useQueryClient()
+  const saveCustomerMutation = useMutation({
+    mutationFn: async ({
+      values,
+      id,
+    }: {
+      values: CustomerFormValues
+      id: number | null
+    }) => {
+      if (id != null) {
+        await updateCustomer({ data: { id, ...values } })
+      } else {
+        await insertCustomer({ data: values })
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+  })
+  const saveCustomer = (
+    values: CustomerFormValues,
+    ctx: { id: number | null },
+  ) => saveCustomerMutation.mutateAsync({ values, id: ctx.id })
 
   const addRecipient = () => {
     const nextIndex = recipients.length
@@ -138,6 +163,7 @@ export default function SectionRecipients({
           onExpand={() => setExpanded(expanded === i ? null : i)}
           onChange={(patch) => updateRecipient(i, patch)}
           onRemove={() => removeRecipient(i)}
+          onSaveCustomer={saveCustomer}
           defaults={defaults}
         />
       ))}
@@ -160,6 +186,10 @@ interface RecipientRowProps {
   onExpand: () => void
   onChange: (patch: Partial<Customer>) => void
   onRemove: () => void
+  onSaveCustomer: (
+    values: CustomerFormValues,
+    ctx: { id: number | null },
+  ) => Promise<void>
   defaults: SectionRecipientsProps['defaults']
 }
 
@@ -170,6 +200,7 @@ function RecipientRow({
   onExpand,
   onChange,
   onRemove,
+  onSaveCustomer,
   defaults,
 }: RecipientRowProps) {
   const summaryDate = value.date || defaults.delivery.date
@@ -215,10 +246,12 @@ function RecipientRow({
         <div className="grid grid-cols-[15rem_1fr] grid-rows-[auto_auto] border-t px-4 pb-4 pt-4 gap-4">
           <CustomerForm
             bare
+            formButtons
             size="sm"
             showCareof
             defaultValues={customerDefaults}
             onValuesChange={(v) => onChange(v)}
+            onSubmit={onSaveCustomer}
           />
 
           {/* Overrides */}

@@ -1,6 +1,6 @@
 import { useForm, useStore } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import * as z from 'zod'
 
 import {
@@ -13,6 +13,7 @@ import {
   Save,
   RotateCcw,
   UserCheck,
+  Check,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -58,6 +59,10 @@ interface CustomerFormProps {
   bare?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
+  onSubmit?: (
+    values: CustomerFormValues,
+    ctx: { id: number | null },
+  ) => Promise<void> | void
 }
 
 const formSchema = z.object({
@@ -125,7 +130,9 @@ function fillForm(
     ) => void
   },
   customer: CustomerSuggestion,
+  selectedIdRef: { current: number | null },
 ) {
+  selectedIdRef.current = customer.id ?? null
   form.setFieldValue('name', customer.name)
   form.setFieldValue('phone', customer.phone ?? '')
   form.setFieldValue('company', customer.company ?? '')
@@ -145,8 +152,19 @@ export default function CustomerForm({
   bare = false,
   defaultValues: initialValues,
   onValuesChange,
+  onSubmit,
 }: CustomerFormProps) {
   const formId = useId()
+  const selectedIdRef = useRef<number | null>(null)
+  const [justSaved, setJustSaved] = useState(false)
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current)
+    },
+    [],
+  )
 
   const form = useForm({
     defaultValues: {
@@ -164,15 +182,23 @@ export default function CustomerForm({
     },
     listeners: {
       onChange: ({ formApi }) => {
-        onValuesChange?.(formApi.state.values)
-        if (formApi.state.isValid) {
-          formApi.handleSubmit()
+        if (!formApi.state.values.name) {
+          selectedIdRef.current = null
         }
+        onValuesChange?.(formApi.state.values)
       },
+    },
+    onSubmit: async ({ value }) => {
+      if (!onSubmit) return
+      await onSubmit(value, { id: selectedIdRef.current })
+      setJustSaved(true)
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current)
+      savedTimeoutRef.current = setTimeout(() => setJustSaved(false), 2000)
     },
   })
 
   const postcode = useStore(form.store, (s) => s.values.postcode)
+  const isSubmitting = useStore(form.store, (s) => s.isSubmitting)
 
   const { data: bringLookup } = useQuery({
     queryKey: ['bring-postcode', postcode],
@@ -205,7 +231,7 @@ export default function CustomerForm({
               disabled={disabled}
               autoComplete="name"
               onSearch={(q) => searchCustomers({ data: q })}
-              onSelect={(c) => fillForm(form, c)}
+              onSelect={(c) => fillForm(form, c, selectedIdRef)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
             />
           )}
@@ -222,7 +248,7 @@ export default function CustomerForm({
               disabled={disabled}
               autoComplete="tel"
               onSearch={(q) => searchCustomersByPhone({ data: q })}
-              onSelect={(c) => fillForm(form, c)}
+              onSelect={(c) => fillForm(form, c, selectedIdRef)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
             />
           )}
@@ -238,7 +264,7 @@ export default function CustomerForm({
               disabled={disabled}
               autoComplete="organization"
               onSearch={(q) => searchCustomersByBusiness({ data: q })}
-              onSelect={(c) => fillForm(form, c)}
+              onSelect={(c) => fillForm(form, c, selectedIdRef)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
             />
           )}
@@ -328,9 +354,30 @@ export default function CustomerForm({
         </Button>
       )}
       <TooltipWrapper TooltipText={'Lagre kundens informasjon i systemet'}>
-        <Button type="submit" disabled={disabled}>
-          <Save className="h-4 w-4" />
-          Lagre
+        <Button
+          type="submit"
+          disabled={disabled || isSubmitting}
+          onClick={(e) => {
+            e.preventDefault()
+            form.handleSubmit()
+          }}
+          className={cn(
+            'transition-colors',
+            justSaved &&
+              'bg-green-600 text-white hover:bg-green-600 focus-visible:ring-green-600',
+          )}
+        >
+          {justSaved ? (
+            <>
+              <Check className="h-4 w-4" />
+              Lagret
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Lagre
+            </>
+          )}
         </Button>
       </TooltipWrapper>
     </>

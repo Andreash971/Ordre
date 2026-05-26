@@ -2,11 +2,6 @@ import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
 import { updateElectronApp } from 'update-electron-app'
-
-if (started) {
-  app.quit()
-}
-
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
@@ -18,12 +13,16 @@ import {
   registerPrinterHandlers,
 } from './ipc/printer'
 
+if (started) {
+  app.quit()
+}
+
 const isDev = !!process.env.ELECTRON_DEV
 
 if (!isDev && process.platform === 'win32') {
   updateElectronApp({
     repo: 'Andreash971/Ordre',
-    updateInterval: '1 hour',
+    updateInterval: '2 minutes',
     logger: console,
   })
 }
