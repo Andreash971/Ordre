@@ -32,7 +32,7 @@ function installSecurityHandlers() {
     "default-src 'self'",
     isDev
       ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-      : "script-src 'self' 'wasm-unsafe-eval'",
+      : "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self' https://cdn.jsdelivr.net",
@@ -77,6 +77,7 @@ function createWindow() {
       allowRunningInsecureContent: false,
       experimentalFeatures: false,
       spellcheck: false,
+      devTools: true,
     },
   })
 
@@ -95,7 +96,6 @@ function createWindow() {
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
     void win.loadFile(path.join(__dirname, '../renderer/index.html'))
-    win.webContents.on('devtools-opened', () => win.webContents.closeDevTools())
   }
 }
 
