@@ -18,7 +18,9 @@ module.exports = {
     name: 'Ordre',
     executableName: 'ordre',
     ...(hasIcnsIcon || hasIcoIcon ? { icon: iconBase } : {}),
-    asar: true,
+    asar: {
+      unpack: '**/node_modules/pdf-to-printer/dist/**',
+    },
     extraResource: ['drizzle'],
     ignore: [
       /^\/electron($|\/)/,
