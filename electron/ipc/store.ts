@@ -71,6 +71,7 @@ const partialSettingsSchema = z.object({
   defaultPrinter: z.string().nullable().optional(),
   bringApi: bringApiSchema.partial().optional(),
   specialItems: specialItemsSchema.optional(),
+  autoSaveCustomer: z.boolean().optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -158,6 +159,8 @@ export function registerStoreHandlers() {
           ...(partial.specialItems?.kort ?? {}),
         },
       },
+      autoSaveCustomer:
+        partial.autoSaveCustomer ?? current.autoSaveCustomer ?? false,
     }
     store.set('settings', next)
     return next

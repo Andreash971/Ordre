@@ -35,6 +35,7 @@ interface SectionReviewProps {
   cardValue: string
   instructionsEnabled: boolean
   instructionsValue: string
+  beforeSubmit?: () => Promise<boolean>
 }
 
 function customerFromSender(
@@ -67,6 +68,7 @@ export default function SectionReview({
   cardValue,
   instructionsEnabled,
   instructionsValue,
+  beforeSubmit,
 }: SectionReviewProps) {
   const deliveryInfo = delivery.date ? formatDeliveryDate(delivery.date) : null
   const regularSubtotal = items
@@ -336,6 +338,7 @@ export default function SectionReview({
             senderValues={senderValues}
             deliveryValues={delivery}
             items={items}
+            beforeSubmit={beforeSubmit}
           />
         </div>
         <div className="mt-2 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">

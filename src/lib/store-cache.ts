@@ -37,6 +37,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     apiKey: '',
   },
   specialItems: DEFAULT_SPECIAL_ITEMS,
+  autoSaveCustomer: false,
 }
 
 type Cache = {
@@ -94,6 +95,8 @@ export function setSettingsInCache(partial: Partial<AppSettings>): void {
           },
         }
       : cache.settings.specialItems,
+    autoSaveCustomer:
+      partial.autoSaveCustomer ?? cache.settings.autoSaveCustomer,
   }
   void window.electronAPI.store.setSettings(partial)
   window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT))

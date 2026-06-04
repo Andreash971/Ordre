@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 
 import {
   AlertTriangle,
@@ -48,6 +49,7 @@ import {
   Printer,
   Rows3,
   RotateCcw,
+  Save,
   Settings2,
   X,
   Zap,
@@ -188,6 +190,19 @@ function ClearArchiveButton() {
       </DialogContent>
     </Dialog>
   )
+}
+
+function ToggleAutoSaveCustomer() {
+  const [enabled, setEnabled] = useState<boolean>(
+    () => getStoredSettings().autoSaveCustomer,
+  )
+
+  function handleChange(next: boolean) {
+    setEnabled(next)
+    updateSettings({ autoSaveCustomer: next })
+  }
+
+  return <Switch checked={enabled} onCheckedChange={handleChange} />
 }
 
 function SelectRowsPerPage() {
@@ -559,10 +574,8 @@ function SpecialItemsForm() {
   const dirty =
     items.frakt.name !== stored.frakt.name ||
     items.frakt.price !== stored.frakt.price ||
-    items.leveringstid.name !==
-      stored.leveringstid.name ||
-    items.leveringstid.price !==
-      stored.leveringstid.price ||
+    items.leveringstid.name !== stored.leveringstid.name ||
+    items.leveringstid.price !== stored.leveringstid.price ||
     items.kort.name !== stored.kort.name ||
     items.kort.price !== stored.kort.price
 
@@ -784,6 +797,22 @@ function SettingsPage() {
           <ItemFooter>
             <QuickSelectForm />
           </ItemFooter>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
+            <Save />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Lagre kunde automatisk</ItemTitle>
+            <ItemDescription>
+              Skru på for å alltid lagre/oppdatere kundeinformasjon automatisk
+              når en ordre sendes til utskrift/PDF.
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <ToggleAutoSaveCustomer />
+          </ItemActions>
         </Item>
 
         <Item variant="outline" className="dark:bg-card gray:bg-card">

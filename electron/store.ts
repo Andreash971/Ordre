@@ -56,6 +56,7 @@ export type AppSettings = {
   defaultPrinter: string | null
   bringApi: BringApiCredentials
   specialItems: SpecialItemsSettings
+  autoSaveCustomer: boolean
 }
 
 export type StoredOrder = {
@@ -92,6 +93,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     apiKey: '',
   },
   specialItems: DEFAULT_SPECIAL_ITEMS,
+  autoSaveCustomer: false,
 }
 
 const DEFAULTS: StoreSchema = {

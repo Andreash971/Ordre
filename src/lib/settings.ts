@@ -54,6 +54,7 @@ export type AppSettings = {
   defaultPrinter: string | null
   bringApi: BringApiCredentials
   specialItems: SpecialItemsSettings
+  autoSaveCustomer: boolean
 }
 
 export function getStoredSettings(): AppSettings {
