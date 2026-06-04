@@ -25,6 +25,27 @@ export type BringApiCredentials = {
   apiKey: string
 }
 
+export type SpecialItemKey = 'frakt' | 'leveringstid' | 'kort'
+
+export type SpecialItem = {
+  name: string
+  price: number
+}
+
+export type SpecialItemsSettings = Record<SpecialItemKey, SpecialItem>
+
+export const DEFAULT_SPECIAL_ITEMS: SpecialItemsSettings = {
+  frakt: { name: 'Frakt', price: 100 },
+  leveringstid: { name: 'Leveringstid', price: 100 },
+  kort: { name: 'Kort', price: 25 },
+}
+
+export const SPECIAL_ITEM_KEYS: readonly SpecialItemKey[] = [
+  'frakt',
+  'leveringstid',
+  'kort',
+]
+
 export type AppSettings = {
   archiveRetention: RetentionOption
   rowsPerPage: PageSizeOption
@@ -32,6 +53,7 @@ export type AppSettings = {
   quickSelect: QuickSelectSettings
   defaultPrinter: string | null
   bringApi: BringApiCredentials
+  specialItems: SpecialItemsSettings
 }
 
 export function getStoredSettings(): AppSettings {
@@ -40,6 +62,14 @@ export function getStoredSettings(): AppSettings {
 
 export function updateSettings(partial: Partial<AppSettings>): void {
   setSettingsInCache(partial)
+}
+
+export function getSpecialItem(key: SpecialItemKey): SpecialItem {
+  return getStoredSettings().specialItems[key]
+}
+
+export function resetSpecialItems(): void {
+  setSettingsInCache({ specialItems: DEFAULT_SPECIAL_ITEMS })
 }
 
 export function getOnboardingCompleted(): boolean {

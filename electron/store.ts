@@ -33,6 +33,21 @@ export type BringApiCredentials = {
   apiKey: string
 }
 
+export type SpecialItemKey = 'frakt' | 'leveringstid' | 'kort'
+
+export type SpecialItem = {
+  name: string
+  price: number
+}
+
+export type SpecialItemsSettings = Record<SpecialItemKey, SpecialItem>
+
+export const DEFAULT_SPECIAL_ITEMS: SpecialItemsSettings = {
+  frakt: { name: 'Frakt', price: 100 },
+  leveringstid: { name: 'Leveringstid', price: 100 },
+  kort: { name: 'Kort', price: 25 },
+}
+
 export type AppSettings = {
   archiveRetention: RetentionOption
   rowsPerPage: PageSizeOption
@@ -40,6 +55,7 @@ export type AppSettings = {
   quickSelect: QuickSelectSettings
   defaultPrinter: string | null
   bringApi: BringApiCredentials
+  specialItems: SpecialItemsSettings
 }
 
 export type StoredOrder = {
@@ -75,6 +91,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     uid: '',
     apiKey: '',
   },
+  specialItems: DEFAULT_SPECIAL_ITEMS,
 }
 
 const DEFAULTS: StoreSchema = {

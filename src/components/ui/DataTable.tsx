@@ -70,6 +70,7 @@ interface DataTableProps<TData, TValue> {
   pageSize?: number
   rowClassName?: (row: Row<TData>) => string | undefined
   onRowClick?: (row: Row<TData>) => void
+  meta?: Record<string, unknown>
 }
 
 export function DataTable<TData, TValue>({
@@ -83,6 +84,7 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   rowClassName,
   onRowClick,
+  meta: extraMeta,
 }: DataTableProps<TData, TValue>) {
   const [pageIndex, setPageIndex] = useState(0)
   const [sheetRowId, setSheetRowId] = useState<string | null>(null)
@@ -128,6 +130,7 @@ export function DataTable<TData, TValue>({
           prev.map((row, i) => (i === rowIndex ? { ...row, ...values } : row)),
         )
       },
+      ...(extraMeta ?? {}),
     },
   })
 

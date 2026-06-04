@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -19,6 +21,8 @@ import AddProductForm from '#/components/AddProductForm'
 import type { AddProductFormValues } from '#/components/AddProductForm'
 import { insertProduct, updateProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
+import type { SpecialItemKey } from '#/lib/settings'
+import { TOGGLE_DRIVEN_SPECIAL_KEYS } from '#/lib/special-items'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -29,11 +33,19 @@ declare module '@tanstack/react-table' {
     ) => void
     removeRow: (rowIndex: number) => void
     updateRow: (rowIndex: number, values: Record<string, unknown>) => void
+    removeSpecial?: (key: SpecialItemKey) => void
   }
 }
 
+const specialItemKeySchema = z.union([
+  z.literal('frakt'),
+  z.literal('leveringstid'),
+  z.literal('kort'),
+])
+
 const itemSchema = z.object({
   productId: z.number().optional(),
+  specialKey: specialItemKeySchema.optional(),
   name: z.string(),
   description: z.string().default(''),
   category: z.string().optional(),
@@ -46,25 +58,19 @@ const itemSchema = z.object({
 
 export type Item = z.infer<typeof itemSchema>
 
-const PROTECTED_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
-
 function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const { name, description } = row.original
-  const isProtected = PROTECTED_ITEMS.has(name)
-  const isNew = !isProtected && row.original.productId == null
+  const isSpecial = row.original.specialKey != null
+  const isNew = !isSpecial && row.original.productId == null
   const [isEditing, setIsEditing] = useState(isNew)
   const isMobile = useIsMobile()
 
-  if (!isEditing || isProtected) {
+  if (!isEditing) {
     return (
       <div
         className="flex flex-col cursor-default select-none min-w-0"
-        onClick={
-          !isProtected && isMobile ? () => setIsEditing(true) : undefined
-        }
-        onDoubleClick={
-          !isProtected && !isMobile ? () => setIsEditing(true) : undefined
-        }
+        onClick={isMobile ? () => setIsEditing(true) : undefined}
+        onDoubleClick={!isMobile ? () => setIsEditing(true) : undefined}
       >
         {name ? (
           <span className="font-medium truncate">{name}</span>
@@ -109,26 +115,28 @@ function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
         }}
         className="font-medium"
       />
-      <Textarea
-        value={description}
-        rows={2}
-        placeholder="Beskrivelse (valgfri)"
-        onChange={(e) =>
-          table.options.meta?.updateData(
-            row.index,
-            'description',
-            e.target.value,
-          )
-        }
-        className="text-xs min-h-0"
-      />
+      {!isSpecial ? (
+        <Textarea
+          value={description}
+          rows={2}
+          placeholder="Beskrivelse (valgfri)"
+          onChange={(e) =>
+            table.options.meta?.updateData(
+              row.index,
+              'description',
+              e.target.value,
+            )
+          }
+          className="text-xs min-h-0"
+        />
+      ) : null}
     </div>
   )
 }
 
 function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
-  const isProtected = PROTECTED_ITEMS.has(row.original.name)
-  const isNew = !isProtected && row.original.productId == null
+  const isSpecial = row.original.specialKey != null
+  const isNew = !isSpecial && row.original.productId == null
   const [isEditing, setIsEditing] = useState(isNew)
   const isMobile = useIsMobile()
   const quantity = row.original.quantity
@@ -201,8 +209,8 @@ const nokFormatter = new Intl.NumberFormat('no-NB', {
 })
 
 function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
-  const isProtected = PROTECTED_ITEMS.has(row.original.name)
-  const isNew = !isProtected && row.original.productId == null
+  const isSpecial = row.original.specialKey != null
+  const isNew = !isSpecial && row.original.productId == null
   const [isEditing, setIsEditing] = useState(isNew)
   const isMobile = useIsMobile()
   const price = row.original.price
@@ -284,10 +292,10 @@ export const columns: ColumnDef<Item>[] = [
 function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const queryClient = useQueryClient()
   const item = row.original
-  const isProtected = PROTECTED_ITEMS.has(item.name)
-  const isNew = !isProtected && item.productId == null
+  const isSpecial = item.specialKey != null
+  const isNew = !isSpecial && item.productId == null
   const canSaveExisting =
-    !isProtected && item.productId != null && item.originalName != null
+    !isSpecial && item.productId != null && item.originalName != null
 
   const isDirty =
     canSaveExisting &&
@@ -296,6 +304,7 @@ function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
       item.price !== item.originalPrice)
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false)
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -338,7 +347,36 @@ function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
     },
   })
 
-  if (isProtected) return <div className="text-right w-8" />
+  const needsRemoveConfirm =
+    item.specialKey != null && TOGGLE_DRIVEN_SPECIAL_KEYS.has(item.specialKey)
+
+  const handleRemoveClick = () => {
+    if (needsRemoveConfirm) {
+      setConfirmRemoveOpen(true)
+      return
+    }
+    if (item.specialKey && table.options.meta?.removeSpecial) {
+      table.options.meta.removeSpecial(item.specialKey)
+      return
+    }
+    table.options.meta?.removeRow(row.index)
+  }
+
+  const handleConfirmRemove = () => {
+    if (item.specialKey && table.options.meta?.removeSpecial) {
+      table.options.meta.removeSpecial(item.specialKey)
+    } else {
+      table.options.meta?.removeRow(row.index)
+    }
+    setConfirmRemoveOpen(false)
+  }
+
+  const removeWarningCopy =
+    item.specialKey === 'kort'
+      ? 'Dette fjerner fullstendig kort fra denne ordren, om du har lagt inn korttekst vil dette bli slettet. Om du kun vil utelate kostnaden, endre prisen til 0 kr istedenfor.'
+      : item.specialKey === 'leveringstid'
+        ? 'Dette fjerner leveringstiden fra denne ordren. Om du kun vil utelate kostnaden, endre prisen til 0 kr istedenfor.'
+        : ''
 
   return (
     <div className="flex justify-end gap-1">
@@ -402,11 +440,29 @@ function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
         variant="ghost"
         size="icon-sm"
         disabled={updateMutation.isPending || insertMutation.isPending}
-        onClick={() => table.options.meta?.removeRow(row.index)}
+        onClick={handleRemoveClick}
       >
         <Trash2 className="h-4 w-4" />
         <span className="sr-only">Fjern rad</span>
       </Button>
+      {needsRemoveConfirm ? (
+        <Dialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Fjern {item.name}?</DialogTitle>
+              <DialogDescription>{removeWarningCopy}</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost">Avbryt</Button>
+              </DialogClose>
+              <Button variant="destructive" onClick={handleConfirmRemove}>
+                Fjern
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 import { getStoredOrders } from '#/lib/order-utils'
 import type { StoredOrder } from '#/lib/order-utils'
+import { isSpecial } from '#/lib/special-items'
 import { Button } from '@/components/ui/button'
 import {
   InputGroup,
@@ -32,14 +33,12 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   maximumFractionDigits: 2,
 })
 
-const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
-
 function orderSum(order: StoredOrder) {
   return order.data.orderContent.reduce((s, l) => s + l.total, 0)
 }
 
 function orderVisibleItemCount(order: StoredOrder) {
-  return order.data.orderContent.filter((l) => !SPECIAL_ITEMS.has(l.product))
+  return order.data.orderContent.filter((l) => !isSpecial({ name: l.product }))
     .length
 }
 

@@ -1,6 +1,7 @@
 import type { Item } from '#/components/OrderColumns'
 import type { OrderData } from '#/components/pdf/order'
 import { getRetentionMs, getStoredSettings } from '#/lib/settings'
+import { getSpecialKeyForItem } from '#/lib/special-items'
 import {
   clearOrdersInCache,
   getCache,
@@ -99,9 +100,14 @@ export function buildOrderData(
     },
     orderContent: items
       .filter(
-        (i) => customer.time !== null || i.name !== 'Frakt Tidspunktstillegg',
+        (i) =>
+          customer.time !== null ||
+          getSpecialKeyForItem(i) !== 'leveringstid',
       )
-      .filter((i) => customer.cardmsg.trim() !== '' || i.name !== 'Kort')
+      .filter(
+        (i) =>
+          customer.cardmsg.trim() !== '' || getSpecialKeyForItem(i) !== 'kort',
+      )
       .map((item) => ({
         product: item.name,
         description: item.description,

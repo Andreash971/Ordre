@@ -20,6 +20,9 @@ import type {
   CustomerFormValues,
   DeliveryValues,
 } from '#/lib/order-utils'
+import { getStoredSettings } from '#/lib/settings'
+import type { SpecialItemKey } from '#/lib/settings'
+import { isSpecial } from '#/lib/special-items'
 
 const EMPTY_SENDER: CustomerFormValues = {
   name: '',
@@ -68,47 +71,83 @@ function NewOrderPage() {
   const [instructionsEnabled, setInstructionsEnabled] = React.useState(false)
   const [instructionsValue, setInstructionsValue] = React.useState('')
 
-  const [items, setItems] = React.useState<Item[]>([
-    { name: 'Frakt', description: '', price: 100, quantity: 1 },
-  ])
+  const [items, setItems] = React.useState<Item[]>(() => {
+    const { frakt } = getStoredSettings().specialItems
+    return [
+      {
+        specialKey: 'frakt',
+        name: frakt.name,
+        description: '',
+        price: frakt.price,
+        quantity: 1,
+      },
+    ]
+  })
   const [recipients, setRecipients] = React.useState<Customer[]>([])
 
   // Sync extras rows with toggles
   React.useEffect(() => {
-    setItems((prev) =>
-      showTime
-        ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
-          ? prev
-          : [
-              ...prev,
-              {
-                name: 'Frakt Tidspunktstillegg',
-                description: '',
-                price: 100,
-                quantity: 1,
-              },
-            ]
-        : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
-    )
+    setItems((prev) => {
+      if (showTime) {
+        if (prev.some((i) => i.specialKey === 'leveringstid')) {
+          return prev
+        }
+        const { leveringstid } = getStoredSettings().specialItems
+        return [
+          ...prev,
+          {
+            specialKey: 'leveringstid',
+            name: leveringstid.name,
+            description: '',
+            price: leveringstid.price,
+            quantity: 1,
+          },
+        ]
+      }
+      return prev.filter((i) => i.specialKey !== 'leveringstid')
+    })
   }, [showTime])
 
   React.useEffect(() => {
-    setItems((prev) =>
-      cardEnabled
-        ? prev.some((i) => i.name === 'Kort')
-          ? prev
-          : [...prev, { name: 'Kort', description: '', price: 25, quantity: 1 }]
-        : prev.filter((i) => i.name !== 'Kort'),
-    )
+    setItems((prev) => {
+      if (cardEnabled) {
+        if (prev.some((i) => i.specialKey === 'kort')) return prev
+        const { kort } = getStoredSettings().specialItems
+        return [
+          ...prev,
+          {
+            specialKey: 'kort',
+            name: kort.name,
+            description: '',
+            price: kort.price,
+            quantity: 1,
+          },
+        ]
+      }
+      return prev.filter((i) => i.specialKey !== 'kort')
+    })
   }, [cardEnabled])
+
+  const handleSpecialPicked = React.useCallback((key: SpecialItemKey) => {
+    if (key === 'leveringstid') setShowTime(true)
+    if (key === 'kort') setCardEnabled(true)
+  }, [])
+
+  const handleSpecialRemoved = React.useCallback((key: SpecialItemKey) => {
+    if (key === 'leveringstid') {
+      setShowTime(false)
+      return
+    }
+    if (key === 'kort') {
+      setCardEnabled(false)
+      return
+    }
+    setItems((prev) => prev.filter((i) => i.specialKey !== key))
+  }, [])
 
   const senderFilled = isSenderFilled(sender)
   const recipientCount = recipients.length || (senderFilled ? 1 : 0)
-  const canShowReview =
-    senderFilled &&
-    items.some(
-      (i) => !['Frakt', 'Frakt Tidspunktstillegg', 'Kort'].includes(i.name),
-    )
+  const canShowReview = senderFilled && items.some((i) => !isSpecial(i))
 
   return (
     <main className="rise-in page-wrap flex flex-col gap-6 px-4 pb-12 pt-6">
@@ -158,7 +197,12 @@ function NewOrderPage() {
           title="Ordreinnhold"
           subtitle="Legg til varer i ordren"
         >
-          <SectionItems items={items} setItems={setItems} />
+          <SectionItems
+            items={items}
+            setItems={setItems}
+            onSpecialPicked={handleSpecialPicked}
+            onSpecialRemoved={handleSpecialRemoved}
+          />
         </SectionCard>
       </div>
 
