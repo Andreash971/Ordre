@@ -64,8 +64,9 @@ export default function UpdateCard() {
                 : 'Oppdatering klar'}
             </DialogTitle>
             <DialogDescription>
-              En ny versjon er lastet ned. Start appen på nytt for å fullføre
-              oppdateringen.
+              {pending.downloadUrl
+                ? 'En betaversjon er tilgjengelig. Last ned installasjonsfilen fra GitHub og kjør den for å installere.'
+                : 'En ny versjon er lastet ned. Start appen på nytt for å fullføre oppdateringen.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -90,9 +91,22 @@ export default function UpdateCard() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Senere
             </Button>
-            <Button onClick={() => void window.electronAPI.update.install()}>
-              Start på nytt
-            </Button>
+            {pending.downloadUrl ? (
+              <Button
+                onClick={() => {
+                  void window.electronAPI.shell.openExternal(
+                    pending.downloadUrl!,
+                  )
+                  setOpen(false)
+                }}
+              >
+                Last ned
+              </Button>
+            ) : (
+              <Button onClick={() => void window.electronAPI.update.install()}>
+                Start på nytt
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

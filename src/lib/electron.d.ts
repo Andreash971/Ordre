@@ -19,6 +19,7 @@ export interface DiscoveredPrinter {
 export interface PendingUpdate {
   version: string
   changelog: string
+  downloadUrl?: string
 }
 
 declare global {
@@ -69,6 +70,9 @@ declare global {
         getPending: () => Promise<PendingUpdate | null>
         install: () => Promise<void>
         onAvailable: (cb: (info: PendingUpdate) => void) => () => void
+      }
+      shell: {
+        openExternal: (url: string) => Promise<void>
       }
     }
   }

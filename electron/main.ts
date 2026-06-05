@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
 import { initUpdater, registerUpdateHandlers } from './updater'
@@ -103,6 +103,9 @@ app.whenReady().then(() => {
   registerStoreHandlers()
   registerPrinterHandlers()
   registerUpdateHandlers()
+  ipcMain.handle('shell:openExternal', (_e, url: string) =>
+    shell.openExternal(url),
+  )
   spawnPrinterSidecar()
 
   installSecurityHandlers()

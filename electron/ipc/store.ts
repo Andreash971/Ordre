@@ -72,6 +72,7 @@ const partialSettingsSchema = z.object({
   bringApi: bringApiSchema.partial().optional(),
   specialItems: specialItemsSchema.optional(),
   autoSaveCustomer: z.boolean().optional(),
+  betaChannel: z.boolean().optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -161,6 +162,7 @@ export function registerStoreHandlers() {
       },
       autoSaveCustomer:
         partial.autoSaveCustomer ?? current.autoSaveCustomer ?? false,
+      betaChannel: partial.betaChannel ?? current.betaChannel ?? false,
     }
     store.set('settings', next)
     return next

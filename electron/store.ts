@@ -57,6 +57,7 @@ export type AppSettings = {
   bringApi: BringApiCredentials
   specialItems: SpecialItemsSettings
   autoSaveCustomer: boolean
+  betaChannel: boolean
 }
 
 export type StoredOrder = {
@@ -94,6 +95,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   specialItems: DEFAULT_SPECIAL_ITEMS,
   autoSaveCustomer: false,
+  betaChannel: false,
 }
 
 const DEFAULTS: StoreSchema = {

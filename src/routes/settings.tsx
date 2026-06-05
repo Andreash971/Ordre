@@ -44,6 +44,7 @@ import {
   Clock,
   Eye,
   EyeOff,
+  FlaskConical,
   Palette,
   PackagePlus,
   Printer,
@@ -200,6 +201,19 @@ function ToggleAutoSaveCustomer() {
   function handleChange(next: boolean) {
     setEnabled(next)
     updateSettings({ autoSaveCustomer: next })
+  }
+
+  return <Switch checked={enabled} onCheckedChange={handleChange} />
+}
+
+function ToggleBetaChannel() {
+  const [enabled, setEnabled] = useState<boolean>(
+    () => getStoredSettings().betaChannel,
+  )
+
+  function handleChange(next: boolean) {
+    setEnabled(next)
+    updateSettings({ betaChannel: next })
   }
 
   return <Switch checked={enabled} onCheckedChange={handleChange} />
@@ -934,6 +948,22 @@ function SettingsPage() {
                 her med mindre du vet hva du gjør.
               </p>
             </div>
+
+            <Item variant="outline" className="dark:bg-card gray:bg-card">
+              <ItemMedia variant="icon">
+                <FlaskConical />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>Betaversjoner</ItemTitle>
+                <ItemDescription>
+                  Motta varsler om kommende beta-oppdateringer før de er
+                  offisielt utgitt.
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <ToggleBetaChannel />
+              </ItemActions>
+            </Item>
 
             <Item variant="outline" className="dark:bg-card gray:bg-card">
               <ItemMedia variant="icon">

@@ -56,6 +56,10 @@ const api = {
       return () => ipcRenderer.removeListener('update:available', listener)
     },
   },
+  shell: {
+    openExternal: (url: string) =>
+      ipcRenderer.invoke('shell:openExternal', url),
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

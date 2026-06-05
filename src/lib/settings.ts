@@ -55,6 +55,7 @@ export type AppSettings = {
   bringApi: BringApiCredentials
   specialItems: SpecialItemsSettings
   autoSaveCustomer: boolean
+  betaChannel: boolean
 }
 
 export function getStoredSettings(): AppSettings {
