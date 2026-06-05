@@ -16,6 +16,11 @@ export interface DiscoveredPrinter {
   source?: 'mdns' | 'configured' | 'wsd'
 }
 
+export interface PendingUpdate {
+  version: string
+  changelog: string
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -59,6 +64,11 @@ declare global {
       }
       pdf: {
         open: (pdfBytes: ArrayBuffer) => Promise<string>
+      }
+      update: {
+        getPending: () => Promise<PendingUpdate | null>
+        install: () => Promise<void>
+        onAvailable: (cb: (info: PendingUpdate) => void) => () => void
       }
     }
   }

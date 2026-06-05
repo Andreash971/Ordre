@@ -23,6 +23,7 @@ import {
 
 import { getStoredSettings } from '@/lib/settings'
 import { SETTINGS_CHANGED_EVENT } from '@/lib/store-cache'
+import UpdateCard from '@/components/UpdateCard'
 
 const Links = [
   {
@@ -127,6 +128,7 @@ export default function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="px-2 py-2">
+        <UpdateCard />
         <SidebarMenuButton
           asChild
           size="lg"

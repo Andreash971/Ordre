@@ -1,7 +1,7 @@
 import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
-import { updateElectronApp } from 'update-electron-app'
+import { initUpdater, registerUpdateHandlers } from './updater'
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
@@ -20,11 +20,7 @@ if (started) {
 const isDev = !!process.env.ELECTRON_DEV
 
 if (!isDev && process.platform === 'win32') {
-  updateElectronApp({
-    repo: 'Andreash971/Ordre',
-    updateInterval: '1 hour',
-    logger: console,
-  })
+  initUpdater()
 }
 
 function installSecurityHandlers() {
@@ -106,6 +102,7 @@ app.whenReady().then(() => {
   registerBringHandlers()
   registerStoreHandlers()
   registerPrinterHandlers()
+  registerUpdateHandlers()
   spawnPrinterSidecar()
 
   installSecurityHandlers()

@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { PendingUpdate } from './updater'
 
 const api = {
   customers: {
@@ -45,6 +46,15 @@ const api = {
   pdf: {
     open: (pdfBytes: ArrayBuffer): Promise<string> =>
       ipcRenderer.invoke('pdf:open', pdfBytes),
+  },
+  update: {
+    getPending: () => ipcRenderer.invoke('update:getPending'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onAvailable: (cb: (info: PendingUpdate) => void) => {
+      const listener = (_e: unknown, info: PendingUpdate) => cb(info)
+      ipcRenderer.on('update:available', listener)
+      return () => ipcRenderer.removeListener('update:available', listener)
+    },
   },
 }
 
