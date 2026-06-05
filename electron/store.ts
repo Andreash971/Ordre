@@ -58,6 +58,7 @@ export type AppSettings = {
   specialItems: SpecialItemsSettings
   autoSaveCustomer: boolean
   betaChannel: boolean
+  deliveryTimePresets: [string, string, string, string]
 }
 
 export type StoredOrder = {
@@ -96,6 +97,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   specialItems: DEFAULT_SPECIAL_ITEMS,
   autoSaveCustomer: false,
   betaChannel: false,
+  deliveryTimePresets: ['11:00', '12:00', '14:00', '17:00'],
 }
 
 const DEFAULTS: StoreSchema = {

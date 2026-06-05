@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   specialItems: DEFAULT_SPECIAL_ITEMS,
   autoSaveCustomer: false,
   betaChannel: false,
+  deliveryTimePresets: ['11:00', '12:00', '14:00', '15:00'],
 }
 
 type Cache = {
@@ -99,6 +100,8 @@ export function setSettingsInCache(partial: Partial<AppSettings>): void {
     autoSaveCustomer:
       partial.autoSaveCustomer ?? cache.settings.autoSaveCustomer,
     betaChannel: partial.betaChannel ?? cache.settings.betaChannel,
+    deliveryTimePresets:
+      partial.deliveryTimePresets ?? cache.settings.deliveryTimePresets,
   }
   void window.electronAPI.store.setSettings(partial)
   window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT))
@@ -145,9 +148,11 @@ export async function hydrateStoreCache(): Promise<void> {
         // Migrate values previously stored under the old `fraktTidspunktstillegg` key.
         // Remove on or after 2026-09-28 — by then any user who has launched the app
         // since the rename will have re-persisted under the new key.
-        ...((remoteSettings.specialItems as Record<string, unknown> | undefined)
-          ?.fraktTidspunktstillegg as Partial<{ name: string; price: number }>
-          | undefined ?? {}),
+        ...(((
+          remoteSettings.specialItems as Record<string, unknown> | undefined
+        )?.fraktTidspunktstillegg as
+          | Partial<{ name: string; price: number }>
+          | undefined) ?? {}),
         ...(remoteSettings.specialItems?.leveringstid ?? {}),
       },
       kort: {

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
 import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
+import { getStoredSettings } from '#/lib/settings'
 import DeliverySummary from '#/components/new-order/DeliverySummary'
 
 interface SectionDeliveryProps {
@@ -20,8 +21,6 @@ interface SectionDeliveryProps {
   onTimeChange: (time: string | null) => void
   onShowTimeChange: (show: boolean) => void
 }
-
-const TIME_PRESETS = ['11:00', '12:00', '14:00', '17:00']
 
 function toIso(d: Date) {
   const y = d.getFullYear()
@@ -51,6 +50,7 @@ export default function SectionDelivery({
   onTimeChange,
   onShowTimeChange,
 }: SectionDeliveryProps) {
+  const TIME_PRESETS = getStoredSettings().deliveryTimePresets
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 

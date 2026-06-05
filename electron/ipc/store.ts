@@ -73,6 +73,7 @@ const partialSettingsSchema = z.object({
   specialItems: specialItemsSchema.optional(),
   autoSaveCustomer: z.boolean().optional(),
   betaChannel: z.boolean().optional(),
+  deliveryTimePresets: z.tuple([z.string(), z.string(), z.string(), z.string()]).optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -163,6 +164,8 @@ export function registerStoreHandlers() {
       autoSaveCustomer:
         partial.autoSaveCustomer ?? current.autoSaveCustomer ?? false,
       betaChannel: partial.betaChannel ?? current.betaChannel ?? false,
+      deliveryTimePresets:
+        partial.deliveryTimePresets ?? current.deliveryTimePresets ?? ['11:00', '12:00', '14:00', '17:00'],
     }
     store.set('settings', next)
     return next

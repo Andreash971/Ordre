@@ -56,6 +56,7 @@ export type AppSettings = {
   specialItems: SpecialItemsSettings
   autoSaveCustomer: boolean
   betaChannel: boolean
+  deliveryTimePresets: [string, string, string, string]
 }
 
 export function getStoredSettings(): AppSettings {

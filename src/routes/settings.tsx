@@ -33,6 +33,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { TimePicker } from '@/components/ui/time-picker'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 
@@ -482,6 +483,34 @@ function QuickSelectList({
   )
 }
 
+function DeliveryTimePresetsForm() {
+  const [presets, setPresets] = useState<[string, string, string, string]>(
+    () => getStoredSettings().deliveryTimePresets,
+  )
+
+  function handleChange(index: number, value: string) {
+    const next = [...presets] as [string, string, string, string]
+    next[index] = value
+    setPresets(next)
+    updateSettings({ deliveryTimePresets: next })
+  }
+
+  return (
+    <div className="flex gap-2 w-full pt-1">
+      {presets.map((value, i) => (
+        <TimePicker
+          key={i}
+          value={value}
+          onChange={(v) => {
+            if (v !== null) handleChange(i, v)
+          }}
+          className="flex-1"
+        />
+      ))}
+    </div>
+  )
+}
+
 function QuickSelectForm() {
   const [quickSelect, setQuickSelect] = useState<QuickSelectSettings>(
     () => getStoredSettings().quickSelect,
@@ -570,7 +599,7 @@ function SpecialItemsForm() {
     setSaved(false)
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     updateSettings({ specialItems: items })
     setStored(items)
@@ -810,6 +839,21 @@ function SettingsPage() {
           </ItemContent>
           <ItemFooter>
             <QuickSelectForm />
+          </ItemFooter>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
+            <Clock />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Leveringstidspunkter</ItemTitle>
+            <ItemDescription>
+              Hurtigvalg for leveringstid ved ny ordre.
+            </ItemDescription>
+          </ItemContent>
+          <ItemFooter>
+            <DeliveryTimePresetsForm />
           </ItemFooter>
         </Item>
 
