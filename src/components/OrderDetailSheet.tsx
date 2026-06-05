@@ -1,3 +1,6 @@
+import * as React from 'react'
+import { Trash2 } from 'lucide-react'
+
 import type { StoredOrder } from '#/lib/order-utils'
 import {
   Sheet,
@@ -7,6 +10,16 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import OpenOrderButton from '@/components/ui/open-order-button'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -23,8 +36,15 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   maximumFractionDigits: 2,
 })
 
-export function OrderDetail({ order }: { order: StoredOrder }) {
+export function OrderDetail({
+  order,
+  onDelete,
+}: {
+  order: StoredOrder
+  onDelete?: () => void
+}) {
   const { data } = order
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
   const items = data.orderContent
   const sum = items.reduce((s, l) => s + l.total, 0)
   const hasCard = Boolean(data.card.cardText)
@@ -170,10 +190,51 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
             dateStyle: 'medium',
           })}
         </div>
-        <div className="flex gap-2 self-end">
+        <div className="flex items-center justify-between gap-2">
+          {onDelete ? (
+            <Button
+              type="button"
+              variant="destructive"
+              size="lg"
+              onClick={() => setConfirmDeleteOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Slett
+            </Button>
+          ) : (
+            <div />
+          )}
           <OpenOrderButton storedOrder={order} />
         </div>
       </div>
+
+      {onDelete ? (
+        <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Slett ordre?</DialogTitle>
+              <DialogDescription>
+                Er du sikker på at du vil slette denne ordren? Den vil bli
+                slettet permanent og kan ikke gjenopprettes.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost">Avbryt</Button>
+              </DialogClose>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setConfirmDeleteOpen(false)
+                  onDelete()
+                }}
+              >
+                Slett
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   )
 }
@@ -181,14 +242,16 @@ export function OrderDetail({ order }: { order: StoredOrder }) {
 export function OrderDetailSheet({
   order,
   onOpenChange,
+  onDelete,
 }: {
   order: StoredOrder | null
   onOpenChange: (open: boolean) => void
+  onDelete?: () => void
 }) {
   return (
     <Sheet open={order !== null} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-        {order ? <OrderDetail order={order} /> : null}
+        {order ? <OrderDetail order={order} onDelete={onDelete} /> : null}
       </SheetContent>
     </Sheet>
   )

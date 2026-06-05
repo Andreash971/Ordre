@@ -3,7 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, Eye, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { getStoredOrders } from '#/lib/order-utils'
+import { deleteStoredOrder, getStoredOrders } from '#/lib/order-utils'
 import type { StoredOrder } from '#/lib/order-utils'
 import { isSpecial } from '#/lib/special-items'
 import { Button } from '@/components/ui/button'
@@ -158,6 +158,12 @@ function ArchivePage() {
 
   const columns = React.useMemo(() => buildColumns(setOpen), [])
 
+  function handleDelete(order: StoredOrder) {
+    deleteStoredOrder(order.key)
+    setOrders((prev) => prev.filter((o) => o.key !== order.key))
+    setOpen(null)
+  }
+
   return (
     <main className="rise-in page-wrap flex flex-col gap-4 px-4 pb-8 pt-6">
       <div className="flex flex-col gap-1">
@@ -221,7 +227,9 @@ function ArchivePage() {
         }}
       >
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          {open ? <OrderDetail order={open} /> : null}
+          {open ? (
+            <OrderDetail order={open} onDelete={() => handleDelete(open)} />
+          ) : null}
         </SheetContent>
       </Sheet>
     </main>

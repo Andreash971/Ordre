@@ -949,21 +949,6 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
-          <ItemMedia variant="icon">
-            <Archive />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Tøm arkiv</ItemTitle>
-            <ItemDescription>
-              Slett alle lagrede ordre permanent.
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <ClearArchiveButton />
-          </ItemActions>
-        </Item>
-
         <button
           type="button"
           onClick={() => setAdvancedOpen((v) => !v)}
@@ -1022,6 +1007,21 @@ function SettingsPage() {
               <ItemFooter>
                 <BringApiForm />
               </ItemFooter>
+            </Item>
+
+            <Item variant="outline" className="dark:bg-card gray:bg-card">
+              <ItemMedia variant="icon">
+                <Archive />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>Tøm arkiv</ItemTitle>
+                <ItemDescription>
+                  Slett alle lagrede ordre permanent.
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <ClearArchiveButton />
+              </ItemActions>
             </Item>
           </div>
         )}
