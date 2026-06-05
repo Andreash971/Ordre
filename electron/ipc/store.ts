@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 import * as z from 'zod'
 
 import type { AppSettings, StoredOrder } from '../store'
-import { DEFAULT_SETTINGS, getStore } from '../store'
+import { DEFAULT_SETTINGS, DEFAULT_SPECIAL_ITEMS, getStore } from '../store'
 
 // Source of truth: src/lib/theme.ts
 const themeSchema = z.enum([
@@ -52,6 +52,17 @@ const bringApiSchema = z.object({
   apiKey: z.string(),
 })
 
+const specialItemSchema = z.object({
+  name: z.string(),
+  price: z.number(),
+})
+
+const specialItemsSchema = z.object({
+  frakt: specialItemSchema.partial().optional(),
+  leveringstid: specialItemSchema.partial().optional(),
+  kort: specialItemSchema.partial().optional(),
+})
+
 const partialSettingsSchema = z.object({
   archiveRetention: retentionSchema.optional(),
   rowsPerPage: pageSizeSchema.optional(),
@@ -59,6 +70,10 @@ const partialSettingsSchema = z.object({
   quickSelect: quickSelectSchema.optional(),
   defaultPrinter: z.string().nullable().optional(),
   bringApi: bringApiSchema.partial().optional(),
+  specialItems: specialItemsSchema.optional(),
+  autoSaveCustomer: z.boolean().optional(),
+  betaChannel: z.boolean().optional(),
+  deliveryTimePresets: z.tuple([z.string(), z.string(), z.string(), z.string()]).optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -122,6 +137,35 @@ export function registerStoreHandlers() {
         ...current.bringApi,
         ...(partial.bringApi ?? {}),
       },
+      specialItems: {
+        frakt: {
+          ...DEFAULT_SPECIAL_ITEMS.frakt,
+          ...(current.specialItems?.frakt ?? {}),
+          ...(partial.specialItems?.frakt ?? {}),
+        },
+        leveringstid: {
+          ...DEFAULT_SPECIAL_ITEMS.leveringstid,
+          // Carry over values previously stored under the old `fraktTidspunktstillegg` key.
+          // Remove on or after 2026-09-28 — once the renderer-side hydration migration
+          // has run for every active user, the old key will no longer appear in `current`.
+          ...((current.specialItems as Record<string, unknown> | undefined)
+            ?.fraktTidspunktstillegg as
+            | Partial<{ name: string; price: number }>
+            | undefined ?? {}),
+          ...(current.specialItems?.leveringstid ?? {}),
+          ...(partial.specialItems?.leveringstid ?? {}),
+        },
+        kort: {
+          ...DEFAULT_SPECIAL_ITEMS.kort,
+          ...(current.specialItems?.kort ?? {}),
+          ...(partial.specialItems?.kort ?? {}),
+        },
+      },
+      autoSaveCustomer:
+        partial.autoSaveCustomer ?? current.autoSaveCustomer ?? false,
+      betaChannel: partial.betaChannel ?? current.betaChannel ?? false,
+      deliveryTimePresets:
+        partial.deliveryTimePresets ?? current.deliveryTimePresets ?? ['11:00', '12:00', '14:00', '17:00'],
     }
     store.set('settings', next)
     return next

@@ -24,6 +24,8 @@ import type { AddProductFormValues } from '#/components/AddProductForm'
 import { insertProduct, searchProducts } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 import { useOrderForm } from '#/components/order-form/OrderFormContext'
+import { getStoredSettings } from '#/lib/settings'
+import { isSpecial } from '#/lib/special-items'
 
 export { searchProducts }
 
@@ -37,43 +39,64 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   currency: 'NOK',
 })
 
-const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
-
 export default function OrderProductsContent({
   className,
   onItemsChange,
 }: OrderProductsContentProps) {
   const { showTime, showCardText } = useOrderForm()
-  const [items, setItems] = useState<Item[]>([
-    { name: 'Frakt', description: '', price: 100, quantity: 1 },
-  ])
+  const [items, setItems] = useState<Item[]>(() => {
+    const { frakt } = getStoredSettings().specialItems
+    return [
+      {
+        specialKey: 'frakt',
+        name: frakt.name,
+        description: '',
+        price: frakt.price,
+        quantity: 1,
+      },
+    ]
+  })
 
   useEffect(() => {
-    setItems((prev) =>
-      showTime
-        ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
-          ? prev
-          : [
-              ...prev,
-              {
-                name: 'Frakt Tidspunktstillegg',
-                description: '',
-                price: 100,
-                quantity: 1,
-              },
-            ]
-        : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
-    )
+    setItems((prev) => {
+      if (showTime) {
+        if (prev.some((i) => i.specialKey === 'leveringstid')) {
+          return prev
+        }
+        const { leveringstid } = getStoredSettings().specialItems
+        return [
+          ...prev,
+          {
+            specialKey: 'leveringstid',
+            name: leveringstid.name,
+            description: '',
+            price: leveringstid.price,
+            quantity: 1,
+          },
+        ]
+      }
+      return prev.filter((i) => i.specialKey !== 'leveringstid')
+    })
   }, [showTime])
 
   useEffect(() => {
-    setItems((prev) =>
-      showCardText
-        ? prev.some((i) => i.name === 'Kort')
-          ? prev
-          : [...prev, { name: 'Kort', description: '', price: 25, quantity: 1 }]
-        : prev.filter((i) => i.name !== 'Kort'),
-    )
+    setItems((prev) => {
+      if (showCardText) {
+        if (prev.some((i) => i.specialKey === 'kort')) return prev
+        const { kort } = getStoredSettings().specialItems
+        return [
+          ...prev,
+          {
+            specialKey: 'kort',
+            name: kort.name,
+            description: '',
+            price: kort.price,
+            quantity: 1,
+          },
+        ]
+      }
+      return prev.filter((i) => i.specialKey !== 'kort')
+    })
   }, [showCardText])
   useEffect(() => {
     onItemsChange?.(items)
@@ -119,7 +142,7 @@ export default function OrderProductsContent({
       originalPrice: price,
     }
     setItems((prev) => {
-      const firstSpecialIndex = prev.findIndex((i) => SPECIAL_ITEMS.has(i.name))
+      const firstSpecialIndex = prev.findIndex((i) => isSpecial(i))
       if (firstSpecialIndex === -1) return [...prev, newItem]
       return [
         ...prev.slice(0, firstSpecialIndex),
@@ -167,7 +190,9 @@ export default function OrderProductsContent({
                     onMouseDown={() => {
                       setItems((prev) => {
                         const existingIndex = prev.findIndex(
-                          (item) => item.name === product.name,
+                          (item) =>
+                            item.specialKey == null &&
+                            item.name === product.name,
                         )
                         if (existingIndex !== -1) {
                           return prev.map((item, i) =>
@@ -190,7 +215,7 @@ export default function OrderProductsContent({
                           originalPrice: price,
                         }
                         const firstSpecialIndex = prev.findIndex((i) =>
-                          SPECIAL_ITEMS.has(i.name),
+                          isSpecial(i),
                         )
                         if (firstSpecialIndex === -1) return [...prev, newItem]
                         return [

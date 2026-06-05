@@ -41,6 +41,10 @@ import type {
 interface SectionRecipientsProps {
   recipients: Customer[]
   onRecipientsChange: React.Dispatch<React.SetStateAction<Customer[]>>
+  onRecipientIdsChange: React.Dispatch<
+    React.SetStateAction<(number | null)[]>
+  >
+  autoSaveCustomer: boolean
   defaults: {
     delivery: DeliveryValues
     showTime: boolean
@@ -75,6 +79,8 @@ function toIso(d: Date) {
 export default function SectionRecipients({
   recipients,
   onRecipientsChange,
+  onRecipientIdsChange,
+  autoSaveCustomer,
   defaults,
 }: SectionRecipientsProps) {
   const [expanded, setExpanded] = React.useState<number | null>(0)
@@ -113,17 +119,25 @@ export default function SectionRecipients({
         : '',
     }
     onRecipientsChange((prev) => [...prev, next])
+    onRecipientIdsChange((prev) => [...prev, null])
     setExpanded(nextIndex)
   }
 
   const removeRecipient = (index: number) => {
     onRecipientsChange((prev) => prev.filter((_, i) => i !== index))
+    onRecipientIdsChange((prev) => prev.filter((_, i) => i !== index))
     setExpanded(null)
   }
 
   const updateRecipient = (index: number, patch: Partial<Customer>) => {
     onRecipientsChange((prev) =>
       prev.map((c, i) => (i === index ? { ...c, ...patch } : c)),
+    )
+  }
+
+  const updateRecipientId = (index: number, id: number | null) => {
+    onRecipientIdsChange((prev) =>
+      prev.map((existing, i) => (i === index ? id : existing)),
     )
   }
 
@@ -164,6 +178,8 @@ export default function SectionRecipients({
           onChange={(patch) => updateRecipient(i, patch)}
           onRemove={() => removeRecipient(i)}
           onSaveCustomer={saveCustomer}
+          onIdChange={(id) => updateRecipientId(i, id)}
+          hideSaveButton={autoSaveCustomer}
           defaults={defaults}
         />
       ))}
@@ -190,6 +206,8 @@ interface RecipientRowProps {
     values: CustomerFormValues,
     ctx: { id: number | null },
   ) => Promise<void>
+  onIdChange: (id: number | null) => void
+  hideSaveButton: boolean
   defaults: SectionRecipientsProps['defaults']
 }
 
@@ -201,6 +219,8 @@ function RecipientRow({
   onChange,
   onRemove,
   onSaveCustomer,
+  onIdChange,
+  hideSaveButton,
   defaults,
 }: RecipientRowProps) {
   const summaryDate = value.date || defaults.delivery.date
@@ -249,8 +269,10 @@ function RecipientRow({
             formButtons
             size="sm"
             showCareof
+            hideSaveButton={hideSaveButton}
             defaultValues={customerDefaults}
             onValuesChange={(v) => onChange(v)}
+            onIdChange={onIdChange}
             onSubmit={onSaveCustomer}
           />
 

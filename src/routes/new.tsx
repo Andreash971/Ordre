@@ -12,6 +12,15 @@ import SectionRecipients from '#/components/new-order/SectionRecipients'
 import SectionReview from '#/components/new-order/SectionReview'
 import type { Item } from '#/components/OrderColumns'
 import { Separator } from '@/components/ui/separator'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { getLocalDateString } from '#/lib/order-utils'
 import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
 import { queryKeys } from '#/lib/query-keys'
@@ -20,6 +29,10 @@ import type {
   CustomerFormValues,
   DeliveryValues,
 } from '#/lib/order-utils'
+import { getStoredSettings } from '#/lib/settings'
+import type { SpecialItemKey } from '#/lib/settings'
+import { SETTINGS_CHANGED_EVENT } from '#/lib/store-cache'
+import { isSpecial } from '#/lib/special-items'
 
 const EMPTY_SENDER: CustomerFormValues = {
   name: '',
@@ -40,6 +53,18 @@ export const Route = createFileRoute('/new')({ component: NewOrderPage })
 function NewOrderPage() {
   const queryClient = useQueryClient()
   const [sender, setSender] = React.useState<CustomerFormValues>(EMPTY_SENDER)
+  const senderIdRef = React.useRef<number | null>(null)
+  const [autoSaveCustomer, setAutoSaveCustomer] = React.useState<boolean>(
+    () => getStoredSettings().autoSaveCustomer,
+  )
+  React.useEffect(() => {
+    const onSettingsChanged = () => {
+      setAutoSaveCustomer(getStoredSettings().autoSaveCustomer)
+    }
+    window.addEventListener(SETTINGS_CHANGED_EVENT, onSettingsChanged)
+    return () =>
+      window.removeEventListener(SETTINGS_CHANGED_EVENT, onSettingsChanged)
+  }, [])
   const saveCustomerMutation = useMutation({
     mutationFn: async ({
       values,
@@ -57,6 +82,7 @@ function NewOrderPage() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
   })
+
   const [delivery, setDelivery] = React.useState<DeliveryValues>({
     date: getLocalDateString(),
     time: null,
@@ -68,47 +94,138 @@ function NewOrderPage() {
   const [instructionsEnabled, setInstructionsEnabled] = React.useState(false)
   const [instructionsValue, setInstructionsValue] = React.useState('')
 
-  const [items, setItems] = React.useState<Item[]>([
-    { name: 'Frakt', description: '', price: 100, quantity: 1 },
-  ])
+  const [items, setItems] = React.useState<Item[]>(() => {
+    const { frakt } = getStoredSettings().specialItems
+    return [
+      {
+        specialKey: 'frakt',
+        name: frakt.name,
+        description: '',
+        price: frakt.price,
+        quantity: 1,
+      },
+    ]
+  })
   const [recipients, setRecipients] = React.useState<Customer[]>([])
+  const [recipientIds, setRecipientIds] = React.useState<(number | null)[]>([])
+
+  const [saveErrorMessage, setSaveErrorMessage] = React.useState<string | null>(
+    null,
+  )
+  const saveErrorResolveRef = React.useRef<((proceed: boolean) => void) | null>(
+    null,
+  )
+
+  function resolveSaveError(proceed: boolean) {
+    const resolve = saveErrorResolveRef.current
+    saveErrorResolveRef.current = null
+    setSaveErrorMessage(null)
+    resolve?.(proceed)
+  }
+
+  const beforeSubmit = React.useCallback(async (): Promise<boolean> => {
+    if (!autoSaveCustomer) return true
+
+    const targets: Array<{
+      values: CustomerFormValues
+      id: number | null
+    }> = []
+    if (isSenderFilled(sender)) {
+      targets.push({ values: sender, id: senderIdRef.current })
+    }
+    recipients.forEach((r, i) => {
+      const values: CustomerFormValues = {
+        name: r.name,
+        phone: r.phone,
+        company: r.company,
+        address: r.address,
+        postcode: r.postcode,
+        city: r.city,
+        careof: r.careof,
+      }
+      if (isSenderFilled(values)) {
+        targets.push({ values, id: recipientIds[i] ?? null })
+      }
+    })
+
+    for (const target of targets) {
+      try {
+        await saveCustomerMutation.mutateAsync(target)
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Ukjent feil ved lagring.'
+        return new Promise<boolean>((resolve) => {
+          saveErrorResolveRef.current = resolve
+          setSaveErrorMessage(message)
+        })
+      }
+    }
+    return true
+  }, [autoSaveCustomer, sender, recipients, recipientIds, saveCustomerMutation])
 
   // Sync extras rows with toggles
   React.useEffect(() => {
-    setItems((prev) =>
-      showTime
-        ? prev.some((i) => i.name === 'Frakt Tidspunktstillegg')
-          ? prev
-          : [
-              ...prev,
-              {
-                name: 'Frakt Tidspunktstillegg',
-                description: '',
-                price: 100,
-                quantity: 1,
-              },
-            ]
-        : prev.filter((i) => i.name !== 'Frakt Tidspunktstillegg'),
-    )
+    setItems((prev) => {
+      if (showTime) {
+        if (prev.some((i) => i.specialKey === 'leveringstid')) {
+          return prev
+        }
+        const { leveringstid } = getStoredSettings().specialItems
+        return [
+          ...prev,
+          {
+            specialKey: 'leveringstid',
+            name: leveringstid.name,
+            description: '',
+            price: leveringstid.price,
+            quantity: 1,
+          },
+        ]
+      }
+      return prev.filter((i) => i.specialKey !== 'leveringstid')
+    })
   }, [showTime])
 
   React.useEffect(() => {
-    setItems((prev) =>
-      cardEnabled
-        ? prev.some((i) => i.name === 'Kort')
-          ? prev
-          : [...prev, { name: 'Kort', description: '', price: 25, quantity: 1 }]
-        : prev.filter((i) => i.name !== 'Kort'),
-    )
+    setItems((prev) => {
+      if (cardEnabled) {
+        if (prev.some((i) => i.specialKey === 'kort')) return prev
+        const { kort } = getStoredSettings().specialItems
+        return [
+          ...prev,
+          {
+            specialKey: 'kort',
+            name: kort.name,
+            description: '',
+            price: kort.price,
+            quantity: 1,
+          },
+        ]
+      }
+      return prev.filter((i) => i.specialKey !== 'kort')
+    })
   }, [cardEnabled])
+
+  const handleSpecialPicked = React.useCallback((key: SpecialItemKey) => {
+    if (key === 'leveringstid') setShowTime(true)
+    if (key === 'kort') setCardEnabled(true)
+  }, [])
+
+  const handleSpecialRemoved = React.useCallback((key: SpecialItemKey) => {
+    if (key === 'leveringstid') {
+      setShowTime(false)
+      return
+    }
+    if (key === 'kort') {
+      setCardEnabled(false)
+      return
+    }
+    setItems((prev) => prev.filter((i) => i.specialKey !== key))
+  }, [])
 
   const senderFilled = isSenderFilled(sender)
   const recipientCount = recipients.length || (senderFilled ? 1 : 0)
-  const canShowReview =
-    senderFilled &&
-    items.some(
-      (i) => !['Frakt', 'Frakt Tidspunktstillegg', 'Kort'].includes(i.name),
-    )
+  const canShowReview = senderFilled && items.some((i) => !isSpecial(i))
 
   return (
     <main className="rise-in page-wrap flex flex-col gap-6 px-4 pb-12 pt-6">
@@ -127,8 +244,12 @@ function NewOrderPage() {
             bare
             formButtons
             showCareof
+            hideSaveButton={autoSaveCustomer}
             defaultValues={sender}
             onValuesChange={setSender}
+            onIdChange={(id) => {
+              senderIdRef.current = id
+            }}
             onSubmit={(values, { id }) =>
               saveCustomerMutation.mutateAsync({ values, id })
             }
@@ -158,7 +279,12 @@ function NewOrderPage() {
           title="Ordreinnhold"
           subtitle="Legg til varer i ordren"
         >
-          <SectionItems items={items} setItems={setItems} />
+          <SectionItems
+            items={items}
+            setItems={setItems}
+            onSpecialPicked={handleSpecialPicked}
+            onSpecialRemoved={handleSpecialRemoved}
+          />
         </SectionCard>
       </div>
 
@@ -191,6 +317,8 @@ function NewOrderPage() {
         <SectionRecipients
           recipients={recipients}
           onRecipientsChange={setRecipients}
+          onRecipientIdsChange={setRecipientIds}
+          autoSaveCustomer={autoSaveCustomer}
           defaults={{
             delivery,
             showTime,
@@ -219,6 +347,7 @@ function NewOrderPage() {
             cardValue={cardValue}
             instructionsEnabled={instructionsEnabled}
             instructionsValue={instructionsValue}
+            beforeSubmit={beforeSubmit}
           />
         </SectionCard>
       ) : (
@@ -228,6 +357,31 @@ function NewOrderPage() {
           </EmptyDescription>
         </Empty>
       )}
+
+      <Dialog
+        open={saveErrorMessage !== null}
+        onOpenChange={(open) => {
+          if (!open) resolveSaveError(false)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kunne ikke lagre kundeinformasjon</DialogTitle>
+            <DialogDescription>
+              {saveErrorMessage}
+              {'\n'}Vil du fortsette med ordren likevel?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => resolveSaveError(false)}>
+              Avbryt
+            </Button>
+            <Button onClick={() => resolveSaveError(true)}>
+              Fortsett uten å lagre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

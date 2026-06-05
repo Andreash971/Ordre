@@ -1,7 +1,7 @@
-import { app, BrowserWindow, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
-import { updateElectronApp } from 'update-electron-app'
+import { initUpdater, registerUpdateHandlers } from './updater'
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
@@ -12,6 +12,7 @@ import {
   killPrinterSidecar,
   registerPrinterHandlers,
 } from './ipc/printer'
+import { registerContextMenuHandlers } from './ipc/contextMenu'
 
 if (started) {
   app.quit()
@@ -20,11 +21,7 @@ if (started) {
 const isDev = !!process.env.ELECTRON_DEV
 
 if (!isDev && process.platform === 'win32') {
-  updateElectronApp({
-    repo: 'Andreash971/Ordre',
-    updateInterval: '1 hour',
-    logger: console,
-  })
+  initUpdater()
 }
 
 function installSecurityHandlers() {
@@ -64,7 +61,7 @@ function installSecurityHandlers() {
   session.defaultSession.setPermissionCheckHandler(() => false)
 }
 
-function createWindow() {
+function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -97,6 +94,8 @@ function createWindow() {
   } else {
     void win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
+
+  return win
 }
 
 app.whenReady().then(() => {
@@ -106,10 +105,15 @@ app.whenReady().then(() => {
   registerBringHandlers()
   registerStoreHandlers()
   registerPrinterHandlers()
+  registerUpdateHandlers()
+  ipcMain.handle('shell:openExternal', (_e, url: string) =>
+    shell.openExternal(url),
+  )
   spawnPrinterSidecar()
 
   installSecurityHandlers()
-  createWindow()
+  const win = createWindow()
+  registerContextMenuHandlers(win)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

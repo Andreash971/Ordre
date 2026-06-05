@@ -33,7 +33,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { TimePicker } from '@/components/ui/time-picker'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 
 import {
   AlertTriangle,
@@ -43,9 +45,13 @@ import {
   Clock,
   Eye,
   EyeOff,
+  FlaskConical,
   Palette,
+  PackagePlus,
   Printer,
   Rows3,
+  RotateCcw,
+  Save,
   Settings2,
   X,
   Zap,
@@ -59,8 +65,14 @@ import type {
   PageSizeOption,
   QuickSelectSettings,
   RetentionOption,
+  SpecialItemsSettings,
 } from '@/lib/settings'
-import { getStoredSettings, updateSettings } from '@/lib/settings'
+import {
+  DEFAULT_SPECIAL_ITEMS,
+  getStoredSettings,
+  resetSpecialItems,
+  updateSettings,
+} from '@/lib/settings'
 import type { DiscoveredPrinter, Printer as PrinterInfo } from '@/lib/electron'
 import { clearArchive } from '@/lib/order-utils'
 
@@ -180,6 +192,32 @@ function ClearArchiveButton() {
       </DialogContent>
     </Dialog>
   )
+}
+
+function ToggleAutoSaveCustomer() {
+  const [enabled, setEnabled] = useState<boolean>(
+    () => getStoredSettings().autoSaveCustomer,
+  )
+
+  function handleChange(next: boolean) {
+    setEnabled(next)
+    updateSettings({ autoSaveCustomer: next })
+  }
+
+  return <Switch checked={enabled} onCheckedChange={handleChange} />
+}
+
+function ToggleBetaChannel() {
+  const [enabled, setEnabled] = useState<boolean>(
+    () => getStoredSettings().betaChannel,
+  )
+
+  function handleChange(next: boolean) {
+    setEnabled(next)
+    updateSettings({ betaChannel: next })
+  }
+
+  return <Switch checked={enabled} onCheckedChange={handleChange} />
 }
 
 function SelectRowsPerPage() {
@@ -445,6 +483,34 @@ function QuickSelectList({
   )
 }
 
+function DeliveryTimePresetsForm() {
+  const [presets, setPresets] = useState<[string, string, string, string]>(
+    () => getStoredSettings().deliveryTimePresets,
+  )
+
+  function handleChange(index: number, value: string) {
+    const next = [...presets] as [string, string, string, string]
+    next[index] = value
+    setPresets(next)
+    updateSettings({ deliveryTimePresets: next })
+  }
+
+  return (
+    <div className="flex gap-2 w-full pt-1">
+      {presets.map((value, i) => (
+        <TimePicker
+          key={i}
+          value={value}
+          onChange={(v) => {
+            if (v !== null) handleChange(i, v)
+          }}
+          className="flex-1"
+        />
+      ))}
+    </div>
+  )
+}
+
 function QuickSelectForm() {
   const [quickSelect, setQuickSelect] = useState<QuickSelectSettings>(
     () => getStoredSettings().quickSelect,
@@ -508,6 +574,126 @@ function QuickSelectForm() {
         />
       </div>
     </div>
+  )
+}
+
+function SpecialItemsForm() {
+  const [items, setItems] = useState<SpecialItemsSettings>(
+    () => getStoredSettings().specialItems,
+  )
+  const [stored, setStored] = useState<SpecialItemsSettings>(
+    () => getStoredSettings().specialItems,
+  )
+  const [saved, setSaved] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+
+  function handleNameChange(key: keyof SpecialItemsSettings, value: string) {
+    setItems((prev) => ({ ...prev, [key]: { ...prev[key], name: value } }))
+    setSaved(false)
+  }
+
+  function handlePriceChange(key: keyof SpecialItemsSettings, value: string) {
+    const parsed = Number(value)
+    const safe = Number.isFinite(parsed) ? Math.max(0, parsed) : 0
+    setItems((prev) => ({ ...prev, [key]: { ...prev[key], price: safe } }))
+    setSaved(false)
+  }
+
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault()
+    updateSettings({ specialItems: items })
+    setStored(items)
+    setSaved(true)
+  }
+
+  function handleReset() {
+    resetSpecialItems()
+    setItems(DEFAULT_SPECIAL_ITEMS)
+    setStored(DEFAULT_SPECIAL_ITEMS)
+    setSaved(true)
+    setResetOpen(false)
+  }
+
+  const dirty =
+    items.frakt.name !== stored.frakt.name ||
+    items.frakt.price !== stored.frakt.price ||
+    items.leveringstid.name !== stored.leveringstid.name ||
+    items.leveringstid.price !== stored.leveringstid.price ||
+    items.kort.name !== stored.kort.name ||
+    items.kort.price !== stored.kort.price
+
+  const rows: Array<{
+    key: keyof SpecialItemsSettings
+    label: string
+  }> = [
+    { key: 'frakt', label: 'Frakt' },
+    { key: 'leveringstid', label: 'Leveringstid' },
+    { key: 'kort', label: 'Kort' },
+  ]
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full pt-1">
+      <div className="flex flex-col gap-3">
+        {rows.map(({ key, label }) => (
+          <div key={key} className="flex flex-col gap-1.5">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              {label}
+            </div>
+            <div className="grid grid-cols-[1fr_8rem] gap-2">
+              <Input
+                value={items[key].name}
+                placeholder="Navn"
+                onChange={(e) => handleNameChange(key, e.target.value)}
+                className="gray:border-border gray:bg-input"
+              />
+              <Input
+                type="number"
+                min={0}
+                value={items[key].price}
+                placeholder="Pris"
+                onChange={(e) => handlePriceChange(key, e.target.value)}
+                className="gray:border-border gray:bg-input text-right [appearance:textfield]"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="ghost" size="sm">
+              <RotateCcw className="h-3.5 w-3.5" />
+              Tilbakestill
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Tilbakestill standardvarer?</DialogTitle>
+              <DialogDescription>
+                Navn og priser for Frakt, Leveringstid og Kort vil
+                tilbakestilles til standardverdiene.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost">Avbryt</Button>
+              </DialogClose>
+              <Button variant="destructive" onClick={handleReset}>
+                Tilbakestill
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Button
+          type="submit"
+          variant="outline"
+          size="sm"
+          disabled={!dirty && !saved}
+        >
+          {saved && !dirty ? 'Lagret' : 'Lagre'}
+        </Button>
+      </div>
+    </form>
   )
 }
 
@@ -658,6 +844,52 @@ function SettingsPage() {
 
         <Item variant="outline" className="dark:bg-card gray:bg-card">
           <ItemMedia variant="icon">
+            <Clock />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Leveringstidspunkter</ItemTitle>
+            <ItemDescription>
+              Hurtigvalg for leveringstid ved ny ordre.
+            </ItemDescription>
+          </ItemContent>
+          <ItemFooter>
+            <DeliveryTimePresetsForm />
+          </ItemFooter>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
+            <Save />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Lagre kunde automatisk</ItemTitle>
+            <ItemDescription>
+              Skru på for å alltid lagre/oppdatere kundeinformasjon automatisk
+              når en ordre sendes til utskrift/PDF.
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <ToggleAutoSaveCustomer />
+          </ItemActions>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
+            <PackagePlus />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Standardvarer og tillegg</ItemTitle>
+            <ItemDescription>
+              Navn og standardpris for Frakt, Leveringstid og Kort.
+            </ItemDescription>
+          </ItemContent>
+          <ItemFooter>
+            <SpecialItemsForm />
+          </ItemFooter>
+        </Item>
+
+        <Item variant="outline" className="dark:bg-card gray:bg-card">
+          <ItemMedia variant="icon">
             <Printer />
           </ItemMedia>
           <ItemContent>
@@ -760,6 +992,22 @@ function SettingsPage() {
                 her med mindre du vet hva du gjør.
               </p>
             </div>
+
+            <Item variant="outline" className="dark:bg-card gray:bg-card">
+              <ItemMedia variant="icon">
+                <FlaskConical />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>Betaversjoner</ItemTitle>
+                <ItemDescription>
+                  Motta varsler om kommende beta-oppdateringer før de er
+                  offisielt utgitt.
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <ToggleBetaChannel />
+              </ItemActions>
+            </Item>
 
             <Item variant="outline" className="dark:bg-card gray:bg-card">
               <ItemMedia variant="icon">

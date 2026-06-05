@@ -11,7 +11,6 @@ export type ThemeMode =
   | 'sandstone'
   | 'bog'
   | 'ironstone'
-  | 'darkforest'
 
 interface ThemeDefinition {
   value: ThemeMode
@@ -27,7 +26,6 @@ interface ThemeDefinition {
     | 'sandstone'
     | 'bog'
     | 'ironstone'
-    | 'darkforest'
     | null
   colorScheme: 'light' | 'dark'
 }
@@ -94,13 +92,6 @@ export const THEMES: ReadonlyArray<ThemeDefinition> = [
     label: 'Jernsten',
     group: 'Mørk',
     className: 'ironstone',
-    colorScheme: 'dark',
-  },
-  {
-    value: 'darkforest',
-    label: 'Mørk Skog',
-    group: 'Mørk',
-    className: 'darkforest',
     colorScheme: 'dark',
   },
   {

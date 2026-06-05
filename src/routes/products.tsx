@@ -133,7 +133,7 @@ function ProductsPage() {
           <DialogHeader>
             <DialogTitle>Legg til vare</DialogTitle>
             <DialogDescription>
-              Registrer et nytt vare i katalogen.
+              Registrer en nytt vare i katalogen.
             </DialogDescription>
           </DialogHeader>
           <AddProductForm

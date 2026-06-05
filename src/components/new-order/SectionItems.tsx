@@ -5,13 +5,15 @@ import ProductPicker from '#/components/ProductPicker'
 import type { PickedProduct } from '#/components/ProductPicker'
 import { columns as orderColumns } from '#/components/OrderColumns'
 import type { Item } from '#/components/OrderColumns'
+import type { SpecialItemKey } from '#/lib/settings'
+import { isSpecial } from '#/lib/special-items'
 
 interface SectionItemsProps {
   items: Item[]
   setItems: React.Dispatch<React.SetStateAction<Item[]>>
+  onSpecialPicked?: (key: SpecialItemKey) => void
+  onSpecialRemoved?: (key: SpecialItemKey) => void
 }
-
-const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
 
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
@@ -20,9 +22,14 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   maximumFractionDigits: 2,
 })
 
-export default function SectionItems({ items, setItems }: SectionItemsProps) {
+export default function SectionItems({
+  items,
+  setItems,
+  onSpecialPicked,
+  onSpecialRemoved,
+}: SectionItemsProps) {
   const insertItem = (prev: Item[], newItem: Item): Item[] => {
-    const firstSpecialIndex = prev.findIndex((i) => SPECIAL_ITEMS.has(i.name))
+    const firstSpecialIndex = prev.findIndex((i) => isSpecial(i))
     if (firstSpecialIndex === -1) return [...prev, newItem]
     return [
       ...prev.slice(0, firstSpecialIndex),
@@ -32,8 +39,24 @@ export default function SectionItems({ items, setItems }: SectionItemsProps) {
   }
 
   const handlePick = (p: PickedProduct) => {
+    if (p.specialKey) {
+      setItems((prev) => {
+        if (prev.some((i) => i.specialKey === p.specialKey)) return prev
+        return insertItem(prev, {
+          specialKey: p.specialKey,
+          name: p.name,
+          description: '',
+          price: p.price,
+          quantity: 1,
+        })
+      })
+      onSpecialPicked?.(p.specialKey)
+      return
+    }
     setItems((prev) => {
-      const existingIndex = prev.findIndex((i) => i.name === p.name)
+      const existingIndex = prev.findIndex(
+        (i) => i.specialKey == null && i.name === p.name,
+      )
       if (existingIndex !== -1) {
         return prev.map((item, i) =>
           i === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
@@ -69,13 +92,20 @@ export default function SectionItems({ items, setItems }: SectionItemsProps) {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-4">
-      <ProductPicker onPick={handlePick} onAddNew={handleAddNew} />
+      <ProductPicker
+        onPick={handlePick}
+        onAddNew={handleAddNew}
+        currentItems={items}
+      />
 
       <DataTable
         columns={orderColumns}
         data={items}
         setData={setItems}
         emptyMessage="Ingen varer lagt til enda."
+        meta={{
+          removeSpecial: onSpecialRemoved,
+        }}
       />
 
       <div className="flex items-center justify-between rounded-lg border bg-muted/30 gray:bg-background px-4 py-3">

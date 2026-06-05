@@ -26,6 +26,7 @@ type OpenOrderButtonProps =
       senderValues?: never
       deliveryValues?: never
       items?: never
+      beforeSubmit?: never
       variant?: VariantProps<typeof buttonVariants>['variant']
     }
   | {
@@ -34,6 +35,7 @@ type OpenOrderButtonProps =
       senderValues: CustomerFormValues | null
       deliveryValues: DeliveryValues
       items: Item[]
+      beforeSubmit?: () => Promise<boolean>
       variant?: VariantProps<typeof buttonVariants>['variant']
     }
 
@@ -43,6 +45,7 @@ export default function OpenOrderButton({
   senderValues,
   deliveryValues,
   items,
+  beforeSubmit,
   variant = 'default',
 }: OpenOrderButtonProps) {
   const [isPrinting, setIsPrinting] = useState(false)
@@ -54,6 +57,7 @@ export default function OpenOrderButton({
       if (storedOrder) {
         await openStoredOrderPdf(storedOrder)
       } else {
+        if (beforeSubmit && !(await beforeSubmit())) return
         await openOrdersPdf(customers, senderValues, deliveryValues, items)
       }
     } finally {
@@ -67,6 +71,7 @@ export default function OpenOrderButton({
       if (storedOrder) {
         await printStoredOrderPdf(storedOrder)
       } else {
+        if (beforeSubmit && !(await beforeSubmit())) return
         await printOrdersPdf(customers, senderValues, deliveryValues, items)
       }
     } finally {

@@ -17,6 +17,7 @@ import type {
   CustomerFormValues,
   DeliveryValues,
 } from '#/lib/order-utils'
+import { getSpecialKeyForItem, isSpecial } from '#/lib/special-items'
 
 const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
@@ -24,8 +25,6 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 })
-
-const SPECIAL_ITEMS = new Set(['Frakt', 'Frakt Tidspunktstillegg', 'Kort'])
 
 interface SectionReviewProps {
   sender: CustomerFormValues | null
@@ -36,6 +35,7 @@ interface SectionReviewProps {
   cardValue: string
   instructionsEnabled: boolean
   instructionsValue: string
+  beforeSubmit?: () => Promise<boolean>
 }
 
 function customerFromSender(
@@ -68,14 +68,17 @@ export default function SectionReview({
   cardValue,
   instructionsEnabled,
   instructionsValue,
+  beforeSubmit,
 }: SectionReviewProps) {
   const deliveryInfo = delivery.date ? formatDeliveryDate(delivery.date) : null
   const regularSubtotal = items
-    .filter((i) => !SPECIAL_ITEMS.has(i.name))
+    .filter((i) => !isSpecial(i))
     .reduce((s, i) => s + i.price * i.quantity, 0)
-  const kort = items.find((i) => i.name === 'Kort')
-  const leveringstid = items.find((i) => i.name === 'Frakt Tidspunktstillegg')
-  const frakt = items.find((i) => i.name === 'Frakt')
+  const kort = items.find((i) => getSpecialKeyForItem(i) === 'kort')
+  const leveringstid = items.find(
+    (i) => getSpecialKeyForItem(i) === 'leveringstid',
+  )
+  const frakt = items.find((i) => getSpecialKeyForItem(i) === 'frakt')
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
   const effectiveRecipients: Customer[] = recipients.length
@@ -335,6 +338,7 @@ export default function SectionReview({
             senderValues={senderValues}
             deliveryValues={delivery}
             items={items}
+            beforeSubmit={beforeSubmit}
           />
         </div>
         <div className="mt-2 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">

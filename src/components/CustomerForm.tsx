@@ -57,8 +57,10 @@ interface CustomerFormProps {
   disabled?: boolean
   showCareof?: boolean
   bare?: boolean
+  hideSaveButton?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
+  onIdChange?: (id: number | null) => void
   onSubmit?: (
     values: CustomerFormValues,
     ctx: { id: number | null },
@@ -130,9 +132,9 @@ function fillForm(
     ) => void
   },
   customer: CustomerSuggestion,
-  selectedIdRef: { current: number | null },
+  setSelectedId: (id: number | null) => void,
 ) {
-  selectedIdRef.current = customer.id ?? null
+  setSelectedId(customer.id ?? null)
   form.setFieldValue('name', customer.name)
   form.setFieldValue('phone', customer.phone ?? '')
   form.setFieldValue('company', customer.company ?? '')
@@ -150,12 +152,23 @@ export default function CustomerForm({
   disabled,
   showCareof = false,
   bare = false,
+  hideSaveButton = false,
   defaultValues: initialValues,
   onValuesChange,
+  onIdChange,
   onSubmit,
 }: CustomerFormProps) {
   const formId = useId()
   const selectedIdRef = useRef<number | null>(null)
+  const onIdChangeRef = useRef(onIdChange)
+  useEffect(() => {
+    onIdChangeRef.current = onIdChange
+  }, [onIdChange])
+  const setSelectedId = (id: number | null) => {
+    if (selectedIdRef.current === id) return
+    selectedIdRef.current = id
+    onIdChangeRef.current?.(id)
+  }
   const [justSaved, setJustSaved] = useState(false)
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -183,7 +196,7 @@ export default function CustomerForm({
     listeners: {
       onChange: ({ formApi }) => {
         if (!formApi.state.values.name) {
-          selectedIdRef.current = null
+          setSelectedId(null)
         }
         onValuesChange?.(formApi.state.values)
       },
@@ -231,7 +244,7 @@ export default function CustomerForm({
               disabled={disabled}
               autoComplete="name"
               onSearch={(q) => searchCustomers({ data: q })}
-              onSelect={(c) => fillForm(form, c, selectedIdRef)}
+              onSelect={(c) => fillForm(form, c, setSelectedId)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
             />
           )}
@@ -248,7 +261,7 @@ export default function CustomerForm({
               disabled={disabled}
               autoComplete="tel"
               onSearch={(q) => searchCustomersByPhone({ data: q })}
-              onSelect={(c) => fillForm(form, c, selectedIdRef)}
+              onSelect={(c) => fillForm(form, c, setSelectedId)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
             />
           )}
@@ -264,7 +277,7 @@ export default function CustomerForm({
               disabled={disabled}
               autoComplete="organization"
               onSearch={(q) => searchCustomersByBusiness({ data: q })}
-              onSelect={(c) => fillForm(form, c, selectedIdRef)}
+              onSelect={(c) => fillForm(form, c, setSelectedId)}
               renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
             />
           )}
@@ -353,33 +366,35 @@ export default function CustomerForm({
           Reset
         </Button>
       )}
-      <TooltipWrapper TooltipText={'Lagre kundens informasjon i systemet'}>
-        <Button
-          type="submit"
-          disabled={disabled || isSubmitting}
-          onClick={(e) => {
-            e.preventDefault()
-            form.handleSubmit()
-          }}
-          className={cn(
-            'transition-colors',
-            justSaved &&
-              'bg-green-600 text-white hover:bg-green-600 focus-visible:ring-green-600',
-          )}
-        >
-          {justSaved ? (
-            <>
-              <Check className="h-4 w-4" />
-              Lagret
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Lagre
-            </>
-          )}
-        </Button>
-      </TooltipWrapper>
+      {!hideSaveButton && (
+        <TooltipWrapper TooltipText={'Lagre kundens informasjon i systemet'}>
+          <Button
+            type="submit"
+            disabled={disabled || isSubmitting}
+            onClick={(e) => {
+              e.preventDefault()
+              form.handleSubmit()
+            }}
+            className={cn(
+              'transition-colors',
+              justSaved &&
+                'bg-green-600 text-white hover:bg-green-600 focus-visible:ring-green-600',
+            )}
+          >
+            {justSaved ? (
+              <>
+                <Check className="h-4 w-4" />
+                Lagret
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Lagre
+              </>
+            )}
+          </Button>
+        </TooltipWrapper>
+      )}
     </>
   )
 
