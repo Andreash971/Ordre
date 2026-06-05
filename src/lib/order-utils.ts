@@ -192,3 +192,9 @@ export function getStoredOrders(): StoredOrder[] {
 export function clearArchive(): void {
   clearOrdersInCache()
 }
+
+export function deleteStoredOrder(key: string): void {
+  const rest = { ...getCache().orders }
+  delete rest[key]
+  setOrdersInCache(rest)
+}

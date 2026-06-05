@@ -157,18 +157,30 @@ function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
     <div className="flex items-center justify-end">
       <Input
         type="number"
-        min={1}
+        min={0}
         value={quantity}
         placeholder="Antall"
         onChange={(e) =>
           table.options.meta?.updateData(
             row.index,
             'quantity',
-            Math.max(1, Number(e.target.value)),
+            Math.max(0, Number(e.target.value)),
           )
         }
-        onBlur={() => setIsEditing(false)}
-        onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
+        onBlur={() => {
+          if (quantity === 0) {
+            if (row.original.specialKey && table.options.meta?.removeSpecial) {
+              table.options.meta.removeSpecial(row.original.specialKey)
+            } else {
+              table.options.meta?.removeRow(row.index)
+            }
+            return
+          }
+          setIsEditing(false)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+        }}
         className="w-16 text-right [appearance:textfield]"
       />
       <div className="ml-2 flex flex-col">
