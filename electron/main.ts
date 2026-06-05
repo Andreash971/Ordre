@@ -12,6 +12,7 @@ import {
   killPrinterSidecar,
   registerPrinterHandlers,
 } from './ipc/printer'
+import { registerContextMenuHandlers } from './ipc/contextMenu'
 
 if (started) {
   app.quit()
@@ -60,7 +61,7 @@ function installSecurityHandlers() {
   session.defaultSession.setPermissionCheckHandler(() => false)
 }
 
-function createWindow() {
+function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -93,6 +94,8 @@ function createWindow() {
   } else {
     void win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
+
+  return win
 }
 
 app.whenReady().then(() => {
@@ -109,7 +112,8 @@ app.whenReady().then(() => {
   spawnPrinterSidecar()
 
   installSecurityHandlers()
-  createWindow()
+  const win = createWindow()
+  registerContextMenuHandlers(win)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
