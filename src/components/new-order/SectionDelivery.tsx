@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
 import { getStoredSettings } from '#/lib/settings'
 import DeliverySummary from '#/components/new-order/DeliverySummary'
@@ -17,9 +18,13 @@ interface SectionDeliveryProps {
   date: string
   time: string | null
   showTime: boolean
+  leaveDoor: boolean
+  leaveNeighbour: boolean
   onDateChange: (date: string) => void
   onTimeChange: (time: string | null) => void
   onShowTimeChange: (show: boolean) => void
+  onLeaveDoorChange: (value: boolean) => void
+  onLeaveNeighbourChange: (value: boolean) => void
 }
 
 function toIso(d: Date) {
@@ -46,9 +51,13 @@ export default function SectionDelivery({
   date,
   time,
   showTime,
+  leaveDoor,
+  leaveNeighbour,
   onDateChange,
   onTimeChange,
   onShowTimeChange,
+  onLeaveDoorChange,
+  onLeaveNeighbourChange,
 }: SectionDeliveryProps) {
   const TIME_PRESETS = getStoredSettings().deliveryTimePresets
   const today = new Date()
@@ -179,6 +188,29 @@ export default function SectionDelivery({
             Bruk dagens dato
           </Button>
         ) : null}
+      </div>
+
+      {/* Delivery options */}
+      <div className="flex flex-col gap-3">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          Leveringsvalg
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            className="gray:border-border gray:bg-background gray:data-checked:bg-primary"
+            checked={leaveDoor}
+            onCheckedChange={(v) => onLeaveDoorChange(v === true)}
+          />
+          Kan settes igjen ved dør
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            className="gray:border-border gray:bg-background gray:data-checked:bg-primary"
+            checked={leaveNeighbour}
+            onCheckedChange={(v) => onLeaveNeighbourChange(v === true)}
+          />
+          Kan leveres til nabo
+        </label>
       </div>
 
       {/* Column 3: Summary — on md spans both columns below, on lg sits next to time */}

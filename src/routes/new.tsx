@@ -86,6 +86,8 @@ function NewOrderPage() {
   const [delivery, setDelivery] = React.useState<DeliveryValues>({
     date: getLocalDateString(),
     time: null,
+    leaveDoor: false,
+    leaveNeighbour: false,
   })
   const [showTime, setShowTime] = React.useState(false)
 
@@ -266,9 +268,17 @@ function NewOrderPage() {
             date={delivery.date}
             time={delivery.time}
             showTime={showTime}
+            leaveDoor={delivery.leaveDoor}
+            leaveNeighbour={delivery.leaveNeighbour}
             onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
             onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
             onShowTimeChange={setShowTime}
+            onLeaveDoorChange={(v) =>
+              setDelivery((prev) => ({ ...prev, leaveDoor: v }))
+            }
+            onLeaveNeighbourChange={(v) =>
+              setDelivery((prev) => ({ ...prev, leaveNeighbour: v }))
+            }
           />
         </SectionCard>
 
