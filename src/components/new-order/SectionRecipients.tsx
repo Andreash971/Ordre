@@ -11,6 +11,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Calendar } from '@/components/ui/calendar'
 import { TimePicker } from '@/components/ui/time-picker'
 import {
@@ -67,6 +68,8 @@ const emptyRecipient = (): Customer => ({
   instructmsg: '',
   date: '',
   time: null,
+  leaveDoor: false,
+  leaveNeighbour: false,
 })
 
 function toIso(d: Date) {
@@ -113,6 +116,8 @@ export default function SectionRecipients({
       ...emptyRecipient(),
       date: defaults.delivery.date,
       time: defaults.delivery.time,
+      leaveDoor: defaults.delivery.leaveDoor,
+      leaveNeighbour: defaults.delivery.leaveNeighbour,
       cardmsg: defaults.cardEnabled ? defaults.cardValue : '',
       instructmsg: defaults.instructionsEnabled
         ? defaults.instructionsValue
@@ -277,19 +282,31 @@ function RecipientRow({
           />
 
           {/* Overrides */}
-          <div className="grid grid-cols-[1fr_1fr] grid-rows-[auto_1fr] gap-4">
+          <div className="grid grid-cols-6 grid-rows-[auto_1fr] gap-4">
             <OverrideDate
+              className="col-span-2"
               value={value.date}
               fallback={defaults.delivery.date}
               onChange={(d) => onChange({ date: d })}
             />
             <OverrideTime
+              className="col-span-2"
               value={value.time}
               fallback={defaults.delivery.time}
               onChange={(t) => onChange({ time: t })}
               disabled={!defaults.showTime}
             />
+            <OverrideToggles
+              className="col-span-2"
+              leaveDoor={value.leaveDoor}
+              leaveNeighbour={value.leaveNeighbour}
+              fallbackLeaveDoor={defaults.delivery.leaveDoor}
+              fallbackLeaveNeighbour={defaults.delivery.leaveNeighbour}
+              onLeaveDoorChange={(v) => onChange({ leaveDoor: v })}
+              onLeaveNeighbourChange={(v) => onChange({ leaveNeighbour: v })}
+            />
             <OverrideText
+              className="col-span-3"
               label="Korttekst"
               placeholder="Kortteksten er tom."
               value={value.cardmsg}
@@ -298,6 +315,7 @@ function RecipientRow({
               disabled={!defaults.cardEnabled && !value.cardmsg}
             />
             <OverrideText
+              className="col-span-3"
               label="Instrukser"
               placeholder="Ingen instrukser for denne mottakeren."
               value={value.instructmsg}
@@ -331,10 +349,12 @@ function OverrideDate({
   value,
   fallback,
   onChange,
+  className,
 }: {
   value: string
   fallback: string
   onChange: (v: string) => void
+  className?: string
 }) {
   const [open, setOpen] = React.useState(false)
   const effective = value || fallback
@@ -346,6 +366,7 @@ function OverrideDate({
       className={cn(
         'flex flex-col gap-2 rounded-lg border p-3',
         isOverride && 'border-primary/50 bg-accent/10',
+        className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -409,12 +430,14 @@ function OverrideTime({
   onChange,
   disabled = false,
   hint,
+  className,
 }: {
   value: string | null
   fallback: string | null
   onChange: (v: string | null) => void
   disabled?: boolean
   hint?: string
+  className?: string
 }) {
   const isOverride = value !== fallback
 
@@ -423,6 +446,7 @@ function OverrideTime({
       className={cn(
         'flex flex-col gap-2 rounded-lg border p-3',
         isOverride && !disabled && 'border-primary/50 bg-accent/10',
+        className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -451,6 +475,70 @@ function OverrideTime({
   )
 }
 
+function OverrideToggles({
+  leaveDoor,
+  leaveNeighbour,
+  fallbackLeaveDoor,
+  fallbackLeaveNeighbour,
+  onLeaveDoorChange,
+  onLeaveNeighbourChange,
+  className,
+}: {
+  leaveDoor: boolean
+  leaveNeighbour: boolean
+  fallbackLeaveDoor: boolean
+  fallbackLeaveNeighbour: boolean
+  onLeaveDoorChange: (v: boolean) => void
+  onLeaveNeighbourChange: (v: boolean) => void
+  className?: string
+}) {
+  const isOverride =
+    leaveDoor !== fallbackLeaveDoor || leaveNeighbour !== fallbackLeaveNeighbour
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-2 rounded-lg border p-3',
+        isOverride && 'border-primary/50 bg-accent/10',
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          Leveringsvalg
+        </div>
+        {isOverride ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onLeaveDoorChange(fallbackLeaveDoor)
+              onLeaveNeighbourChange(fallbackLeaveNeighbour)
+            }}
+          >
+            Nullstill
+          </Button>
+        ) : null}
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <Checkbox
+          checked={leaveDoor}
+          onCheckedChange={(v) => onLeaveDoorChange(v === true)}
+        />
+        Sett igjen ved dør
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <Checkbox
+          checked={leaveNeighbour}
+          onCheckedChange={(v) => onLeaveNeighbourChange(v === true)}
+        />
+        Levere til nabo
+      </label>
+    </div>
+  )
+}
+
 function OverrideText({
   label,
   placeholder,
@@ -458,6 +546,7 @@ function OverrideText({
   fallback,
   onChange,
   disabled = false,
+  className,
 }: {
   label: string
   placeholder: string
@@ -465,6 +554,7 @@ function OverrideText({
   fallback: string
   onChange: (v: string) => void
   disabled?: boolean
+  className?: string
 }) {
   const isOverride = value !== fallback
   return (
@@ -472,6 +562,7 @@ function OverrideText({
       className={cn(
         'flex flex-col gap-2 min-h-full rounded-lg border p-3',
         isOverride && 'border-primary/50 bg-accent/10',
+        className,
       )}
     >
       <div className="flex items-center justify-between gap-2">

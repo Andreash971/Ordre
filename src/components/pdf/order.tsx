@@ -28,6 +28,8 @@ const orderDataSchema = z.object({
     longDate: spaceString,
     shortDate: spaceString,
     deliveryTime: optionalString,
+    deliveryLeaveDoor: optionalString,
+    deliveryLeaveNeighbour: optionalString,
   }),
   sender: z.object({
     name: spaceString,
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#f0f0f0',
     padding: 8,
-    minHeight: 120,
+    minHeight: 60,
     fontSize: 10,
   },
   heading: {
@@ -162,6 +164,21 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'flex-end',
   },
+  driverLeaveInfo: {
+    gap: 8,
+    marginTop: 4,
+  },
+  driverLeaveBG: {
+    padding: 2,
+    backgroundColor: '#f0f0f0',
+  },
+  pageNumbers: {
+    position: 'absolute',
+    bottom: 6,
+    alignSelf: 'center',
+    textAlign: 'center',
+    fontSize: 10,
+  },
 })
 
 export const OrderPage = ({ data }: { data: OrderData }) => {
@@ -173,7 +190,14 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
       postCode: companyPostCode,
       phone: companyPhone,
     },
-    delivery: { dayText, longDate, shortDate, deliveryTime },
+    delivery: {
+      dayText,
+      longDate,
+      shortDate,
+      deliveryTime,
+      deliveryLeaveDoor,
+      deliveryLeaveNeighbour,
+    },
     sender: {
       name: senderName,
       address: senderAddress,
@@ -272,7 +296,10 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
 
       {/* CARD AND INSTRUCTIONS INFO */}
       {cardText || instructionsText ? (
-        <View wrap={false} style={[styles.rowContainer, styles.smallGap]}>
+        <View
+          wrap={false}
+          style={[styles.rowContainer, styles.smallGap, { marginTop: 8 }]}
+        >
           <View style={styles.container}>
             <Text style={styles.heading}>Korttekst</Text>
             <View style={styles.textBoxContainer}>
@@ -337,6 +364,19 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
               <Text>{receiverPhone}</Text>
             </View>
           </View>
+
+          {/* INFO VALUES BOTTOM */}
+          <View style={[styles.rowContainer, styles.driverLeaveInfo]}>
+            <View style={[styles.rowContainer, styles.driverLeaveBG]}>
+              <Text>Dør: </Text>
+              <Text>{deliveryLeaveDoor}</Text>
+            </View>
+
+            <View style={[styles.rowContainer, styles.driverLeaveBG]}>
+              <Text>Nabo: </Text>
+              <Text>{deliveryLeaveNeighbour}</Text>
+            </View>
+          </View>
         </View>
 
         {/* RIGHT CONTAINER */}
@@ -381,8 +421,29 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
               <Text>{receiverPhone}</Text>
             </View>
           </View>
+
+          {/* INFO VALUES BOTTOM */}
+          <View style={[styles.rowContainer, styles.driverLeaveInfo]}>
+            <View style={[styles.rowContainer, styles.driverLeaveBG]}>
+              <Text>Dør: </Text>
+              <Text>{deliveryLeaveDoor}</Text>
+            </View>
+
+            <View style={[styles.rowContainer, styles.driverLeaveBG]}>
+              <Text>Nabo: </Text>
+              <Text>{deliveryLeaveNeighbour}</Text>
+            </View>
+          </View>
         </View>
       </View>
+
+      <Text
+        style={styles.pageNumbers}
+        render={({ pageNumber, totalPages }) =>
+          totalPages != 1 && `${pageNumber} / ${totalPages}`
+        }
+        fixed
+      />
     </Page>
   )
 }

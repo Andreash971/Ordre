@@ -114,6 +114,20 @@ export function OrderDetail({
         </div>
       </div>
 
+      <div className="rounded-lg border p-3">
+        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-1">
+          Leveringsvalg
+        </div>
+        <div className="text-sm space-y-0.5">
+          <div className="text-muted-foreground">
+            Ved dør: {data.delivery.deliveryLeaveDoor}
+          </div>
+          <div className="text-muted-foreground">
+            Til nabo: {data.delivery.deliveryLeaveNeighbour}
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-lg border overflow-hidden">
         <Table>
           <TableHeader>

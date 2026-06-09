@@ -56,6 +56,8 @@ function customerFromSender(
     instructmsg: instructions,
     date: delivery.date,
     time: delivery.time,
+    leaveDoor: delivery.leaveDoor,
+    leaveNeighbour: delivery.leaveNeighbour,
   }
 }
 
@@ -143,6 +145,12 @@ export default function SectionReview({
               </div>
               <div className="text-muted-foreground font-mono">
                 {delivery.time ? `kl. ${delivery.time}` : 'Ingen tidspunkt'}
+              </div>
+              <div className="text-muted-foreground text-xs pt-1">
+                Ved dør: {delivery.leaveDoor ? 'Ja' : 'Nei'}
+              </div>
+              <div className="text-muted-foreground text-xs">
+                Til nabo: {delivery.leaveNeighbour ? 'Ja' : 'Nei'}
               </div>
               <div className="text-muted-foreground text-xs flex items-center gap-1.5 pt-1">
                 <Users className="size-3.5" />
@@ -245,6 +253,9 @@ export default function SectionReview({
                 instructionsEnabled &&
                 r.instructmsg &&
                 r.instructmsg !== instructionsValue
+              const doorOverride = r.leaveDoor !== delivery.leaveDoor
+              const neighbourOverride =
+                r.leaveNeighbour !== delivery.leaveNeighbour
               return (
                 <div key={i} className="rounded-lg border p-3 bg-background">
                   <div className="flex items-center gap-2 mb-2">
@@ -283,6 +294,16 @@ export default function SectionReview({
                       label="Instruks"
                       value={rNotes ? '✓ instruks' : '—'}
                       highlight={Boolean(notesOverride)}
+                    />
+                    <ReviewCell
+                      label="Dør"
+                      value={r.leaveDoor ? 'Ja' : 'Nei'}
+                      highlight={doorOverride}
+                    />
+                    <ReviewCell
+                      label="Nabo"
+                      value={r.leaveNeighbour ? 'Ja' : 'Nei'}
+                      highlight={neighbourOverride}
                     />
                   </div>
                 </div>

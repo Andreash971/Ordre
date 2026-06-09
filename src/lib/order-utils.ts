@@ -30,9 +30,16 @@ export type Customer = {
   instructmsg: string
   date: string
   time: string | null
+  leaveDoor: boolean
+  leaveNeighbour: boolean
 }
 
-export type DeliveryValues = { date: string; time: string | null }
+export type DeliveryValues = {
+  date: string
+  time: string | null
+  leaveDoor: boolean
+  leaveNeighbour: boolean
+}
 
 export function getLocalDateString() {
   const d = new Date()
@@ -78,6 +85,8 @@ export function buildOrderData(
       longDate,
       shortDate,
       deliveryTime: customer.time ?? '',
+      deliveryLeaveDoor: customer.leaveDoor ? 'Ja' : 'Nei',
+      deliveryLeaveNeighbour: customer.leaveNeighbour ? 'Ja' : 'Nei',
     },
     sender: {
       name: sender?.name ?? '',
