@@ -104,7 +104,7 @@ export default function AutocompleteField<T extends { id: number }>({
   return (
     <Field data-invalid={isInvalid} data-disabled>
       <div className="relative">
-        <InputGroup className="gray:bg-input gray:border-border">
+        <InputGroup className="bg-card">
           <InputGroupAddon>{icon}</InputGroupAddon>
           <InputGroupInput
             id={id}

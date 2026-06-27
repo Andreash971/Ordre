@@ -8,7 +8,7 @@ import type { Item } from '#/components/OrderColumns'
 import type { SpecialItemKey } from '#/lib/settings'
 import { isSpecial } from '#/lib/special-items'
 
-interface SectionItemsProps {
+interface OrderItemsProps {
   items: Item[]
   setItems: React.Dispatch<React.SetStateAction<Item[]>>
   onSpecialPicked?: (key: SpecialItemKey) => void
@@ -22,12 +22,12 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
   maximumFractionDigits: 2,
 })
 
-export default function SectionItems({
+export default function OrderItems({
   items,
   setItems,
   onSpecialPicked,
   onSpecialRemoved,
-}: SectionItemsProps) {
+}: OrderItemsProps) {
   const insertItem = (prev: Item[], newItem: Item): Item[] => {
     const firstSpecialIndex = prev.findIndex((i) => isSpecial(i))
     if (firstSpecialIndex === -1) return [...prev, newItem]
@@ -99,6 +99,7 @@ export default function SectionItems({
       />
 
       <DataTable
+        className="min-h-[24rem]"
         columns={orderColumns}
         data={items}
         setData={setItems}
@@ -108,7 +109,7 @@ export default function SectionItems({
         }}
       />
 
-      <div className="flex items-center justify-between rounded-lg border bg-muted/30 gray:bg-background px-4 py-3">
+      <div className="flex items-center justify-between rounded-lg border bg-muted px-4 py-3">
         <span className="text-sm font-medium">Totalt</span>
         <div className="font-mono text-base font-medium">
           {nokFormatter.format(grandTotal)}

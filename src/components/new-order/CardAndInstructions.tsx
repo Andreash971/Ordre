@@ -1,11 +1,12 @@
 import { MessageSquarePlus, StickyNote, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Chip } from '@/components/ui/chip'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyButton } from '@/components/ui/empty-button'
 import { getStoredSettings } from '@/lib/settings'
 
-interface SectionCardNotesProps {
+interface CardAndInstructionsProps {
   cardEnabled: boolean
   cardValue: string
   onCardEnabledChange: (enabled: boolean) => void
@@ -31,7 +32,7 @@ function appendSuggestion(current: string, suggestion: string) {
   return `${trimmed}${sep}${suggestion}`
 }
 
-export default function SectionCardNotes({
+export default function CardAndInstructions({
   cardEnabled,
   cardValue,
   onCardEnabledChange,
@@ -40,68 +41,11 @@ export default function SectionCardNotes({
   instructionsValue,
   onInstructionsEnabledChange,
   onInstructionsValueChange,
-}: SectionCardNotesProps) {
+}: CardAndInstructionsProps) {
   const { cardSignatures, instructionSuggestions } =
     getStoredSettings().quickSelect
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {/* Kort */}
-      {!cardEnabled ? (
-        <EmptyButton
-          icon={<MessageSquarePlus />}
-          title="Legg til kort"
-          description="Inkluder kort som skal følge med leveringen."
-          onClick={() => onCardEnabledChange(true)}
-          className="min-h-32"
-        />
-      ) : (
-        <div className="flex flex-col gap-3 rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              Korttekst
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => {
-                onCardEnabledChange(false)
-                onCardValueChange('')
-              }}
-              aria-label="Fjern kortmelding"
-            >
-              <X />
-            </Button>
-          </div>
-          <Textarea
-            placeholder="Skriv korttekst her…"
-            value={cardValue}
-            onChange={(e) => onCardValueChange(e.target.value)}
-            className="min-h-32 resize-none gray:bg-background gray:border-border"
-          />
-          <div className="flex flex-col gap-1.5">
-            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              Forslag
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {cardSignatures.map((sig) => (
-                <Button
-                  key={sig}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    onCardValueChange(appendSignature(cardValue, sig))
-                  }
-                >
-                  {sig}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Instruksjoner */}
       {!instructionsEnabled ? (
         <EmptyButton
@@ -112,7 +56,7 @@ export default function SectionCardNotes({
           className="min-h-32"
         />
       ) : (
-        <div className="flex flex-col gap-3 rounded-lg border p-4">
+        <div className="flex flex-col gap-3 rounded-lg bg-muted/30 p-4">
           <div className="flex items-center justify-between">
             <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               Spesielle instrukser
@@ -134,7 +78,7 @@ export default function SectionCardNotes({
             placeholder="Skriv instrukser her…"
             value={instructionsValue}
             onChange={(e) => onInstructionsValueChange(e.target.value)}
-            className="min-h-32 resize-none gray:bg-background gray:border-border"
+            className="min-h-32 resize-none"
           />
           <div className="flex flex-col gap-1.5">
             <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
@@ -142,11 +86,8 @@ export default function SectionCardNotes({
             </div>
             <div className="flex flex-wrap gap-1.5">
               {instructionSuggestions.map((s) => (
-                <Button
+                <Chip
                   key={s}
-                  type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() =>
                     onInstructionsValueChange(
                       appendSuggestion(instructionsValue, s),
@@ -154,7 +95,61 @@ export default function SectionCardNotes({
                   }
                 >
                   {s}
-                </Button>
+                </Chip>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Kort */}
+      {!cardEnabled ? (
+        <EmptyButton
+          icon={<MessageSquarePlus />}
+          title="Legg til kort"
+          description="Inkluder om det er kort som skal følge med ordren."
+          onClick={() => onCardEnabledChange(true)}
+          className="min-h-32"
+        />
+      ) : (
+        <div className="flex flex-col gap-3 rounded-lg bg-muted/30 p-4">
+          <div className="flex items-center justify-between">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Korttekst
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => {
+                onCardEnabledChange(false)
+                onCardValueChange('')
+              }}
+              aria-label="Fjern kortmelding"
+            >
+              <X />
+            </Button>
+          </div>
+          <Textarea
+            placeholder="Skriv korttekst her…"
+            value={cardValue}
+            onChange={(e) => onCardValueChange(e.target.value)}
+            className="min-h-32 resize-none"
+          />
+          <div className="flex flex-col gap-1.5">
+            <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Forslag
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {cardSignatures.map((sig) => (
+                <Chip
+                  key={sig}
+                  onClick={() =>
+                    onCardValueChange(appendSignature(cardValue, sig))
+                  }
+                >
+                  {sig}
+                </Chip>
               ))}
             </div>
           </div>

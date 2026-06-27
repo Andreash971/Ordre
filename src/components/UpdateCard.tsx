@@ -48,7 +48,7 @@ export default function UpdateCard() {
           size="lg"
           tooltip="Oppdatering tilgjengelig"
           onClick={() => setOpen(true)}
-          className="w-auto h-fit text-base border bg-background dark:bg-muted text-primary dark:text-accent-foreground bog:text-foreground hover:bg-primary/10 hover:text-primary [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
+          className="w-auto h-fit text-base border bg-background dark:bg-muted text-primary dark:text-accent-foreground hover:bg-primary/10 hover:text-primary [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
         >
           <ArrowUpCircle />
           Oppdatering tilgjengelig

@@ -71,6 +71,7 @@ interface DataTableProps<TData, TValue> {
   rowClassName?: (row: Row<TData>) => string | undefined
   onRowClick?: (row: Row<TData>) => void
   meta?: Record<string, unknown>
+  className?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -85,6 +86,7 @@ export function DataTable<TData, TValue>({
   rowClassName,
   onRowClick,
   meta: extraMeta,
+  className,
 }: DataTableProps<TData, TValue>) {
   const [pageIndex, setPageIndex] = useState(0)
   const [sheetRowId, setSheetRowId] = useState<string | null>(null)
@@ -175,11 +177,16 @@ export function DataTable<TData, TValue>({
 
   return (
     <DataTableSheetContext.Provider value={rowSheetContext}>
-      <div className="flex flex-col gap-2 flex-1 min-h-0 min-w-0 w-full">
-        <div className="rounded-md border overflow-hidden flex flex-col flex-1 min-h-0 min-w-0 bg-background dark:bg-transparent note:bg-card">
+      <div
+        className={cn(
+          'flex flex-col gap-2 flex-1 min-h-0 min-w-0 w-full',
+          className,
+        )}
+      >
+        <div className="rounded-md border overflow-hidden flex flex-col flex-1 min-h-0 min-w-0 bg-card">
           <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-auto">
             <Table className="overflow-visible">
-              <TableHeader className="sticky top-0 bg-background">
+              <TableHeader className="sticky top-0 bg-muted dark:bg-background">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers

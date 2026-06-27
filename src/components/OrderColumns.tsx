@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 import AddProductForm from '#/components/AddProductForm'
 import type { AddProductFormValues } from '#/components/AddProductForm'
 import { insertProduct, updateProduct } from '#/lib/product-server-fns'
@@ -261,26 +262,37 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
+const HEADER_LABEL =
+  'font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground'
+
 export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'name',
-    header: () => <div className="text-left">Vare</div>,
+    header: () => <div className={cn(HEADER_LABEL, 'text-left')}>Vare</div>,
     cell: ({ row, table }) => <NameCell row={row} table={table} />,
     meta: { priority: 'primary' },
   },
   {
     id: 'quantity',
-    header: () => <div className="text-right ml-auto">Antall</div>,
+    header: () => (
+      <div className={cn(HEADER_LABEL, 'ml-auto text-right')}>Antall</div>
+    ),
     cell: ({ row, table }) => <QuantityCell row={row} table={table} />,
   },
   {
     accessorKey: 'price',
-    header: () => <div className="text-right w-fit ml-auto">Pris/Stk</div>,
+    header: () => (
+      <div className={cn(HEADER_LABEL, 'ml-auto w-fit text-right')}>
+        Pris/Stk
+      </div>
+    ),
     cell: ({ row, table }) => <PriceCell row={row} table={table} />,
   },
   {
     id: 'total',
-    header: () => <div className="text-right w-fit ml-auto">Total</div>,
+    header: () => (
+      <div className={cn(HEADER_LABEL, 'ml-auto w-fit text-right')}>Total</div>
+    ),
     cell: ({ row }) => {
       const formatted = new Intl.NumberFormat('no-NB', {
         style: 'currency',
@@ -423,7 +435,7 @@ function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
             )}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="sm:max-w-sm note:bg-secondary">
+            <DialogContent className="sm:max-w-sm">
               <DialogHeader>
                 <DialogTitle>Lagre vare</DialogTitle>
                 <DialogDescription>

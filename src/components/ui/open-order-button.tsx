@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Printer } from 'lucide-react'
+import { Printer, FileDown } from 'lucide-react'
 import type { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import type { VariantProps } from 'class-variance-authority'
@@ -91,7 +91,8 @@ export default function OpenOrderButton({
             variant="outline"
             size="lg"
           >
-            Lag PDF
+            <FileDown className="h-4 w-4" />
+            Lagre som PDF
           </Button>
         </TooltipWrapper>
         <TooltipWrapper TooltipText={`Skriv ut til ${defaultPrinter}`}>

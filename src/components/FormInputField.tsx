@@ -40,7 +40,7 @@ export default function FormInputField({
 
   return (
     <Field data-invalid={isInvalid} data-disabled>
-      <InputGroup className="gray:bg-input gray:border-border">
+      <InputGroup className="bg-card">
         <InputGroupAddon>{icon}</InputGroupAddon>
         <InputGroupInput
           id={id}

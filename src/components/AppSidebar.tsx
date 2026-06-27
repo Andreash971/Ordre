@@ -82,7 +82,7 @@ export default function AppSidebar() {
               <SidebarMenuButton
                 asChild
                 size="lg"
-                className="group/new text-base hover:bg-accent hover:text-accent-foreground [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
+                className="group/new text-base bg-primary text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground data-active:bg-primary data-active:text-primary-foreground [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
               >
                 <Link
                   to="/new"
@@ -92,7 +92,7 @@ export default function AppSidebar() {
                   activeOptions={{ exact: true }}
                   onClick={handleNavClick}
                 >
-                  <FilePlusIcon className="text-foreground group-hover/new:text-accent-foreground" />
+                  <FilePlusIcon className="text-primary-foreground data-active:text-primary-foreground" />
                   Ny ordre
                 </Link>
               </SidebarMenuButton>

@@ -177,7 +177,7 @@ function ArchivePage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <InputGroup className="w-full max-w-sm gray:bg-white/70 gray:border-border note:border-border">
+        <InputGroup className="w-full max-w-sm bg-card">
           <InputGroupAddon align="inline-start">
             <Search className="size-4" />
           </InputGroupAddon>

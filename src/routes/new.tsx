@@ -2,16 +2,14 @@ import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import SectionCard from '#/components/SectionCard'
+import OrderSection from '#/components/OrderSection'
 import CustomerForm from '#/components/CustomerForm'
 import { Empty, EmptyDescription } from '@/components/ui/empty'
-import SectionItems from '#/components/new-order/SectionItems'
-import SectionDelivery from '#/components/new-order/SectionDelivery'
-import SectionCardNotes from '#/components/new-order/SectionCardNotes'
-import SectionRecipients from '#/components/new-order/SectionRecipients'
-import SectionReview from '#/components/new-order/SectionReview'
+import OrderItems from '#/components/new-order/OrderItems'
+import SharedDetails from '#/components/new-order/SharedDetails'
+import RecipientList from '#/components/new-order/RecipientList'
+import OrderProof from '#/components/new-order/OrderProof'
 import type { Item } from '#/components/OrderColumns'
-import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
   DialogContent,
@@ -230,20 +228,21 @@ function NewOrderPage() {
   const canShowReview = senderFilled && items.some((i) => !isSpecial(i))
 
   return (
-    <main className="rise-in page-wrap flex flex-col gap-6 px-4 pb-12 pt-6">
-      <h1 className="font-heading text-2xl font-medium leading-tight">
-        Registrer ny bestilling
-      </h1>
+    <main className="rise-in page-wrap flex flex-col gap-10 px-4 pb-12 pt-6">
+      <header className="flex flex-col gap-1">
+        <h1 className="font-heading text-2xl font-medium leading-tight">
+          Ny ordre
+        </h1>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          Fyll ut kunde og varer, sett leveringsdetaljer, og legg til
+          mottakerne.
+        </p>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-[20rem_1fr] lg:grid-rows-[auto_auto] items-start lg:items-stretch">
-        <SectionCard
-          className="col-start-1"
-          number="01"
-          title="Kunde"
-          subtitle="Hvem er avsender / betaler?"
-        >
+      <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[17rem_1fr]">
+        <OrderSection title="Kunde" subtitle="Avsender / betaler">
           <CustomerForm
-            bare
+            hideHeader
             formButtons
             showCareof
             hideSaveButton={autoSaveCustomer}
@@ -256,54 +255,41 @@ function NewOrderPage() {
               saveCustomerMutation.mutateAsync({ values, id })
             }
           />
-        </SectionCard>
+        </OrderSection>
 
-        <SectionCard
-          className="col-start-1 row-start-2"
-          number="02"
-          title="Levering"
-          subtitle="Velg leveringsdato og tidspunkt"
-        >
-          <SectionDelivery
-            date={delivery.date}
-            time={delivery.time}
-            showTime={showTime}
-            leaveDoor={delivery.leaveDoor}
-            leaveNeighbour={delivery.leaveNeighbour}
-            onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
-            onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
-            onShowTimeChange={setShowTime}
-            onLeaveDoorChange={(v) =>
-              setDelivery((prev) => ({ ...prev, leaveDoor: v }))
-            }
-            onLeaveNeighbourChange={(v) =>
-              setDelivery((prev) => ({ ...prev, leaveNeighbour: v }))
-            }
-          />
-        </SectionCard>
-
-        <SectionCard
-          className="col-start-2 row-start-1 row-span-2"
-          bodyClassName="lg:flex lg:flex-1 lg:min-h-0 lg:flex-col"
-          number="03"
+        <OrderSection
           title="Ordreinnhold"
           subtitle="Legg til varer i ordren"
+          bodyClassName="flex min-h-0 flex-1 flex-col"
         >
-          <SectionItems
+          <OrderItems
             items={items}
             setItems={setItems}
             onSpecialPicked={handleSpecialPicked}
             onSpecialRemoved={handleSpecialRemoved}
           />
-        </SectionCard>
+        </OrderSection>
       </div>
 
-      <SectionCard
-        number="04"
-        title="Kort og instrukser"
-        subtitle="Inkluder og behandle kort og instrukser"
+      <OrderSection
+        title="Leveringsdetaljer & kort"
+        subtitle="Standard informasjon for hele ordren. Gjelder alle mottakere og kan overstyres per mottaker."
       >
-        <SectionCardNotes
+        <SharedDetails
+          date={delivery.date}
+          time={delivery.time}
+          showTime={showTime}
+          leaveDoor={delivery.leaveDoor}
+          leaveNeighbour={delivery.leaveNeighbour}
+          onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
+          onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
+          onShowTimeChange={setShowTime}
+          onLeaveDoorChange={(v) =>
+            setDelivery((prev) => ({ ...prev, leaveDoor: v }))
+          }
+          onLeaveNeighbourChange={(v) =>
+            setDelivery((prev) => ({ ...prev, leaveNeighbour: v }))
+          }
           cardEnabled={cardEnabled}
           cardValue={cardValue}
           onCardEnabledChange={setCardEnabled}
@@ -313,10 +299,9 @@ function NewOrderPage() {
           onInstructionsEnabledChange={setInstructionsEnabled}
           onInstructionsValueChange={setInstructionsValue}
         />
-      </SectionCard>
+      </OrderSection>
 
-      <SectionCard
-        number="05"
+      <OrderSection
         title="Mottakere"
         subtitle={
           recipientCount
@@ -324,7 +309,7 @@ function NewOrderPage() {
             : 'Leveres til kundens standardadresse'
         }
       >
-        <SectionRecipients
+        <RecipientList
           recipients={recipients}
           onRecipientsChange={setRecipients}
           onRecipientIdsChange={setRecipientIds}
@@ -338,17 +323,14 @@ function NewOrderPage() {
             instructionsValue,
           }}
         />
-      </SectionCard>
-
-      {canShowReview ? <Separator /> : null}
+      </OrderSection>
 
       {canShowReview ? (
-        <SectionCard
-          number="06"
-          title="Oversikt"
-          subtitle="Gjennomgå og generer ordrelapp(er)"
+        <OrderSection
+          title="Kontroller & generer"
+          subtitle="Siste sjekk før utskrift"
         >
-          <SectionReview
+          <OrderProof
             sender={sender}
             delivery={delivery}
             items={items}
@@ -359,7 +341,7 @@ function NewOrderPage() {
             instructionsValue={instructionsValue}
             beforeSubmit={beforeSubmit}
           />
-        </SectionCard>
+        </OrderSection>
       ) : (
         <Empty className="border border-dashed rise-in">
           <EmptyDescription>

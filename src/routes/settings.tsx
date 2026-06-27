@@ -99,7 +99,7 @@ function SelectTheme() {
 
   return (
     <Select value={mode} onValueChange={handleChange}>
-      <SelectTrigger className="w-full max-w-48 gray:border-border gray:bg-input">
+      <SelectTrigger className="w-full max-w-48">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -144,7 +144,7 @@ function SelectRetention() {
 
   return (
     <Select value={String(value)} onValueChange={handleChange}>
-      <SelectTrigger className="w-full max-w-48 gray:border-border gray:bg-input">
+      <SelectTrigger className="w-full max-w-48">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -233,7 +233,7 @@ function SelectRowsPerPage() {
 
   return (
     <Select value={String(value)} onValueChange={handleChange}>
-      <SelectTrigger className="w-full max-w-48 gray:border-border gray:bg-input">
+      <SelectTrigger className="w-full max-w-48">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -281,7 +281,6 @@ function CompanyInfoForm() {
           value={company.displayName}
           placeholder="F.eks. Mitt Firma"
           onChange={(e) => handleChange('displayName', e.target.value)}
-          className="gray:border-border gray:bg-input"
         />
       </div>
 
@@ -302,7 +301,6 @@ function CompanyInfoForm() {
             value={company.name}
             placeholder="Juridisk navn (f.eks. Mitt Firma AS)"
             onChange={(e) => handleChange('name', e.target.value)}
-            className="gray:border-border gray:bg-input"
           />
           <Input
             id="company-address"
@@ -311,7 +309,6 @@ function CompanyInfoForm() {
             value={company.address}
             placeholder="Adresse"
             onChange={(e) => handleChange('address', e.target.value)}
-            className="gray:border-border gray:bg-input"
           />
           <Input
             id="company-postcode"
@@ -320,7 +317,6 @@ function CompanyInfoForm() {
             value={company.postCode}
             placeholder="Postnummer og sted"
             onChange={(e) => handleChange('postCode', e.target.value)}
-            className="gray:border-border gray:bg-input"
           />
           <Input
             id="company-phone"
@@ -330,7 +326,6 @@ function CompanyInfoForm() {
             value={company.phone}
             placeholder="Telefon"
             onChange={(e) => handleChange('phone', e.target.value)}
-            className="gray:border-border gray:bg-input"
           />
         </div>
       </div>
@@ -380,7 +375,6 @@ function BringApiForm() {
         value={creds.uid}
         placeholder="Bring UID (e-postadresse)"
         onChange={(e) => handleChange('uid', e.target.value)}
-        className="gray:border-border gray:bg-input"
       />
       <div className="relative">
         <Input
@@ -391,7 +385,7 @@ function BringApiForm() {
           value={creds.apiKey}
           placeholder="Bring API-nøkkel"
           onChange={(e) => handleChange('apiKey', e.target.value)}
-          className="gray:border-border gray:bg-input pr-9"
+          className="pr-9"
         />
         <button
           type="button"
@@ -448,7 +442,7 @@ function QuickSelectList({
         {items.map((item, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-sm gray:bg-input"
+            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-sm"
           >
             {item}
             <button
@@ -464,7 +458,6 @@ function QuickSelectList({
       </div>
       <div className="flex gap-2">
         <Input
-          className="gray:border-border gray:bg-input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Legg til forslag…"
@@ -644,7 +637,6 @@ function SpecialItemsForm() {
                 value={items[key].name}
                 placeholder="Navn"
                 onChange={(e) => handleNameChange(key, e.target.value)}
-                className="gray:border-border gray:bg-input"
               />
               <Input
                 type="number"
@@ -652,7 +644,7 @@ function SpecialItemsForm() {
                 value={items[key].price}
                 placeholder="Pris"
                 onChange={(e) => handlePriceChange(key, e.target.value)}
-                className="gray:border-border gray:bg-input text-right [appearance:textfield]"
+                className="text-right [appearance:textfield]"
               />
             </div>
           </div>
@@ -758,7 +750,7 @@ function PrinterSettings() {
           value={defaultPrinter ?? '__none__'}
           onValueChange={handleSelect}
         >
-          <SelectTrigger className="!w-0 flex-1 min-w-0 gray:border-border gray:bg-input *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate *:data-[slot=select-value]:min-w-0">
+          <SelectTrigger className="!w-0 flex-1 min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate *:data-[slot=select-value]:min-w-0">
             <SelectValue placeholder="Ingen skriver valgt" />
           </SelectTrigger>
           <SelectContent>
@@ -794,7 +786,7 @@ function PrinterSettings() {
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200 note:text-amber-900 min-w-0"
+          className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200 min-w-0"
         >
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <p className="min-w-0 break-words break-all">{error}</p>
@@ -814,7 +806,7 @@ function SettingsPage() {
   return (
     <main className="rise-in page-wrap px-4 pb-8 pt-6">
       <div className="flex flex-col gap-4 w-full max-w-lg">
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Palette />
           </ItemMedia>
@@ -827,7 +819,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Zap />
           </ItemMedia>
@@ -842,7 +834,7 @@ function SettingsPage() {
           </ItemFooter>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Clock />
           </ItemMedia>
@@ -857,7 +849,7 @@ function SettingsPage() {
           </ItemFooter>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Save />
           </ItemMedia>
@@ -873,7 +865,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <PackagePlus />
           </ItemMedia>
@@ -888,7 +880,7 @@ function SettingsPage() {
           </ItemFooter>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Printer />
           </ItemMedia>
@@ -903,7 +895,7 @@ function SettingsPage() {
           </ItemFooter>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Building2 />
           </ItemMedia>
@@ -919,7 +911,7 @@ function SettingsPage() {
           </ItemFooter>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Rows3 />
           </ItemMedia>
@@ -934,7 +926,7 @@ function SettingsPage() {
           </ItemActions>
         </Item>
 
-        <Item variant="outline" className="dark:bg-card gray:bg-card">
+        <Item variant="outline" className="bg-card">
           <ItemMedia variant="icon">
             <Clock />
           </ItemMedia>
@@ -968,7 +960,7 @@ function SettingsPage() {
           <div id="advanced-settings-section" className="flex flex-col gap-4">
             <div
               role="alert"
-              className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200 note:text-amber-900"
+              className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <p>
@@ -978,7 +970,7 @@ function SettingsPage() {
               </p>
             </div>
 
-            <Item variant="outline" className="dark:bg-card gray:bg-card">
+            <Item variant="outline" className="bg-card">
               <ItemMedia variant="icon">
                 <FlaskConical />
               </ItemMedia>
@@ -994,7 +986,7 @@ function SettingsPage() {
               </ItemActions>
             </Item>
 
-            <Item variant="outline" className="dark:bg-card gray:bg-card">
+            <Item variant="outline" className="bg-card">
               <ItemMedia variant="icon">
                 <Settings2 />
               </ItemMedia>
@@ -1009,7 +1001,7 @@ function SettingsPage() {
               </ItemFooter>
             </Item>
 
-            <Item variant="outline" className="dark:bg-card gray:bg-card">
+            <Item variant="outline" className="bg-card">
               <ItemMedia variant="icon">
                 <Archive />
               </ItemMedia>

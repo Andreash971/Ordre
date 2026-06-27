@@ -85,7 +85,7 @@ export default function ProductPicker({
   return (
     <div className={cn('flex gap-2', className)}>
       <div className="relative flex-1">
-        <InputGroup className="note:border-border gray:bg-input gray:border-border">
+        <InputGroup className="bg-card">
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>

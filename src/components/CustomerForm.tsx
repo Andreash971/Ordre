@@ -57,6 +57,7 @@ interface CustomerFormProps {
   disabled?: boolean
   showCareof?: boolean
   bare?: boolean
+  hideHeader?: boolean
   hideSaveButton?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
@@ -152,6 +153,7 @@ export default function CustomerForm({
   disabled,
   showCareof = false,
   bare = false,
+  hideHeader = false,
   hideSaveButton = false,
   defaultValues: initialValues,
   onValuesChange,
@@ -350,6 +352,8 @@ export default function CustomerForm({
     </form>
   )
 
+  const hasButtons = formButtons && (reset || !hideSaveButton)
+
   const buttons = formButtons && (
     <>
       {reset && (
@@ -402,18 +406,20 @@ export default function CustomerForm({
     return (
       <div className={cn('flex flex-col gap-3', className)}>
         {formContent}
-        {formButtons && <div className="flex justify-end gap-2">{buttons}</div>}
+        {hasButtons && <div className="flex justify-end gap-2">{buttons}</div>}
       </div>
     )
   }
 
   return (
     <Card size={size} className={cn('min-w-60', className)}>
-      <CardHeader>
-        <CardTitle>Kundeinformasjon</CardTitle>
-      </CardHeader>
+      {!hideHeader && (
+        <CardHeader>
+          <CardTitle>Kundeinformasjon</CardTitle>
+        </CardHeader>
+      )}
       <CardContent>{formContent}</CardContent>
-      {formButtons && (
+      {hasButtons && (
         <CardFooter className="flex justify-end gap-2">{buttons}</CardFooter>
       )}
     </Card>

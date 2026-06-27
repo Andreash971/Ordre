@@ -3,6 +3,7 @@ import { ClockPlus, X, CalendarIcon } from 'lucide-react'
 
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
+import { Chip } from '@/components/ui/chip'
 import {
   Popover,
   PopoverContent,
@@ -12,9 +13,8 @@ import { TimePicker } from '@/components/ui/time-picker'
 import { Checkbox } from '@/components/ui/checkbox'
 import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
 import { getStoredSettings } from '#/lib/settings'
-import DeliverySummary from '#/components/new-order/DeliverySummary'
 
-interface SectionDeliveryProps {
+interface DeliveryDefaultsProps {
   date: string
   time: string | null
   showTime: boolean
@@ -47,7 +47,7 @@ function nextWeekday(base: Date, weekday: number) {
   return d
 }
 
-export default function SectionDelivery({
+export default function DeliveryDefaults({
   date,
   time,
   showTime,
@@ -58,7 +58,7 @@ export default function SectionDelivery({
   onShowTimeChange,
   onLeaveDoorChange,
   onLeaveNeighbourChange,
-}: SectionDeliveryProps) {
+}: DeliveryDefaultsProps) {
   const TIME_PRESETS = getStoredSettings().deliveryTimePresets
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -81,15 +81,13 @@ export default function SectionDelivery({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {quickPicks.map((q) => (
-            <Button
+            <Chip
               key={q.label}
-              type="button"
-              variant={date === q.value ? 'default' : 'outline'}
-              size="sm"
+              selected={date === q.value}
               onClick={() => onDateChange(q.value)}
             >
               {q.label}
-            </Button>
+            </Chip>
           ))}
         </div>
         <Popover>
@@ -142,16 +140,14 @@ export default function SectionDelivery({
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-1.5">
               {TIME_PRESETS.map((t) => (
-                <Button
+                <Chip
                   key={t}
-                  type="button"
-                  variant={time === t ? 'default' : 'outline'}
-                  size="sm"
+                  selected={time === t}
                   onClick={() => onTimeChange(t)}
                   className="font-mono"
                 >
                   {t}
-                </Button>
+                </Chip>
               ))}
             </div>
             <div className="flex gap-2">
@@ -197,7 +193,6 @@ export default function SectionDelivery({
         </div>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox
-            className="gray:border-border gray:bg-background gray:data-checked:bg-primary"
             checked={leaveDoor}
             onCheckedChange={(v) => onLeaveDoorChange(v === true)}
           />
@@ -205,20 +200,12 @@ export default function SectionDelivery({
         </label>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox
-            className="gray:border-border gray:bg-background gray:data-checked:bg-primary"
             checked={leaveNeighbour}
             onCheckedChange={(v) => onLeaveNeighbourChange(v === true)}
           />
           Kan leveres til nabo
         </label>
       </div>
-
-      {/* Column 3: Summary — on md spans both columns below, on lg sits next to time */}
-      <DeliverySummary
-        date={date}
-        time={time}
-        className="md:col-span-2 lg:col-span-1 gray:bg-background"
-      />
     </div>
   )
 }
