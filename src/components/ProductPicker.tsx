@@ -9,7 +9,7 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import { searchProducts } from '#/components/OrderProductsContent'
+import { searchProducts } from '#/lib/product-server-fns'
 import type { Item } from '#/components/OrderColumns'
 import { queryKeys } from '#/lib/query-keys'
 import { getStoredSettings } from '#/lib/settings'
