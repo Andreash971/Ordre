@@ -73,7 +73,7 @@ import {
   resetSpecialItems,
   updateSettings,
 } from '@/lib/settings'
-import type { DiscoveredPrinter, Printer as PrinterInfo } from '@/lib/electron'
+import type { DiscoveredPrinter, PrinterInfo } from '@shared/printing'
 import { clearArchive } from '@/lib/order-utils'
 
 export const Route = createFileRoute('/settings')({

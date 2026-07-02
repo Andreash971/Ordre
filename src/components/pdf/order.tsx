@@ -2,15 +2,8 @@
 import React from 'react'
 import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer'
 import { z } from 'zod'
+import type { OrderData } from '@shared/orders'
 import { DataTable } from '../pdf/components/dataTable'
-
-interface OrderItem extends Record<string, unknown> {
-  product: string
-  description: string
-  quantity: number
-  price: number
-  total: number
-}
 
 const spaceString = z.string().transform((val) => val || ' ')
 const optionalString = z.string().transform((val) => val || null)
@@ -61,7 +54,12 @@ const orderDataSchema = z.object({
   ),
 })
 
-export type OrderData = z.input<typeof orderDataSchema>
+// Compile-time drift guard: the parsing schema above must accept every
+// value of the shared OrderData contract that buildOrderData produces.
+type Assert<T extends true> = T
+export type _SchemaAcceptsOrderData = Assert<
+  OrderData extends z.input<typeof orderDataSchema> ? true : false
+>
 
 const styles = StyleSheet.create({
   page: {

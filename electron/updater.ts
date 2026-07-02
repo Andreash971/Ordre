@@ -1,15 +1,10 @@
 import { app, BrowserWindow, autoUpdater, ipcMain } from 'electron'
 import { updateElectronApp } from 'update-electron-app'
 import type { IUpdateInfo } from 'update-electron-app'
+import type { PendingUpdate } from '../shared/updates'
 import { getStore } from './store'
 
 const REPO = 'Andreash971/Ordre'
-
-export interface PendingUpdate {
-  version: string
-  changelog: string
-  downloadUrl?: string
-}
 
 let pendingUpdate: PendingUpdate | null = null
 

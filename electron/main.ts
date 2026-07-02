@@ -92,7 +92,7 @@ function createWindow(): BrowserWindow {
     void win.loadURL('http://localhost:3000')
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    void win.loadFile(path.join(__dirname, '../renderer/index.html'))
+    void win.loadFile(path.join(__dirname, '../../renderer/index.html'))
   }
 
   return win

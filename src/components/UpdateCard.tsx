@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { PendingUpdate } from '@/lib/electron'
+import type { PendingUpdate } from '@shared/updates'
 
 function formatChangelog(raw: string): Array<string> {
   return raw

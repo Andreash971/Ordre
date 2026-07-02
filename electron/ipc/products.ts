@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { eq, like, sql } from 'drizzle-orm'
-import * as z from 'zod'
 
+import { productIdSchema, productSchema } from '../../shared/products'
 import { getDb, schema } from '../db'
 
 const { products } = schema
@@ -13,17 +13,6 @@ const productSelect = {
   price: products.price,
   description: products.description,
 }
-
-const productSchema = z.object({
-  id: z.number().optional(),
-  name: z.string().trim().min(1, 'Navn er påkrevd').max(100),
-  category: z
-    .string()
-    .max(50)
-    .transform((v) => (v.trim() === '' ? 'Ukategorisert' : v.trim())),
-  price: z.number().positive('Pris må være større enn 0'),
-  description: z.string().max(2000).optional(),
-})
 
 export function registerProductHandlers() {
   const db = getDb()
@@ -42,7 +31,7 @@ export function registerProductHandlers() {
   })
 
   ipcMain.handle('products:delete', async (_e, raw: unknown) => {
-    const id = z.number().int().positive().parse(raw)
+    const id = productIdSchema.parse(raw)
     await db.delete(products).where(eq(products.id, id))
   })
 

@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { eq, like, sql } from 'drizzle-orm'
-import * as z from 'zod'
 
+import { customerIdSchema, customerSchema } from '../../shared/customers'
 import { getDb, schema } from '../db'
 
 const { customers } = schema
@@ -16,17 +16,6 @@ const customerSelect = {
   city: customers.city,
   careof: customers.careof,
 }
-
-const customerSchema = z.object({
-  id: z.number().optional(),
-  name: z.string().max(50),
-  phone: z.string().max(15).optional(),
-  company: z.string().max(50).optional(),
-  address: z.string().max(50).optional(),
-  postcode: z.string().max(4).optional(),
-  city: z.string().max(25).optional(),
-  careof: z.string().max(50).optional(),
-})
 
 function ilikePattern(query: string) {
   return `%${query.toLowerCase()}%`
@@ -67,7 +56,7 @@ export function registerCustomerHandlers() {
   })
 
   ipcMain.handle('customers:delete', async (_e, raw: unknown) => {
-    const id = z.number().int().positive().parse(raw)
+    const id = customerIdSchema.parse(raw)
     await db.delete(customers).where(eq(customers.id, id))
   })
 

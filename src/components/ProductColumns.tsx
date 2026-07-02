@@ -23,7 +23,7 @@ import {
 
 import type { AddProductFormValues } from '#/components/AddProductForm'
 import AddProductForm from '#/components/AddProductForm'
-import type { Product } from '#/lib/api-types'
+import type { Product } from '@shared/products'
 import { deleteProduct, updateProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
 

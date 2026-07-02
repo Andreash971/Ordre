@@ -24,7 +24,7 @@ import {
 
 import type { CompanyInfo } from '@/lib/settings'
 import { completeOnboarding, updateSettings } from '@/lib/settings'
-import type { DiscoveredPrinter, Printer as PrinterInfo } from '@/lib/electron'
+import type { DiscoveredPrinter, PrinterInfo } from '@shared/printing'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingPage,

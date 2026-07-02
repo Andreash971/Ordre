@@ -6,6 +6,7 @@ import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { Bonjour } from 'bonjour-service'
 import type { Service } from 'bonjour-service'
+import type { DiscoveredPrinter, PrinterInfo } from '../../shared/printing'
 
 // dns-packet has no shipped types; declare the narrow surface we need.
 // It's a transitive dep via bonjour-service → multicast-dns → dns-packet.
@@ -38,16 +39,6 @@ const execFileAsync = promisify(execFile)
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-export type PrinterInfo = { name: string; isDefault: boolean }
-
-export type DiscoveredPrinter = {
-  name: string
-  host?: string
-  port?: number
-  addresses?: string[]
-  source: 'mdns' | 'configured' | 'wsd'
-}
 
 type SidecarRequest =
   | { id: string; type: 'list-printers' }

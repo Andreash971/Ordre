@@ -1,5 +1,5 @@
 import type { Item } from '#/components/OrderColumns'
-import type { OrderData } from '#/components/pdf/order'
+import type { OrderData, StoredOrder } from '@shared/orders'
 import { getRetentionMs, getStoredSettings } from '#/lib/settings'
 import { getSpecialKeyForItem } from '#/lib/special-items'
 import {
@@ -126,12 +126,7 @@ export function buildOrderData(
   }
 }
 
-export type StoredOrder = {
-  data: OrderData
-  savedAt: number
-  expiresAt: number
-  key: string
-}
+export type { StoredOrder }
 
 /**
  * Deterministic key derived from the order contents. Re-generating the same

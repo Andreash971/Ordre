@@ -1,4 +1,4 @@
-import type { AddressSuggestion } from './api-types'
+import type { AddressSuggestion } from '@shared/bring'
 
 export type { AddressSuggestion }
 

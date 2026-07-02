@@ -24,6 +24,7 @@ module.exports = {
     extraResource: ['drizzle'],
     ignore: [
       /^\/electron($|\/)/,
+      /^\/shared($|\/)/,
       /^\/src($|\/)/,
       /^\/public($|\/)/,
       /^\/assets($|\/)/,

@@ -3,7 +3,7 @@ import type {
   CustomerSuggestion,
   InsertCustomerInput,
   UpdateCustomerInput,
-} from './api-types'
+} from '@shared/customers'
 
 export type {
   Customer,

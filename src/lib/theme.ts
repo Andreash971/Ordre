@@ -1,12 +1,8 @@
+import type { ThemeMode } from '@shared/settings'
+import { themeSchema } from '@shared/settings'
 import { getCache, setThemeInCache } from './store-cache'
 
-export type ThemeMode =
-  | 'auto'
-  | 'light'
-  | 'dark'
-  | 'midnight'
-  | 'editorial-florist'
-  | 'ironstone'
+export type { ThemeMode }
 
 interface ThemeDefinition {
   value: ThemeMode
@@ -22,7 +18,7 @@ interface ThemeDefinition {
   colorScheme: 'light' | 'dark'
 }
 
-export const THEMES: ReadonlyArray<ThemeDefinition> = [
+export const THEMES = [
   {
     value: 'auto',
     label: 'Auto',
@@ -65,13 +61,19 @@ export const THEMES: ReadonlyArray<ThemeDefinition> = [
     className: 'ironstone',
     colorScheme: 'dark',
   },
-]
+] as const satisfies ReadonlyArray<ThemeDefinition>
+
+// Compile-time drift guard: fails to compile if THEMES is missing a value
+// from the shared themeSchema (or vice versa via ThemeDefinition above).
+type AssertNever<T extends never> = T
+export type _ThemesCoverAllModes = AssertNever<
+  Exclude<ThemeMode, (typeof THEMES)[number]['value']>
+>
 
 const LOCALSTORAGE_KEY = 'theme'
-const THEME_VALUES = THEMES.map((t) => t.value)
 
 export function isThemeMode(v: unknown): v is ThemeMode {
-  return typeof v === 'string' && (THEME_VALUES as Array<string>).includes(v)
+  return themeSchema.safeParse(v).success
 }
 
 function resolve(mode: ThemeMode): ThemeDefinition {

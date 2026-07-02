@@ -1,98 +1,12 @@
-type RetentionOption = 3 | 7 | 14 | 30 | 'never'
-type PageSizeOption = 10 | 14 | 25 | 50
-
-// Source of truth: src/lib/theme.ts — must list exactly the ThemeMode values.
-export type ThemeMode =
-  | 'auto'
-  | 'light'
-  | 'dark'
-  | 'midnight'
-  | 'editorial-florist'
-  | 'ironstone'
-
-export type CompanyInfo = {
-  name: string
-  displayName: string
-  address: string
-  postCode: string
-  phone: string
-}
-
-export type QuickSelectSettings = {
-  cardSignatures: string[]
-  instructionSuggestions: string[]
-}
-
-export type BringApiCredentials = {
-  uid: string
-  apiKey: string
-}
-
-export type SpecialItemKey = 'frakt' | 'leveringstid' | 'kort'
-
-export type SpecialItem = {
-  name: string
-  price: number
-}
-
-export type SpecialItemsSettings = Record<SpecialItemKey, SpecialItem>
-
-export const DEFAULT_SPECIAL_ITEMS: SpecialItemsSettings = {
-  frakt: { name: 'Frakt', price: 100 },
-  leveringstid: { name: 'Leveringstid', price: 100 },
-  kort: { name: 'Kort', price: 25 },
-}
-
-export type AppSettings = {
-  archiveRetention: RetentionOption
-  rowsPerPage: PageSizeOption
-  company: CompanyInfo
-  quickSelect: QuickSelectSettings
-  defaultPrinter: string | null
-  bringApi: BringApiCredentials
-  specialItems: SpecialItemsSettings
-  autoSaveCustomer: boolean
-  betaChannel: boolean
-  deliveryTimePresets: [string, string, string, string]
-}
-
-export type StoredOrder = {
-  data: unknown
-  savedAt: number
-  expiresAt: number
-  key: string
-}
+import type { AppSettings, ThemeMode } from '../shared/settings'
+import { DEFAULT_SETTINGS } from '../shared/settings'
+import type { StoredOrder } from '../shared/orders'
 
 export type StoreSchema = {
   theme: ThemeMode
   settings: AppSettings
   orders: Record<string, StoredOrder>
   onboardingCompleted: boolean
-}
-
-export const DEFAULT_SETTINGS: AppSettings = {
-  archiveRetention: 7,
-  rowsPerPage: 14,
-  defaultPrinter: null,
-  company: {
-    name: '',
-    displayName: '',
-    address: '',
-    postCode: '',
-    phone: '',
-  },
-  quickSelect: {
-    cardSignatures: [],
-    instructionSuggestions: [],
-  },
-  bringApi: {
-    uid: '',
-    apiKey: '',
-  },
-  specialItems: DEFAULT_SPECIAL_ITEMS,
-  autoSaveCustomer: false,
-  betaChannel: false,
-  deliveryTimePresets: ['11:00', '12:00', '14:00', '17:00'],
 }
 
 const DEFAULTS: StoreSchema = {
@@ -116,6 +30,8 @@ type StoreCtor = new (opts: {
   defaults?: StoreSchema
 }) => StoreInstance
 
+// electron-store v11 is ESM-only while the main process compiles to CJS;
+// the Function wrapper stops tsc from downleveling import() to require().
 const dynamicImport = new Function('specifier', 'return import(specifier)') as (
   specifier: string,
 ) => Promise<{ default: StoreCtor }>
