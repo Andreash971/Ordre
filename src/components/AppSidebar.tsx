@@ -86,9 +86,7 @@ export default function AppSidebar() {
               >
                 <Link
                   to="/new"
-                  activeProps={
-                    { 'data-active': 'true' } as Record<string, string>
-                  }
+                  activeProps={{ 'data-active': 'true' }}
                   activeOptions={{ exact: true }}
                   onClick={handleNavClick}
                 >
@@ -111,9 +109,7 @@ export default function AppSidebar() {
                 >
                   <Link
                     to={to}
-                    activeProps={
-                      { 'data-active': 'true' } as Record<string, string>
-                    }
+                    activeProps={{ 'data-active': 'true' }}
                     activeOptions={{ exact: true }}
                     onClick={handleNavClick}
                   >
@@ -136,7 +132,7 @@ export default function AppSidebar() {
         >
           <Link
             to="/settings"
-            activeProps={{ 'data-active': 'true' } as Record<string, string>}
+            activeProps={{ 'data-active': 'true' }}
             onClick={handleNavClick}
           >
             <Settings className="text-foreground" />

@@ -250,7 +250,7 @@ export const OrderPage = ({ data }: { data: OrderData }) => {
 
       {/* ORDER CONTENTS */}
       <DataTable
-        data={orderContentData as OrderItem[]}
+        data={orderContentData}
         style={styles.orderContent}
         columns={[
           {

@@ -41,7 +41,8 @@ export function registerProductHandlers() {
       .limit(3)
   })
 
-  ipcMain.handle('products:delete', async (_e, id: number) => {
+  ipcMain.handle('products:delete', async (_e, raw: unknown) => {
+    const id = z.number().int().positive().parse(raw)
     await db.delete(products).where(eq(products.id, id))
   })
 

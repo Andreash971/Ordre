@@ -93,7 +93,7 @@ function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
     <div
       className="flex flex-col gap-1 min-w-0"
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
           setIsEditing(false)
         }
       }}
@@ -214,7 +214,7 @@ function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
-const nokFormatter = new Intl.NumberFormat('no-NB', {
+const nokFormatter = new Intl.NumberFormat('nb-NO', {
   style: 'currency',
   currency: 'NOK',
   minimumFractionDigits: 0,
@@ -293,16 +293,11 @@ export const columns: ColumnDef<Item>[] = [
     header: () => (
       <div className={cn(HEADER_LABEL, 'ml-auto w-fit text-right')}>Total</div>
     ),
-    cell: ({ row }) => {
-      const formatted = new Intl.NumberFormat('no-NB', {
-        style: 'currency',
-        currency: 'NOK',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }).format(row.original.price * row.original.quantity)
-
-      return <div className="text-right">{formatted}</div>
-    },
+    cell: ({ row }) => (
+      <div className="text-right">
+        {nokFormatter.format(row.original.price * row.original.quantity)}
+      </div>
+    ),
     meta: { priority: 'primary' },
   },
   {

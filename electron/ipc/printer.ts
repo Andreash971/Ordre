@@ -30,9 +30,7 @@ export function spawnPrinterSidecar() {
   })
 
   sidecar.on('error', (type, location, report) => {
-    console.error(
-      `[printer-sidecar] fatal ${type} at ${location}\n${report}`,
-    )
+    console.error(`[printer-sidecar] fatal ${type} at ${location}\n${report}`)
   })
 
   sidecar.on('message', (msg: SidecarMessage) => {

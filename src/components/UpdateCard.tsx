@@ -29,8 +29,7 @@ export default function UpdateCard() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const update = window.electronAPI?.update
-    if (!update) return
+    const update = window.electronAPI.update
     void update.getPending().then((info) => {
       if (info) setPending(info)
     })

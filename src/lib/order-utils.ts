@@ -110,8 +110,7 @@ export function buildOrderData(
     orderContent: items
       .filter(
         (i) =>
-          customer.time !== null ||
-          getSpecialKeyForItem(i) !== 'leveringstid',
+          customer.time !== null || getSpecialKeyForItem(i) !== 'leveringstid',
       )
       .filter(
         (i) =>
@@ -134,6 +133,37 @@ export type StoredOrder = {
   key: string
 }
 
+/**
+ * Deterministic key derived from the order contents. Re-generating the same
+ * order (e.g. "save PDF" followed by "print") overwrites its archive entry
+ * instead of duplicating it, while orders that differ in any field — even to
+ * recipients with identical names — never collide.
+ */
+function orderKey(data: OrderData): string {
+  const json = JSON.stringify(data)
+  let hash = 5381
+  for (let i = 0; i < json.length; i++) {
+    hash = (((hash << 5) + hash) ^ json.charCodeAt(i)) >>> 0
+  }
+  return `ordre-${hash.toString(36)}-${json.length.toString(36)}`
+}
+
+function buildStoredOrder(
+  customer: Customer,
+  sender: CustomerFormValues | null,
+  delivery: DeliveryValues,
+  items: Item[],
+): StoredOrder {
+  const data = buildOrderData(customer, sender, delivery, items)
+  const now = Date.now()
+  return {
+    data,
+    savedAt: now,
+    expiresAt: now + getRetentionMs(),
+    key: orderKey(data),
+  }
+}
+
 export function exportOrdersToJson(
   customers: Customer[],
   sender: CustomerFormValues | null,
@@ -141,21 +171,10 @@ export function exportOrdersToJson(
   items: Item[],
 ) {
   const stored: Record<string, StoredOrder> = { ...getCache().orders }
-  const now = Date.now()
-  customers.forEach((customer, index) => {
-    const orderData = buildOrderData(customer, sender, delivery, items)
-    const safeName = (customer.name || `mottaker-${index + 1}`)
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-    const key = `ordre-${safeName}`
-    stored[key] = {
-      data: orderData,
-      savedAt: now,
-      expiresAt: now + getRetentionMs(),
-      key,
-    }
-  })
+  for (const customer of customers) {
+    const order = buildStoredOrder(customer, sender, delivery, items)
+    stored[order.key] = order
+  }
   setOrdersInCache(stored)
 }
 
@@ -165,21 +184,9 @@ export function getCurrentOrders(
   delivery: DeliveryValues,
   items: Item[],
 ): StoredOrder[] {
-  const now = Date.now()
-  return customers.map((customer, index) => {
-    const orderData = buildOrderData(customer, sender, delivery, items)
-    const safeName = (customer.name || `mottaker-${index + 1}`)
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-    const key = `ordre-${safeName}`
-    return {
-      data: orderData,
-      savedAt: now,
-      expiresAt: now + getRetentionMs(),
-      key,
-    }
-  })
+  return customers.map((customer) =>
+    buildStoredOrder(customer, sender, delivery, items),
+  )
 }
 
 export function getStoredOrders(): StoredOrder[] {

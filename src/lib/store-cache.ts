@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   specialItems: DEFAULT_SPECIAL_ITEMS,
   autoSaveCustomer: false,
   betaChannel: false,
-  deliveryTimePresets: ['11:00', '12:00', '14:00', '15:00'],
+  deliveryTimePresets: ['11:00', '12:00', '14:00', '17:00'],
 }
 
 type Cache = {

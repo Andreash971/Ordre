@@ -4,19 +4,14 @@ import * as z from 'zod'
 import type { AppSettings, StoredOrder } from '../store'
 import { DEFAULT_SETTINGS, DEFAULT_SPECIAL_ITEMS, getStore } from '../store'
 
-// Source of truth: src/lib/theme.ts
+// Source of truth: src/lib/theme.ts — must list exactly the ThemeMode values.
 const themeSchema = z.enum([
   'auto',
   'light',
   'dark',
-  'gray',
-  'darkblue',
   'midnight',
-  'note',
-  'sandstone',
-  'bog',
+  'editorial-florist',
   'ironstone',
-  'darkforest',
 ])
 
 const companySchema = z.object({
@@ -73,7 +68,9 @@ const partialSettingsSchema = z.object({
   specialItems: specialItemsSchema.optional(),
   autoSaveCustomer: z.boolean().optional(),
   betaChannel: z.boolean().optional(),
-  deliveryTimePresets: z.tuple([z.string(), z.string(), z.string(), z.string()]).optional(),
+  deliveryTimePresets: z
+    .tuple([z.string(), z.string(), z.string(), z.string()])
+    .optional(),
 })
 
 const storedOrderSchema = z.object({
@@ -111,10 +108,18 @@ export function registerStoreHandlers() {
   ipcMain.handle('store:setSettings', async (_e, raw: unknown) => {
     const partial = partialSettingsSchema.parse(raw)
     const store = await getStore()
-    const current = store.get('settings')
+    // Persisted settings may come from an older app version and lack newer
+    // fields, so treat everything as potentially missing.
+    const current = store.get('settings') as Partial<AppSettings>
     const next: AppSettings = {
-      archiveRetention: partial.archiveRetention ?? current.archiveRetention,
-      rowsPerPage: partial.rowsPerPage ?? current.rowsPerPage,
+      archiveRetention:
+        partial.archiveRetention ??
+        current.archiveRetention ??
+        DEFAULT_SETTINGS.archiveRetention,
+      rowsPerPage:
+        partial.rowsPerPage ??
+        current.rowsPerPage ??
+        DEFAULT_SETTINGS.rowsPerPage,
       company: {
         ...DEFAULT_SETTINGS.company,
         ...current.company,
@@ -123,15 +128,17 @@ export function registerStoreHandlers() {
       quickSelect: {
         cardSignatures:
           partial.quickSelect?.cardSignatures ??
-          current.quickSelect.cardSignatures,
+          current.quickSelect?.cardSignatures ??
+          [],
         instructionSuggestions:
           partial.quickSelect?.instructionSuggestions ??
-          current.quickSelect.instructionSuggestions,
+          current.quickSelect?.instructionSuggestions ??
+          [],
       },
       defaultPrinter:
         partial.defaultPrinter !== undefined
           ? partial.defaultPrinter
-          : current.defaultPrinter,
+          : (current.defaultPrinter ?? null),
       bringApi: {
         ...DEFAULT_SETTINGS.bringApi,
         ...current.bringApi,
@@ -148,10 +155,10 @@ export function registerStoreHandlers() {
           // Carry over values previously stored under the old `fraktTidspunktstillegg` key.
           // Remove on or after 2026-09-28 — once the renderer-side hydration migration
           // has run for every active user, the old key will no longer appear in `current`.
-          ...((current.specialItems as Record<string, unknown> | undefined)
+          ...(((current.specialItems as Record<string, unknown> | undefined)
             ?.fraktTidspunktstillegg as
             | Partial<{ name: string; price: number }>
-            | undefined ?? {}),
+            | undefined) ?? {}),
           ...(current.specialItems?.leveringstid ?? {}),
           ...(partial.specialItems?.leveringstid ?? {}),
         },
@@ -165,7 +172,9 @@ export function registerStoreHandlers() {
         partial.autoSaveCustomer ?? current.autoSaveCustomer ?? false,
       betaChannel: partial.betaChannel ?? current.betaChannel ?? false,
       deliveryTimePresets:
-        partial.deliveryTimePresets ?? current.deliveryTimePresets ?? ['11:00', '12:00', '14:00', '17:00'],
+        partial.deliveryTimePresets ??
+        current.deliveryTimePresets ??
+        DEFAULT_SETTINGS.deliveryTimePresets,
     }
     store.set('settings', next)
     return next

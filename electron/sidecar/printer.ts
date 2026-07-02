@@ -29,7 +29,8 @@ type DnsPacketModule = {
   encode: (pkt: DnsPacket) => Buffer
   decode: (buf: Buffer) => DnsPacket
 }
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+// eslint-disable-next-line import/no-commonjs -- dns-packet ships no types; loaded via require() in the CJS sidecar build
 const dnsPacket = require('dns-packet') as DnsPacketModule
 
 const execFileAsync = promisify(execFile)
@@ -171,15 +172,13 @@ async function discoverMdns(timeoutMs: number): Promise<DiscoveredPrinter[]> {
     .flatMap(([name, addrs]) =>
       (addrs ?? [])
         .filter((a) => a.family === 'IPv4')
-        .map(
-          (a) => `${name}=${a.address}${a.internal ? '(internal)' : ''}`,
-        ),
+        .map((a) => `${name}=${a.address}${a.internal ? '(internal)' : ''}`),
     )
     .join(' ')
   console.log(`[printer-sidecar mdns] interfaces: ${ifaceSummary || 'none'}`)
 
   const bonjour = new Bonjour(undefined, (err: unknown) => {
-    const e = err as { code?: string; message?: string }
+    const e = err as { code?: string; message?: string } | null
     console.error(
       `[printer-sidecar mdns] bonjour error: code=${e?.code ?? 'unknown'} msg=${e?.message ?? String(err)}`,
     )
@@ -217,7 +216,7 @@ async function discoverMdns(timeoutMs: number): Promise<DiscoveredPrinter[]> {
       collect(svc)
     })
     browser.on('error', (err: unknown) => {
-      const e = err as { code?: string; message?: string }
+      const e = err as { code?: string; message?: string } | null
       console.error(
         `[printer-sidecar mdns] browser ${type} error: code=${e?.code ?? 'unknown'} msg=${e?.message ?? String(err)}`,
       )
@@ -367,9 +366,7 @@ function browseService(
     rl.on('line', (line) => {
       // Columns: Timestamp  A/R  Flags  if  Domain  ServiceType  InstanceName
       // The instance name can contain spaces, so capture the rest of the line.
-      const m = line.match(
-        /^\s*\S+\s+Add\s+\d+\s+\d+\s+\S+\s+\S+\s+(.+?)\s*$/,
-      )
+      const m = line.match(/^\s*\S+\s+Add\s+\d+\s+\d+\s+\S+\s+\S+\s+(.+?)\s*$/)
       if (m) onAdd({ type, instance: m[1] })
     })
     const timer = setTimeout(() => {
@@ -496,10 +493,7 @@ async function discoverWindowsDnsSd(
   )
 
   const counts = types
-    .map(
-      (t) =>
-        `${t}=${[...hits.values()].filter((h) => h.type === t).length}`,
-    )
+    .map((t) => `${t}=${[...hits.values()].filter((h) => h.type === t).length}`)
     .join(' ')
   console.log(
     `[printer-sidecar dns-sd] ${counts} resolved=${printers.length} duration=${Date.now() - startedAt}ms`,
@@ -570,9 +564,7 @@ const MDNS_TYPES = [
   '_printer._tcp.local',
 ] as const
 
-function discoverMdnsUnicast(
-  timeoutMs: number,
-): Promise<DiscoveredPrinter[]> {
+function discoverMdnsUnicast(timeoutMs: number): Promise<DiscoveredPrinter[]> {
   return new Promise((resolve) => {
     const startedAt = Date.now()
     const socket = dgram.createSocket({ type: 'udp4', reuseAddr: true })
@@ -593,8 +585,8 @@ function discoverMdnsUnicast(
     const hostsWanted = new Set<string>()
 
     let finished = false
-    let deadlineTimer: NodeJS.Timeout | undefined
-    let repeatTimer: NodeJS.Timeout | undefined
+    let deadlineTimer: NodeJS.Timeout | undefined = undefined
+    let repeatTimer: NodeJS.Timeout | undefined = undefined
 
     const send = (questions: MdnsQuestion[]) => {
       if (finished || questions.length === 0) return
@@ -633,8 +625,7 @@ function discoverMdnsUnicast(
         // of the instance name before "._<type>._tcp.local".
         const dotIdx = p.instance.indexOf('._')
         const displayName =
-          p.friendly ||
-          (dotIdx > 0 ? p.instance.slice(0, dotIdx) : p.instance)
+          p.friendly || (dotIdx > 0 ? p.instance.slice(0, dotIdx) : p.instance)
         result.push({
           name: displayName,
           host: p.host?.replace(/\.$/, ''),
@@ -676,7 +667,7 @@ function discoverMdnsUnicast(
           // Only care about PTRs for our service types of interest.
           const matchedType = MDNS_TYPES.find((t) => recName === t)
           if (!matchedType) continue
-          const instance = (rec.data as string).replace(/\.$/, '')
+          const instance = rec.data.replace(/\.$/, '')
           if (!byInstance.has(instance)) {
             byInstance.set(instance, {
               ptrFrom: matchedType,
@@ -689,7 +680,11 @@ function discoverMdnsUnicast(
             followups.push({ name: instance, type: 'SRV' })
             followups.push({ name: instance, type: 'TXT' })
           }
-        } else if (rec.type === 'SRV' && rec.data && typeof rec.data === 'object') {
+        } else if (
+          rec.type === 'SRV' &&
+          rec.data &&
+          typeof rec.data === 'object'
+        ) {
           const data = rec.data as { target?: string; port?: number }
           const pending = byInstance.get(recName)
           if (pending && data.target && typeof data.port === 'number') {
@@ -718,7 +713,7 @@ function discoverMdnsUnicast(
           if (hostsWanted.has(recName)) {
             for (const pending of byInstance.values()) {
               if (pending.host === recName) {
-                pending.addresses.add(rec.data as string)
+                pending.addresses.add(rec.data)
               }
             }
           }
@@ -742,9 +737,12 @@ function discoverMdnsUnicast(
 
     // Resend roughly mid-window — catches responders that need a second
     // prompt and any printers that come online during discovery.
-    repeatTimer = setTimeout(() => {
-      send(MDNS_TYPES.map((t) => ({ name: t, type: 'PTR' as const })))
-    }, Math.max(1000, Math.floor(timeoutMs / 3)))
+    repeatTimer = setTimeout(
+      () => {
+        send(MDNS_TYPES.map((t) => ({ name: t, type: 'PTR' as const })))
+      },
+      Math.max(1000, Math.floor(timeoutMs / 3)),
+    )
 
     deadlineTimer = setTimeout(finish, timeoutMs)
   })

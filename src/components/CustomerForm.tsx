@@ -135,7 +135,7 @@ function fillForm(
   customer: CustomerSuggestion,
   setSelectedId: (id: number | null) => void,
 ) {
-  setSelectedId(customer.id ?? null)
+  setSelectedId(customer.id)
   form.setFieldValue('name', customer.name)
   form.setFieldValue('phone', customer.phone ?? '')
   form.setFieldValue('company', customer.company ?? '')
