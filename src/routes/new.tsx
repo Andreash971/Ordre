@@ -240,7 +240,7 @@ function NewOrderPage() {
       </header>
 
       <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[17rem_1fr]">
-        <OrderSection title="Kunde" subtitle="Avsender / betaler">
+        <OrderSection title="Kundeinformasjon" subtitle="Avsender / betaler">
           <CustomerForm
             hideHeader
             formButtons

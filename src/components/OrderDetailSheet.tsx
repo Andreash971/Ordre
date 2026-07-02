@@ -264,7 +264,7 @@ export function OrderDetailSheet({
 }) {
   return (
     <Sheet open={order !== null} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+      <SheetContent className="w-full lg:min-w-xl overflow-y-auto">
         {order ? <OrderDetail order={order} onDelete={onDelete} /> : null}
       </SheetContent>
     </Sheet>
