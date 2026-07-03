@@ -35,7 +35,7 @@ export function EmptyButton({
       )}
       {...props}
     >
-      <Empty className="border border-dashed group-hover:border-primary group-hover:bg-accent/20">
+      <Empty className="h-full border border-dashed group-hover:border-primary group-hover:bg-accent/20">
         <EmptyHeader>
           {icon && <EmptyMedia variant="icon">{icon}</EmptyMedia>}
           <EmptyTitle>{title}</EmptyTitle>

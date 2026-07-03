@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { PendingUpdate } from '@/lib/electron'
+import type { PendingUpdate } from '@shared/updates'
 
 function formatChangelog(raw: string): Array<string> {
   return raw
@@ -29,8 +29,7 @@ export default function UpdateCard() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const update = window.electronAPI?.update
-    if (!update) return
+    const update = window.electronAPI.update
     void update.getPending().then((info) => {
       if (info) setPending(info)
     })
@@ -48,7 +47,7 @@ export default function UpdateCard() {
           size="lg"
           tooltip="Oppdatering tilgjengelig"
           onClick={() => setOpen(true)}
-          className="w-auto h-fit text-base border bg-background dark:bg-muted text-primary dark:text-accent-foreground bog:text-foreground hover:bg-primary/10 hover:text-primary [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
+          className="w-auto h-fit text-base border bg-background dark:bg-muted text-primary dark:text-accent-foreground hover:bg-primary/10 hover:text-primary [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
         >
           <ArrowUpCircle />
           Oppdatering tilgjengelig

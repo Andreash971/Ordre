@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
 
-import FormInputField from '#/components/FormInputField'
+import FormInputField from '@/components/FormInputField'
 import { DialogClose } from './ui/dialog'
 
 export type AddProductFormValues = {

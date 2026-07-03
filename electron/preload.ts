@@ -1,46 +1,89 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { PendingUpdate } from './updater'
+import type {
+  Customer,
+  CustomerSuggestion,
+  InsertCustomerInput,
+  UpdateCustomerInput,
+} from '../shared/customers'
+import type {
+  InsertProductInput,
+  Product,
+  UpdateProductInput,
+} from '../shared/products'
+import type { AddressSuggestion } from '../shared/bring'
+import type {
+  AppSettings,
+  PartialSettings,
+  ThemeMode,
+} from '../shared/settings'
+import type { ArchivedOrder, NewArchivedOrder } from '../shared/orders'
+import type { DiscoveredPrinter, PrinterInfo } from '../shared/printing'
+import type { PendingUpdate } from '../shared/updates'
 
 const api = {
   customers: {
-    getAll: () => ipcRenderer.invoke('customers:getAll'),
-    search: (q: string) => ipcRenderer.invoke('customers:search', q),
-    searchByPhone: (q: string) =>
+    getAll: (): Promise<Array<Customer>> =>
+      ipcRenderer.invoke('customers:getAll'),
+    search: (q: string): Promise<Array<CustomerSuggestion>> =>
+      ipcRenderer.invoke('customers:search', q),
+    searchByPhone: (q: string): Promise<Array<CustomerSuggestion>> =>
       ipcRenderer.invoke('customers:searchByPhone', q),
-    searchByBusiness: (q: string) =>
+    searchByBusiness: (q: string): Promise<Array<CustomerSuggestion>> =>
       ipcRenderer.invoke('customers:searchByBusiness', q),
-    insert: (data: unknown) => ipcRenderer.invoke('customers:insert', data),
-    update: (data: unknown) => ipcRenderer.invoke('customers:update', data),
-    delete: (id: number) => ipcRenderer.invoke('customers:delete', id),
+    insert: (data: InsertCustomerInput): Promise<{ id: number }> =>
+      ipcRenderer.invoke('customers:insert', data),
+    update: (data: UpdateCustomerInput): Promise<void> =>
+      ipcRenderer.invoke('customers:update', data),
+    delete: (id: number): Promise<void> =>
+      ipcRenderer.invoke('customers:delete', id),
   },
   products: {
-    getAll: () => ipcRenderer.invoke('products:getAll'),
-    search: (q: string) => ipcRenderer.invoke('products:search', q),
-    insert: (data: unknown) => ipcRenderer.invoke('products:insert', data),
-    update: (data: unknown) => ipcRenderer.invoke('products:update', data),
-    delete: (id: number) => ipcRenderer.invoke('products:delete', id),
+    getAll: (): Promise<Array<Product>> =>
+      ipcRenderer.invoke('products:getAll'),
+    search: (q: string): Promise<Array<Product>> =>
+      ipcRenderer.invoke('products:search', q),
+    insert: (data: InsertProductInput): Promise<Product> =>
+      ipcRenderer.invoke('products:insert', data),
+    update: (data: UpdateProductInput): Promise<void> =>
+      ipcRenderer.invoke('products:update', data),
+    delete: (id: number): Promise<void> =>
+      ipcRenderer.invoke('products:delete', id),
   },
   bring: {
-    lookupPostcode: (code: string) =>
+    lookupPostcode: (code: string): Promise<{ city: string | null }> =>
       ipcRenderer.invoke('bring:lookupPostcode', code),
-    suggestAddresses: (q: string) =>
+    suggestAddresses: (q: string): Promise<Array<AddressSuggestion>> =>
       ipcRenderer.invoke('bring:suggestAddresses', q),
   },
   store: {
-    getAll: () => ipcRenderer.invoke('store:getAll'),
-    setTheme: (mode: string) => ipcRenderer.invoke('store:setTheme', mode),
-    setSettings: (partial: unknown) =>
+    getAll: (): Promise<{
+      theme: ThemeMode
+      settings: AppSettings
+      onboardingCompleted: boolean
+    }> => ipcRenderer.invoke('store:getAll'),
+    setTheme: (mode: ThemeMode): Promise<void> =>
+      ipcRenderer.invoke('store:setTheme', mode),
+    setSettings: (partial: PartialSettings): Promise<AppSettings> =>
       ipcRenderer.invoke('store:setSettings', partial),
-    setOrders: (orders: unknown) =>
-      ipcRenderer.invoke('store:setOrders', orders),
-    clearOrders: () => ipcRenderer.invoke('store:clearOrders'),
-    setOnboardingCompleted: (completed: boolean) =>
+    setOnboardingCompleted: (completed: boolean): Promise<void> =>
       ipcRenderer.invoke('store:setOnboardingCompleted', completed),
   },
+  orders: {
+    getAll: (): Promise<Array<ArchivedOrder>> =>
+      ipcRenderer.invoke('orders:getAll'),
+    insert: (payloads: Array<NewArchivedOrder>): Promise<void> =>
+      ipcRenderer.invoke('orders:insert', payloads),
+    delete: (id: string): Promise<void> =>
+      ipcRenderer.invoke('orders:delete', id),
+    clear: (): Promise<void> => ipcRenderer.invoke('orders:clear'),
+    pruneExpired: (): Promise<void> =>
+      ipcRenderer.invoke('orders:pruneExpired'),
+  },
   printer: {
-    list: () => ipcRenderer.invoke('printer:list'),
-    discover: () => ipcRenderer.invoke('printer:discover'),
-    print: (pdfBytes: ArrayBuffer, printerName?: string) =>
+    list: (): Promise<Array<PrinterInfo>> => ipcRenderer.invoke('printer:list'),
+    discover: (): Promise<Array<DiscoveredPrinter>> =>
+      ipcRenderer.invoke('printer:discover'),
+    print: (pdfBytes: ArrayBuffer, printerName?: string): Promise<void> =>
       ipcRenderer.invoke('printer:print', pdfBytes, printerName),
   },
   pdf: {
@@ -48,16 +91,19 @@ const api = {
       ipcRenderer.invoke('pdf:open', pdfBytes),
   },
   update: {
-    getPending: () => ipcRenderer.invoke('update:getPending'),
-    install: () => ipcRenderer.invoke('update:install'),
+    getPending: (): Promise<PendingUpdate | null> =>
+      ipcRenderer.invoke('update:getPending'),
+    install: (): Promise<void> => ipcRenderer.invoke('update:install'),
     onAvailable: (cb: (info: PendingUpdate) => void) => {
       const listener = (_e: unknown, info: PendingUpdate) => cb(info)
       ipcRenderer.on('update:available', listener)
-      return () => ipcRenderer.removeListener('update:available', listener)
+      return () => {
+        ipcRenderer.removeListener('update:available', listener)
+      }
     },
   },
   shell: {
-    openExternal: (url: string) =>
+    openExternal: (url: string): Promise<void> =>
       ipcRenderer.invoke('shell:openExternal', url),
   },
 }

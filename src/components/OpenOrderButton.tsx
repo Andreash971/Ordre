@@ -1,27 +1,26 @@
 import { useState } from 'react'
-import { Printer } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Printer, FileDown } from 'lucide-react'
 import type { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import type { VariantProps } from 'class-variance-authority'
-import {
-  openOrdersPdf,
-  openStoredOrderPdf,
-  printOrdersPdf,
-  printStoredOrderPdf,
-} from '#/lib/open-orders'
+import { openOrdersPdf, printOrdersPdf } from '@/lib/open-orders'
+import { buildArchivedOrderPayloads } from '@/lib/order-utils'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
-  StoredOrder,
-} from '#/lib/order-utils'
-import type { Item } from '#/components/OrderColumns'
-import { TooltipWrapper } from './TooltipWrapper'
-import { getStoredSettings } from '#/lib/settings'
+} from '@/lib/order-utils'
+import type { ArchivedOrder, OrderData } from '@shared/orders'
+import { insertOrders } from '@/lib/order-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import type { Item } from '@/components/OrderColumns'
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
+import { useSettings } from '@/lib/store-hooks'
 
 type OpenOrderButtonProps =
   | {
-      storedOrder: StoredOrder
+      storedOrder: ArchivedOrder
       customers?: never
       senderValues?: never
       deliveryValues?: never
@@ -49,17 +48,33 @@ export default function OpenOrderButton({
   variant = 'default',
 }: OpenOrderButtonProps) {
   const [isPrinting, setIsPrinting] = useState(false)
-  const defaultPrinter = getStoredSettings().defaultPrinter
+  const queryClient = useQueryClient()
+  const defaultPrinter = useSettings().defaultPrinter
+
+  /**
+   * Archive the current order (unless re-printing an already archived one)
+   * and return the print data, or null when beforeSubmit cancels.
+   */
+  const archiveAndCollect = async (): Promise<OrderData[] | null> => {
+    if (storedOrder) return [storedOrder.data]
+    if (beforeSubmit && !(await beforeSubmit())) return null
+    const payloads = buildArchivedOrderPayloads(
+      customers,
+      senderValues,
+      deliveryValues,
+      items,
+    )
+    await insertOrders({ data: payloads })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+    return payloads.map((p) => p.data)
+  }
 
   const handleOpenPdf = async () => {
     setIsPrinting(true)
     try {
-      if (storedOrder) {
-        await openStoredOrderPdf(storedOrder)
-      } else {
-        if (beforeSubmit && !(await beforeSubmit())) return
-        await openOrdersPdf(customers, senderValues, deliveryValues, items)
-      }
+      const dataList = await archiveAndCollect()
+      if (!dataList) return
+      await openOrdersPdf(dataList)
     } finally {
       setIsPrinting(false)
     }
@@ -68,12 +83,9 @@ export default function OpenOrderButton({
   const handlePrint = async () => {
     setIsPrinting(true)
     try {
-      if (storedOrder) {
-        await printStoredOrderPdf(storedOrder)
-      } else {
-        if (beforeSubmit && !(await beforeSubmit())) return
-        await printOrdersPdf(customers, senderValues, deliveryValues, items)
-      }
+      const dataList = await archiveAndCollect()
+      if (!dataList) return
+      await printOrdersPdf(dataList)
     } finally {
       setIsPrinting(false)
     }
@@ -91,7 +103,8 @@ export default function OpenOrderButton({
             variant="outline"
             size="lg"
           >
-            Lag PDF
+            <FileDown className="h-4 w-4" />
+            Lagre som PDF
           </Button>
         </TooltipWrapper>
         <TooltipWrapper TooltipText={`Skriv ut til ${defaultPrinter}`}>

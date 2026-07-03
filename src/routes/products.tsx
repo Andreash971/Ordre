@@ -18,13 +18,13 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import type { AddProductFormValues } from '#/components/AddProductForm'
-import AddProductForm from '#/components/AddProductForm'
-import CategorySelect from '#/components/CategorySelect'
-import { productColumns } from '#/components/ProductColumns'
-import { getAllProducts, insertProduct } from '#/lib/product-server-fns'
-import { queryKeys } from '#/lib/query-keys'
-import { getStoredSettings } from '@/lib/settings'
+import type { AddProductFormValues } from '@/components/AddProductForm'
+import AddProductForm from '@/components/AddProductForm'
+import CategorySelect from '@/components/CategorySelect'
+import { productColumns } from '@/components/ProductColumns'
+import { getAllProducts, insertProduct } from '@/lib/product-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import { useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/products')({
   component: ProductsPage,
@@ -35,7 +35,7 @@ function ProductsPage() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [category, setCategory] = useState('')
   const [addOpen, setAddOpen] = useState(false)
-  const pageSize = getStoredSettings().rowsPerPage
+  const pageSize = useSettings().rowsPerPage
 
   const { data = [] } = useQuery({
     queryKey: queryKeys.products.all,
@@ -81,7 +81,7 @@ function ProductsPage() {
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
         <div className="flex flex-row items-center w-full gap-2">
-          <InputGroup className="w-full max-w-sm gray:bg-white/70 gray:border-border note:border-border">
+          <InputGroup className="w-full max-w-sm bg-card">
             <InputGroupAddon>
               <PackageSearch />
             </InputGroupAddon>
@@ -129,7 +129,7 @@ function ProductsPage() {
         pageSize={pageSize}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-sm note:bg-secondary">
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Legg til vare</DialogTitle>
             <DialogDescription>

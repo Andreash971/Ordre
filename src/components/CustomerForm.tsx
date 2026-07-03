@@ -11,53 +11,38 @@ import {
   Phone,
   User,
   Save,
-  RotateCcw,
   UserCheck,
   Check,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
+import { Card, CardContent } from '@/components/ui/card'
 import { FieldGroup } from '@/components/ui/field'
 
-import AutocompleteField from '#/components/AutocompleteField'
-import FormInputField from '#/components/FormInputField'
-import type { CustomerSuggestion } from '#/lib/customer-server-fns'
+import AutocompleteField from '@/components/AutocompleteField'
+import FormInputField from '@/components/FormInputField'
+import type { CustomerSuggestion } from '@/lib/customer-server-fns'
 import {
   searchCustomers,
   searchCustomersByBusiness,
   searchCustomersByPhone,
-} from '#/lib/customer-server-fns'
-import { lookupPostcode, suggestAddresses } from '#/lib/bring-server-fns'
-import type { AddressSuggestion } from '#/lib/bring-server-fns'
+} from '@/lib/customer-server-fns'
+import { lookupPostcode, suggestAddresses } from '@/lib/bring-server-fns'
+import type { AddressSuggestion } from '@/lib/bring-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import type { CustomerFormValues } from '@/lib/order-utils'
 
-type CustomerFormValues = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  careof: string
+/** Submit state handed to the `footer` slot, e.g. for a save button. */
+export interface CustomerFormSubmitCtx {
+  submit: () => void
+  isSubmitting: boolean
+  justSaved: boolean
 }
 
-interface CustomerFormProps {
+interface CustomerFieldsProps {
   className?: string
-  size?: 'default' | 'sm'
-  formButtons?: boolean
-  reset?: boolean
-  disabled?: boolean
-  showCareof?: boolean
-  bare?: boolean
-  hideSaveButton?: boolean
   defaultValues?: Partial<CustomerFormValues>
   onValuesChange?: (values: CustomerFormValues) => void
   onIdChange?: (id: number | null) => void
@@ -65,6 +50,8 @@ interface CustomerFormProps {
     values: CustomerFormValues,
     ctx: { id: number | null },
   ) => Promise<void> | void
+  /** Rendered after the fields; receives submit state for action buttons. */
+  footer?: (ctx: CustomerFormSubmitCtx) => React.ReactNode
 }
 
 const formSchema = z.object({
@@ -134,7 +121,7 @@ function fillForm(
   customer: CustomerSuggestion,
   setSelectedId: (id: number | null) => void,
 ) {
-  setSelectedId(customer.id ?? null)
+  setSelectedId(customer.id)
   form.setFieldValue('name', customer.name)
   form.setFieldValue('phone', customer.phone ?? '')
   form.setFieldValue('company', customer.company ?? '')
@@ -144,20 +131,19 @@ function fillForm(
   form.setFieldValue('careof', customer.careof ?? '')
 }
 
-export default function CustomerForm({
+/**
+ * The pure customer form: fields, validation, customer/address autocomplete,
+ * and postcode→city lookup — no card chrome. Compose the chrome at the call
+ * site (see CustomerFormCard) and pass a `footer` for action buttons.
+ */
+export function CustomerFields({
   className,
-  formButtons = false,
-  reset = false,
-  size,
-  disabled,
-  showCareof = false,
-  bare = false,
-  hideSaveButton = false,
   defaultValues: initialValues,
   onValuesChange,
   onIdChange,
   onSubmit,
-}: CustomerFormProps) {
+  footer,
+}: CustomerFieldsProps) {
   const formId = useId()
   const selectedIdRef = useRef<number | null>(null)
   const onIdChangeRef = useRef(onIdChange)
@@ -214,7 +200,7 @@ export default function CustomerForm({
   const isSubmitting = useStore(form.store, (s) => s.isSubmitting)
 
   const { data: bringLookup } = useQuery({
-    queryKey: ['bring-postcode', postcode],
+    queryKey: queryKeys.bring.postcode(postcode),
     queryFn: () => lookupPostcode({ data: postcode }),
     enabled: /^\d{4}$/.test(postcode),
     staleTime: Infinity,
@@ -226,113 +212,113 @@ export default function CustomerForm({
     }
   }, [bringLookup?.city])
 
-  const formContent = (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
-      }}
-    >
-      <FieldGroup className="flex flex-col gap-4">
-        <form.Field name="name">
-          {(field) => (
-            <AutocompleteField
-              field={field}
-              id={`${formId}-name`}
-              icon={<User className="text-foreground" />}
-              placeholder="Navn"
-              disabled={disabled}
-              autoComplete="name"
-              onSearch={(q) => searchCustomers({ data: q })}
-              onSelect={(c) => fillForm(form, c, setSelectedId)}
-              renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="phone">
-          {(field) => (
-            <AutocompleteField
-              field={field}
-              id={`${formId}-phone`}
-              icon={<Phone className="text-foreground" />}
-              placeholder="Telefon"
-              type="tel"
-              disabled={disabled}
-              autoComplete="tel"
-              onSearch={(q) => searchCustomersByPhone({ data: q })}
-              onSelect={(c) => fillForm(form, c, setSelectedId)}
-              renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="company">
-          {(field) => (
-            <AutocompleteField
-              field={field}
-              id={`${formId}-company`}
-              icon={<BriefcaseBusiness className="text-foreground" />}
-              placeholder="Firma"
-              disabled={disabled}
-              autoComplete="organization"
-              onSearch={(q) => searchCustomersByBusiness({ data: q })}
-              onSelect={(c) => fillForm(form, c, setSelectedId)}
-              renderSuggestion={(c) => <CustomerSuggestionItem customer={c} />}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="address">
-          {(field) => (
-            <AutocompleteField
-              field={field}
-              id={`${formId}-address`}
-              icon={<House className="text-foreground" />}
-              placeholder="Adresse"
-              disabled={disabled}
-              autoComplete="street-address"
-              onSearch={(q) => suggestAddresses({ data: q })}
-              onSelect={(a) => {
-                form.setFieldValue('address', formatAddress(a))
-                form.setFieldValue('postcode', a.postal_code)
-                form.setFieldValue('city', a.city)
-              }}
-              renderSuggestion={(a) => <AddressSuggestionItem address={a} />}
-            />
-          )}
-        </form.Field>
-
-        <div className="grid grid-cols-[minmax(6rem,1fr)_minmax(6rem,2fr)] gap-4">
-          <form.Field name="postcode">
+  return (
+    <div className={cn('flex flex-col gap-3', className)}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+      >
+        <FieldGroup className="flex flex-col gap-4">
+          <form.Field name="name">
             {(field) => (
-              <FormInputField
+              <AutocompleteField
                 field={field}
-                id={`${formId}-postcode`}
-                icon={<MapPin className="text-foreground" />}
-                placeholder="Postnr."
-                type="number"
-                disabled={disabled}
-                autoComplete="postal-code"
+                id={`${formId}-name`}
+                icon={<User className="text-foreground" />}
+                placeholder="Navn"
+                autoComplete="name"
+                onSearch={(q) => searchCustomers({ data: q })}
+                onSelect={(c) => fillForm(form, c, setSelectedId)}
+                renderSuggestion={(c) => (
+                  <CustomerSuggestionItem customer={c} />
+                )}
               />
             )}
           </form.Field>
 
-          <form.Field name="city">
+          <form.Field name="phone">
             {(field) => (
-              <FormInputField
+              <AutocompleteField
                 field={field}
-                id={`${formId}-city`}
-                icon={<Building2 className="text-foreground" />}
-                placeholder="Sted"
-                disabled={disabled}
-                autoComplete="address-level2"
+                id={`${formId}-phone`}
+                icon={<Phone className="text-foreground" />}
+                placeholder="Telefon"
+                type="tel"
+                autoComplete="tel"
+                onSearch={(q) => searchCustomersByPhone({ data: q })}
+                onSelect={(c) => fillForm(form, c, setSelectedId)}
+                renderSuggestion={(c) => (
+                  <CustomerSuggestionItem customer={c} />
+                )}
               />
             )}
           </form.Field>
-        </div>
 
-        {showCareof && (
+          <form.Field name="company">
+            {(field) => (
+              <AutocompleteField
+                field={field}
+                id={`${formId}-company`}
+                icon={<BriefcaseBusiness className="text-foreground" />}
+                placeholder="Firma"
+                autoComplete="organization"
+                onSearch={(q) => searchCustomersByBusiness({ data: q })}
+                onSelect={(c) => fillForm(form, c, setSelectedId)}
+                renderSuggestion={(c) => (
+                  <CustomerSuggestionItem customer={c} />
+                )}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="address">
+            {(field) => (
+              <AutocompleteField
+                field={field}
+                id={`${formId}-address`}
+                icon={<House className="text-foreground" />}
+                placeholder="Adresse"
+                autoComplete="street-address"
+                onSearch={(q) => suggestAddresses({ data: q })}
+                onSelect={(a) => {
+                  form.setFieldValue('address', formatAddress(a))
+                  form.setFieldValue('postcode', a.postal_code)
+                  form.setFieldValue('city', a.city)
+                }}
+                renderSuggestion={(a) => <AddressSuggestionItem address={a} />}
+              />
+            )}
+          </form.Field>
+
+          <div className="grid grid-cols-[minmax(6rem,1fr)_minmax(6rem,2fr)] gap-4">
+            <form.Field name="postcode">
+              {(field) => (
+                <FormInputField
+                  field={field}
+                  id={`${formId}-postcode`}
+                  icon={<MapPin className="text-foreground" />}
+                  placeholder="Postnr."
+                  type="number"
+                  autoComplete="postal-code"
+                />
+              )}
+            </form.Field>
+
+            <form.Field name="city">
+              {(field) => (
+                <FormInputField
+                  field={field}
+                  id={`${formId}-city`}
+                  icon={<Building2 className="text-foreground" />}
+                  placeholder="Sted"
+                  autoComplete="address-level2"
+                />
+              )}
+            </form.Field>
+          </div>
+
           <form.Field name="careof">
             {(field) => (
               <FormInputField
@@ -340,82 +326,77 @@ export default function CustomerForm({
                 id={`${formId}-careof`}
                 icon={<UserCheck className="text-foreground" />}
                 placeholder="C/O"
-                disabled={disabled}
                 autoComplete="off"
               />
             )}
           </form.Field>
-        )}
-      </FieldGroup>
-    </form>
+        </FieldGroup>
+      </form>
+      {footer?.({
+        submit: () => form.handleSubmit(),
+        isSubmitting,
+        justSaved,
+      })}
+    </div>
   )
+}
 
-  const buttons = formButtons && (
-    <>
-      {reset && (
-        <Button
-          type="reset"
-          variant="destructive"
-          onClick={(e) => {
-            e.preventDefault()
-            form.reset()
-          }}
-          disabled={disabled}
-        >
-          <RotateCcw className="h-4 w-4" />
-          Reset
-        </Button>
-      )}
-      {!hideSaveButton && (
-        <TooltipWrapper TooltipText={'Lagre kundens informasjon i systemet'}>
-          <Button
-            type="submit"
-            disabled={disabled || isSubmitting}
-            onClick={(e) => {
-              e.preventDefault()
-              form.handleSubmit()
-            }}
-            className={cn(
-              'transition-colors',
-              justSaved &&
-                'bg-green-600 text-white hover:bg-green-600 focus-visible:ring-green-600',
-            )}
-          >
-            {justSaved ? (
-              <>
-                <Check className="h-4 w-4" />
-                Lagret
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Lagre
-              </>
-            )}
-          </Button>
-        </TooltipWrapper>
-      )}
-    </>
-  )
-
-  if (bare) {
-    return (
-      <div className={cn('flex flex-col gap-3', className)}>
-        {formContent}
-        {formButtons && <div className="flex justify-end gap-2">{buttons}</div>}
-      </div>
-    )
-  }
-
+/** The standard save button for CustomerFields' `footer` slot. */
+export function SaveCustomerButton({
+  submit,
+  isSubmitting,
+  justSaved,
+}: CustomerFormSubmitCtx) {
   return (
-    <Card size={size} className={cn('min-w-60', className)}>
-      <CardHeader>
-        <CardTitle>Kundeinformasjon</CardTitle>
-      </CardHeader>
-      <CardContent>{formContent}</CardContent>
-      {formButtons && (
-        <CardFooter className="flex justify-end gap-2">{buttons}</CardFooter>
-      )}
+    <TooltipWrapper TooltipText="Lagre kundens informasjon i systemet">
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        onClick={(e) => {
+          e.preventDefault()
+          submit()
+        }}
+        className={cn(
+          'transition-colors',
+          justSaved &&
+            'bg-green-600 text-white hover:bg-green-600 focus-visible:ring-green-600',
+        )}
+      >
+        {justSaved ? (
+          <>
+            <Check className="h-4 w-4" />
+            Lagret
+          </>
+        ) : (
+          <>
+            <Save className="h-4 w-4" />
+            Lagre
+          </>
+        )}
+      </Button>
+    </TooltipWrapper>
+  )
+}
+
+const saveFooter = (ctx: CustomerFormSubmitCtx) => (
+  <div className="flex justify-end gap-2">
+    <SaveCustomerButton {...ctx} />
+  </div>
+)
+
+/** CustomerFields wrapped in card chrome, with an optional save button. */
+export function CustomerFormCard({
+  showSaveButton = true,
+  ...fields
+}: Omit<CustomerFieldsProps, 'footer'> & { showSaveButton?: boolean }) {
+  return (
+    <Card className="min-w-60">
+      <CardContent>
+        <CustomerFields
+          {...fields}
+          footer={showSaveButton ? saveFooter : undefined}
+        />
+      </CardContent>
     </Card>
   )
 }

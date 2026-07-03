@@ -1,17 +1,13 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import SectionCard from '#/components/SectionCard'
-import CustomerForm from '#/components/CustomerForm'
+import OrderSection from '@/components/OrderSection'
+import { CustomerFormCard } from '@/components/CustomerForm'
 import { Empty, EmptyDescription } from '@/components/ui/empty'
-import SectionItems from '#/components/new-order/SectionItems'
-import SectionDelivery from '#/components/new-order/SectionDelivery'
-import SectionCardNotes from '#/components/new-order/SectionCardNotes'
-import SectionRecipients from '#/components/new-order/SectionRecipients'
-import SectionReview from '#/components/new-order/SectionReview'
-import type { Item } from '#/components/OrderColumns'
-import { Separator } from '@/components/ui/separator'
+import OrderItems from '@/components/new-order/OrderItems'
+import SharedDetails from '@/components/new-order/SharedDetails'
+import RecipientList from '@/components/new-order/RecipientList'
+import OrderProof from '@/components/new-order/OrderProof'
 import {
   Dialog,
   DialogContent,
@@ -21,28 +17,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { getLocalDateString } from '#/lib/order-utils'
-import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
-import type {
-  Customer,
-  CustomerFormValues,
-  DeliveryValues,
-} from '#/lib/order-utils'
-import { getStoredSettings } from '#/lib/settings'
-import type { SpecialItemKey } from '#/lib/settings'
-import { SETTINGS_CHANGED_EVENT } from '#/lib/store-cache'
-import { isSpecial } from '#/lib/special-items'
-
-const EMPTY_SENDER: CustomerFormValues = {
-  name: '',
-  phone: '',
-  company: '',
-  address: '',
-  postcode: '',
-  city: '',
-  careof: '',
-}
+import { pickCustomerFormValues } from '@/lib/order-utils'
+import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
+import type { CustomerFormValues } from '@/lib/order-utils'
+import { useSettings } from '@/lib/store-hooks'
+import { isSpecial } from '@/lib/special-items'
+import {
+  initOrderDraft,
+  orderDraftReducer,
+} from '@/components/new-order/order-draft'
 
 function isSenderFilled(s: CustomerFormValues) {
   return Boolean(s.name || s.phone || s.address)
@@ -51,65 +34,15 @@ function isSenderFilled(s: CustomerFormValues) {
 export const Route = createFileRoute('/new')({ component: NewOrderPage })
 
 function NewOrderPage() {
-  const queryClient = useQueryClient()
-  const [sender, setSender] = React.useState<CustomerFormValues>(EMPTY_SENDER)
-  const senderIdRef = React.useRef<number | null>(null)
-  const [autoSaveCustomer, setAutoSaveCustomer] = React.useState<boolean>(
-    () => getStoredSettings().autoSaveCustomer,
+  const settings = useSettings()
+  const autoSaveCustomer = settings.autoSaveCustomer
+  const saveCustomerMutation = useSaveCustomerMutation()
+
+  const [draft, dispatch] = React.useReducer(
+    orderDraftReducer,
+    settings.specialItems,
+    initOrderDraft,
   )
-  React.useEffect(() => {
-    const onSettingsChanged = () => {
-      setAutoSaveCustomer(getStoredSettings().autoSaveCustomer)
-    }
-    window.addEventListener(SETTINGS_CHANGED_EVENT, onSettingsChanged)
-    return () =>
-      window.removeEventListener(SETTINGS_CHANGED_EVENT, onSettingsChanged)
-  }, [])
-  const saveCustomerMutation = useMutation({
-    mutationFn: async ({
-      values,
-      id,
-    }: {
-      values: CustomerFormValues
-      id: number | null
-    }) => {
-      if (id != null) {
-        await updateCustomer({ data: { id, ...values } })
-      } else {
-        await insertCustomer({ data: values })
-      }
-    },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
-  })
-
-  const [delivery, setDelivery] = React.useState<DeliveryValues>({
-    date: getLocalDateString(),
-    time: null,
-    leaveDoor: false,
-    leaveNeighbour: false,
-  })
-  const [showTime, setShowTime] = React.useState(false)
-
-  const [cardEnabled, setCardEnabled] = React.useState(false)
-  const [cardValue, setCardValue] = React.useState('')
-  const [instructionsEnabled, setInstructionsEnabled] = React.useState(false)
-  const [instructionsValue, setInstructionsValue] = React.useState('')
-
-  const [items, setItems] = React.useState<Item[]>(() => {
-    const { frakt } = getStoredSettings().specialItems
-    return [
-      {
-        specialKey: 'frakt',
-        name: frakt.name,
-        description: '',
-        price: frakt.price,
-        quantity: 1,
-      },
-    ]
-  })
-  const [recipients, setRecipients] = React.useState<Customer[]>([])
-  const [recipientIds, setRecipientIds] = React.useState<(number | null)[]>([])
 
   const [saveErrorMessage, setSaveErrorMessage] = React.useState<string | null>(
     null,
@@ -132,23 +65,15 @@ function NewOrderPage() {
       values: CustomerFormValues
       id: number | null
     }> = []
-    if (isSenderFilled(sender)) {
-      targets.push({ values: sender, id: senderIdRef.current })
+    if (isSenderFilled(draft.sender)) {
+      targets.push({ values: draft.sender, id: draft.senderId })
     }
-    recipients.forEach((r, i) => {
-      const values: CustomerFormValues = {
-        name: r.name,
-        phone: r.phone,
-        company: r.company,
-        address: r.address,
-        postcode: r.postcode,
-        city: r.city,
-        careof: r.careof,
-      }
+    for (const r of draft.recipients) {
+      const values = pickCustomerFormValues(r)
       if (isSenderFilled(values)) {
-        targets.push({ values, id: recipientIds[i] ?? null })
+        targets.push({ values, id: r.customerId })
       }
-    })
+    }
 
     for (const target of targets) {
       try {
@@ -163,160 +88,73 @@ function NewOrderPage() {
       }
     }
     return true
-  }, [autoSaveCustomer, sender, recipients, recipientIds, saveCustomerMutation])
+  }, [
+    autoSaveCustomer,
+    draft.sender,
+    draft.senderId,
+    draft.recipients,
+    saveCustomerMutation,
+  ])
 
-  // Sync extras rows with toggles
-  React.useEffect(() => {
-    setItems((prev) => {
-      if (showTime) {
-        if (prev.some((i) => i.specialKey === 'leveringstid')) {
-          return prev
-        }
-        const { leveringstid } = getStoredSettings().specialItems
-        return [
-          ...prev,
-          {
-            specialKey: 'leveringstid',
-            name: leveringstid.name,
-            description: '',
-            price: leveringstid.price,
-            quantity: 1,
-          },
-        ]
-      }
-      return prev.filter((i) => i.specialKey !== 'leveringstid')
-    })
-  }, [showTime])
-
-  React.useEffect(() => {
-    setItems((prev) => {
-      if (cardEnabled) {
-        if (prev.some((i) => i.specialKey === 'kort')) return prev
-        const { kort } = getStoredSettings().specialItems
-        return [
-          ...prev,
-          {
-            specialKey: 'kort',
-            name: kort.name,
-            description: '',
-            price: kort.price,
-            quantity: 1,
-          },
-        ]
-      }
-      return prev.filter((i) => i.specialKey !== 'kort')
-    })
-  }, [cardEnabled])
-
-  const handleSpecialPicked = React.useCallback((key: SpecialItemKey) => {
-    if (key === 'leveringstid') setShowTime(true)
-    if (key === 'kort') setCardEnabled(true)
-  }, [])
-
-  const handleSpecialRemoved = React.useCallback((key: SpecialItemKey) => {
-    if (key === 'leveringstid') {
-      setShowTime(false)
-      return
-    }
-    if (key === 'kort') {
-      setCardEnabled(false)
-      return
-    }
-    setItems((prev) => prev.filter((i) => i.specialKey !== key))
-  }, [])
-
-  const senderFilled = isSenderFilled(sender)
-  const recipientCount = recipients.length || (senderFilled ? 1 : 0)
-  const canShowReview = senderFilled && items.some((i) => !isSpecial(i))
+  const senderFilled = isSenderFilled(draft.sender)
+  const recipientCount = draft.recipients.length || (senderFilled ? 1 : 0)
+  const canShowReview = senderFilled && draft.items.some((i) => !isSpecial(i))
 
   return (
-    <main className="rise-in page-wrap flex flex-col gap-6 px-4 pb-12 pt-6">
-      <h1 className="font-heading text-2xl font-medium leading-tight">
-        Registrer ny bestilling
-      </h1>
+    <main className="rise-in page-wrap flex flex-col gap-10 px-4 pb-12 pt-6">
+      <header className="flex flex-col gap-1">
+        <h1 className="font-heading text-2xl font-medium leading-tight">
+          Ny ordre
+        </h1>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          Fyll ut kunde og varer, sett leveringsdetaljer, og legg til
+          mottakerne.
+        </p>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-[20rem_1fr] lg:grid-rows-[auto_auto] items-start lg:items-stretch">
-        <SectionCard
-          className="col-start-1"
-          number="01"
-          title="Kunde"
-          subtitle="Hvem er avsender / betaler?"
-        >
-          <CustomerForm
-            bare
-            formButtons
-            showCareof
-            hideSaveButton={autoSaveCustomer}
-            defaultValues={sender}
-            onValuesChange={setSender}
-            onIdChange={(id) => {
-              senderIdRef.current = id
-            }}
+      <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[17rem_1fr]">
+        <OrderSection title="Kundeinformasjon" subtitle="Avsender / betaler">
+          <CustomerFormCard
+            showSaveButton={!autoSaveCustomer}
+            defaultValues={draft.sender}
+            onValuesChange={(values) => dispatch({ type: 'setSender', values })}
+            onIdChange={(id) => dispatch({ type: 'setSenderId', id })}
             onSubmit={(values, { id }) =>
               saveCustomerMutation.mutateAsync({ values, id })
             }
           />
-        </SectionCard>
+        </OrderSection>
 
-        <SectionCard
-          className="col-start-1 row-start-2"
-          number="02"
-          title="Levering"
-          subtitle="Velg leveringsdato og tidspunkt"
-        >
-          <SectionDelivery
-            date={delivery.date}
-            time={delivery.time}
-            showTime={showTime}
-            leaveDoor={delivery.leaveDoor}
-            leaveNeighbour={delivery.leaveNeighbour}
-            onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
-            onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
-            onShowTimeChange={setShowTime}
-            onLeaveDoorChange={(v) =>
-              setDelivery((prev) => ({ ...prev, leaveDoor: v }))
-            }
-            onLeaveNeighbourChange={(v) =>
-              setDelivery((prev) => ({ ...prev, leaveNeighbour: v }))
-            }
-          />
-        </SectionCard>
-
-        <SectionCard
-          className="col-start-2 row-start-1 row-span-2"
-          bodyClassName="lg:flex lg:flex-1 lg:min-h-0 lg:flex-col"
-          number="03"
+        <OrderSection
           title="Ordreinnhold"
           subtitle="Legg til varer i ordren"
+          bodyClassName="flex min-h-0 flex-1 flex-col"
         >
-          <SectionItems
-            items={items}
-            setItems={setItems}
-            onSpecialPicked={handleSpecialPicked}
-            onSpecialRemoved={handleSpecialRemoved}
+          <OrderItems
+            items={draft.items}
+            setItems={(updater) => dispatch({ type: 'updateItems', updater })}
+            onSpecialPicked={(key) =>
+              dispatch({
+                type: 'specialPicked',
+                key,
+                specialItems: settings.specialItems,
+              })
+            }
+            onSpecialRemoved={(key) =>
+              dispatch({ type: 'specialRemoved', key })
+            }
           />
-        </SectionCard>
+        </OrderSection>
       </div>
 
-      <SectionCard
-        number="04"
-        title="Kort og instrukser"
-        subtitle="Inkluder og behandle kort og instrukser"
+      <OrderSection
+        title="Leveringsdetaljer & kort"
+        subtitle="Standard informasjon for hele ordren. Gjelder alle mottakere og kan overstyres per mottaker."
       >
-        <SectionCardNotes
-          cardEnabled={cardEnabled}
-          cardValue={cardValue}
-          onCardEnabledChange={setCardEnabled}
-          onCardValueChange={setCardValue}
-          instructionsEnabled={instructionsEnabled}
-          instructionsValue={instructionsValue}
-          onInstructionsEnabledChange={setInstructionsEnabled}
-          onInstructionsValueChange={setInstructionsValue}
-        />
-      </SectionCard>
+        <SharedDetails draft={draft} dispatch={dispatch} />
+      </OrderSection>
 
-      <SectionCard
-        number="05"
+      <OrderSection
         title="Mottakere"
         subtitle={
           recipientCount
@@ -324,42 +162,20 @@ function NewOrderPage() {
             : 'Leveres til kundens standardadresse'
         }
       >
-        <SectionRecipients
-          recipients={recipients}
-          onRecipientsChange={setRecipients}
-          onRecipientIdsChange={setRecipientIds}
+        <RecipientList
+          draft={draft}
+          dispatch={dispatch}
           autoSaveCustomer={autoSaveCustomer}
-          defaults={{
-            delivery,
-            showTime,
-            cardEnabled,
-            cardValue,
-            instructionsEnabled,
-            instructionsValue,
-          }}
         />
-      </SectionCard>
-
-      {canShowReview ? <Separator /> : null}
+      </OrderSection>
 
       {canShowReview ? (
-        <SectionCard
-          number="06"
-          title="Oversikt"
-          subtitle="Gjennomgå og generer ordrelapp(er)"
+        <OrderSection
+          title="Kontroller & generer"
+          subtitle="Siste sjekk før utskrift"
         >
-          <SectionReview
-            sender={sender}
-            delivery={delivery}
-            items={items}
-            recipients={recipients}
-            cardEnabled={cardEnabled}
-            cardValue={cardValue}
-            instructionsEnabled={instructionsEnabled}
-            instructionsValue={instructionsValue}
-            beforeSubmit={beforeSubmit}
-          />
-        </SectionCard>
+          <OrderProof draft={draft} beforeSubmit={beforeSubmit} />
+        </OrderSection>
       ) : (
         <Empty className="border border-dashed rise-in">
           <EmptyDescription>

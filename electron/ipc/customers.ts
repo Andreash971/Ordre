@@ -1,10 +1,13 @@
 import { ipcMain } from 'electron'
-import { eq, like, sql } from 'drizzle-orm'
-import * as z from 'zod'
+import { eq } from 'drizzle-orm'
 
-import { getDb, schema } from '../db'
+import { customerIdSchema, customerSchema } from '../../shared/customers'
+import { containsInsensitive, getDb, schema } from '../db'
 
 const { customers } = schema
+
+/** Autocomplete dropdowns show at most this many suggestions. */
+const SEARCH_RESULT_LIMIT = 3
 
 const customerSelect = {
   id: customers.id,
@@ -15,21 +18,6 @@ const customerSelect = {
   postcode: customers.postcode,
   city: customers.city,
   careof: customers.careof,
-}
-
-const customerSchema = z.object({
-  id: z.number().optional(),
-  name: z.string().max(50),
-  phone: z.string().max(15).optional(),
-  company: z.string().max(50).optional(),
-  address: z.string().max(50).optional(),
-  postcode: z.string().max(4).optional(),
-  city: z.string().max(25).optional(),
-  careof: z.string().max(50).optional(),
-})
-
-function ilikePattern(query: string) {
-  return `%${query.toLowerCase()}%`
 }
 
 export function registerCustomerHandlers() {
@@ -44,8 +32,8 @@ export function registerCustomerHandlers() {
     return db
       .select(customerSelect)
       .from(customers)
-      .where(like(sql`LOWER(${customers.name})`, ilikePattern(query)))
-      .limit(3)
+      .where(containsInsensitive(customers.name, query))
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
   ipcMain.handle('customers:searchByPhone', async (_e, query: string) => {
@@ -53,8 +41,8 @@ export function registerCustomerHandlers() {
     return db
       .select(customerSelect)
       .from(customers)
-      .where(like(sql`LOWER(${customers.phone})`, ilikePattern(query)))
-      .limit(3)
+      .where(containsInsensitive(customers.phone, query))
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
   ipcMain.handle('customers:searchByBusiness', async (_e, query: string) => {
@@ -62,11 +50,12 @@ export function registerCustomerHandlers() {
     return db
       .select(customerSelect)
       .from(customers)
-      .where(like(sql`LOWER(${customers.company})`, ilikePattern(query)))
-      .limit(3)
+      .where(containsInsensitive(customers.company, query))
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
-  ipcMain.handle('customers:delete', async (_e, id: number) => {
+  ipcMain.handle('customers:delete', async (_e, raw: unknown) => {
+    const id = customerIdSchema.parse(raw)
     await db.delete(customers).where(eq(customers.id, id))
   })
 

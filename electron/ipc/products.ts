@@ -1,10 +1,13 @@
 import { ipcMain } from 'electron'
-import { eq, like, sql } from 'drizzle-orm'
-import * as z from 'zod'
+import { eq } from 'drizzle-orm'
 
-import { getDb, schema } from '../db'
+import { productIdSchema, productSchema } from '../../shared/products'
+import { containsInsensitive, getDb, schema } from '../db'
 
 const { products } = schema
+
+/** Autocomplete dropdowns show at most this many suggestions. */
+const SEARCH_RESULT_LIMIT = 3
 
 const productSelect = {
   id: products.id,
@@ -13,17 +16,6 @@ const productSelect = {
   price: products.price,
   description: products.description,
 }
-
-const productSchema = z.object({
-  id: z.number().optional(),
-  name: z.string().trim().min(1, 'Navn er påkrevd').max(100),
-  category: z
-    .string()
-    .max(50)
-    .transform((v) => (v.trim() === '' ? 'Ukategorisert' : v.trim())),
-  price: z.number().positive('Pris må være større enn 0'),
-  description: z.string().max(2000).optional(),
-})
 
 export function registerProductHandlers() {
   const db = getDb()
@@ -37,11 +29,12 @@ export function registerProductHandlers() {
     return db
       .select(productSelect)
       .from(products)
-      .where(like(sql`LOWER(${products.name})`, `%${query.toLowerCase()}%`))
-      .limit(3)
+      .where(containsInsensitive(products.name, query))
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
-  ipcMain.handle('products:delete', async (_e, id: number) => {
+  ipcMain.handle('products:delete', async (_e, raw: unknown) => {
+    const id = productIdSchema.parse(raw)
     await db.delete(products).where(eq(products.id, id))
   })
 

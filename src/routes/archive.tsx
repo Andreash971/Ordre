@@ -3,9 +3,13 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, Eye, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { deleteStoredOrder, getStoredOrders } from '#/lib/order-utils'
-import type { StoredOrder } from '#/lib/order-utils'
-import { isSpecial } from '#/lib/special-items'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+import type { ArchivedOrder } from '@shared/orders'
+import { deleteOrder, getAllOrders } from '@/lib/order-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import { formatNok } from '@/lib/format'
+import { isSpecial } from '@/lib/special-items'
 import { Button } from '@/components/ui/button'
 import {
   InputGroup,
@@ -26,25 +30,18 @@ import { OrderDetail } from '@/components/OrderDetailSheet'
 
 export const Route = createFileRoute('/archive')({ component: ArchivePage })
 
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-
-function orderSum(order: StoredOrder) {
+function orderSum(order: ArchivedOrder) {
   return order.data.orderContent.reduce((s, l) => s + l.total, 0)
 }
 
-function orderVisibleItemCount(order: StoredOrder) {
+function orderVisibleItemCount(order: ArchivedOrder) {
   return order.data.orderContent.filter((l) => !isSpecial({ name: l.product }))
     .length
 }
 
 function buildColumns(
-  onView: (order: StoredOrder) => void,
-): ColumnDef<StoredOrder>[] {
+  onView: (order: ArchivedOrder) => void,
+): ColumnDef<ArchivedOrder>[] {
   return [
     {
       id: 'date',
@@ -114,7 +111,7 @@ function buildColumns(
       accessorFn: (o) => orderSum(o),
       cell: ({ row }) => (
         <div className="text-right font-mono text-xs">
-          {nokFormatter.format(orderSum(row.original))}
+          {formatNok(orderSum(row.original))}
         </div>
       ),
     },
@@ -143,24 +140,27 @@ function buildColumns(
 }
 
 function ArchivePage() {
-  const [orders, setOrders] = React.useState<StoredOrder[]>([])
+  const queryClient = useQueryClient()
+  const { data: orders = [] } = useQuery({
+    queryKey: queryKeys.orders.all,
+    queryFn: getAllOrders,
+  })
   const [query, setQuery] = React.useState('')
-  const [open, setOpen] = React.useState<StoredOrder | null>(null)
+  const [open, setOpen] = React.useState<ArchivedOrder | null>(null)
 
-  React.useEffect(() => {
-    setOrders(getStoredOrders())
-  }, [])
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteOrder({ data: id }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
+  })
 
-  const sorted = React.useMemo(
-    () => [...orders].sort((a, b) => b.savedAt - a.savedAt),
-    [orders],
-  )
+  // orders:getAll already returns rows sorted by savedAt descending.
+  const sorted = orders
 
   const columns = React.useMemo(() => buildColumns(setOpen), [])
 
-  function handleDelete(order: StoredOrder) {
-    deleteStoredOrder(order.key)
-    setOrders((prev) => prev.filter((o) => o.key !== order.key))
+  function handleDelete(order: ArchivedOrder) {
+    deleteMutation.mutate(order.id)
     setOpen(null)
   }
 
@@ -177,7 +177,7 @@ function ArchivePage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <InputGroup className="w-full max-w-sm gray:bg-white/70 gray:border-border note:border-border">
+        <InputGroup className="w-full max-w-sm bg-card">
           <InputGroupAddon align="inline-start">
             <Search className="size-4" />
           </InputGroupAddon>

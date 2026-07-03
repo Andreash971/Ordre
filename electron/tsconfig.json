@@ -8,9 +8,11 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "outDir": "../dist/electron",
-    "rootDir": ".",
+    // Root is the repo root so ../shared compiles alongside electron/.
+    // Emit layout: dist/electron/electron/*.js + dist/electron/shared/*.js
+    "rootDir": "..",
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "../shared/**/*.ts"]
 }

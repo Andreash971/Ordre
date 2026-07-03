@@ -3,7 +3,7 @@ import type {
   CustomerSuggestion,
   InsertCustomerInput,
   UpdateCustomerInput,
-} from './api-types'
+} from '@shared/customers'
 
 export type {
   Customer,
@@ -13,8 +13,6 @@ export type {
 }
 
 const api = () => window.electronAPI.customers
-
-export const getCustomers = () => api().getAll()
 
 export const getAllCustomers = (): Promise<Array<Customer>> => api().getAll()
 

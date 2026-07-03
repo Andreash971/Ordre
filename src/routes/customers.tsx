@@ -18,12 +18,12 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import type { AddCustomerFormValues } from '#/components/AddCustomerForm'
-import AddCustomerForm from '#/components/AddCustomerForm'
-import { customerColumns } from '#/components/CustomerColumns'
-import { getAllCustomers, insertCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
-import { getStoredSettings } from '@/lib/settings'
+import type { AddCustomerFormValues } from '@/components/AddCustomerForm'
+import AddCustomerForm from '@/components/AddCustomerForm'
+import { customerColumns } from '@/components/CustomerColumns'
+import { getAllCustomers, insertCustomer } from '@/lib/customer-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import { useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/customers')({
   component: CustomersPage,
@@ -33,7 +33,7 @@ function CustomersPage() {
   const queryClient = useQueryClient()
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
-  const pageSize = getStoredSettings().rowsPerPage
+  const pageSize = useSettings().rowsPerPage
 
   const { data = [] } = useQuery({
     queryKey: queryKeys.customers.all,
@@ -65,7 +65,7 @@ function CustomersPage() {
       </div>
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
-        <InputGroup className="w-full max-w-sm note:border-border gray:bg-white/70 gray:border-border">
+        <InputGroup className="w-full max-w-sm bg-card">
           <InputGroupAddon>
             <UserSearch />
           </InputGroupAddon>
@@ -94,7 +94,7 @@ function CustomersPage() {
       />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-sm note:bg-secondary">
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Legg til kunde</DialogTitle>
             <DialogDescription>

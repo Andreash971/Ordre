@@ -1,52 +1,30 @@
-import type { Item } from '#/components/OrderColumns'
-import type { OrderData } from '#/components/pdf/order'
-import { getRetentionMs, getStoredSettings } from '#/lib/settings'
-import { getSpecialKeyForItem } from '#/lib/special-items'
-import {
-  clearOrdersInCache,
-  getCache,
-  setOrdersInCache,
-} from '#/lib/store-cache'
+import type { Item } from '@/components/OrderColumns'
+import type {
+  CustomerFormValues,
+  DeliveryValues,
+  NewArchivedOrder,
+  OrderData,
+  OrderRecipient,
+} from '@shared/orders'
+import { getStoredSettings } from '@/lib/settings'
+import { getSpecialKeyForItem } from '@/lib/special-items'
 
-export type CustomerFormValues = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  careof: string
-}
+export type { CustomerFormValues, DeliveryValues }
+export type Customer = OrderRecipient
 
-export type Customer = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  careof: string
-  cardmsg: string
-  instructmsg: string
-  date: string
-  time: string | null
-  leaveDoor: boolean
-  leaveNeighbour: boolean
-}
-
-export type DeliveryValues = {
-  date: string
-  time: string | null
-  leaveDoor: boolean
-  leaveNeighbour: boolean
-}
-
-export function getLocalDateString() {
-  const d = new Date()
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+/** Copy just the customer-form fields from any customer-shaped object. */
+export function pickCustomerFormValues(
+  c: CustomerFormValues,
+): CustomerFormValues {
+  return {
+    name: c.name,
+    phone: c.phone,
+    company: c.company,
+    address: c.address,
+    postcode: c.postcode,
+    city: c.city,
+    careof: c.careof,
+  }
 }
 
 export function formatDeliveryDate(dateStr: string) {
@@ -110,8 +88,7 @@ export function buildOrderData(
     orderContent: items
       .filter(
         (i) =>
-          customer.time !== null ||
-          getSpecialKeyForItem(i) !== 'leveringstid',
+          customer.time !== null || getSpecialKeyForItem(i) !== 'leveringstid',
       )
       .filter(
         (i) =>
@@ -127,83 +104,18 @@ export function buildOrderData(
   }
 }
 
-export type StoredOrder = {
-  data: OrderData
-  savedAt: number
-  expiresAt: number
-  key: string
-}
-
-export function exportOrdersToJson(
+/**
+ * One archive payload per recipient: the raw draft (source) plus the derived
+ * print snapshot. The main process assigns ids, timestamps, and retention.
+ */
+export function buildArchivedOrderPayloads(
   customers: Customer[],
   sender: CustomerFormValues | null,
   delivery: DeliveryValues,
   items: Item[],
-) {
-  const stored: Record<string, StoredOrder> = { ...getCache().orders }
-  const now = Date.now()
-  customers.forEach((customer, index) => {
-    const orderData = buildOrderData(customer, sender, delivery, items)
-    const safeName = (customer.name || `mottaker-${index + 1}`)
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-    const key = `ordre-${safeName}`
-    stored[key] = {
-      data: orderData,
-      savedAt: now,
-      expiresAt: now + getRetentionMs(),
-      key,
-    }
-  })
-  setOrdersInCache(stored)
-}
-
-export function getCurrentOrders(
-  customers: Customer[],
-  sender: CustomerFormValues | null,
-  delivery: DeliveryValues,
-  items: Item[],
-): StoredOrder[] {
-  const now = Date.now()
-  return customers.map((customer, index) => {
-    const orderData = buildOrderData(customer, sender, delivery, items)
-    const safeName = (customer.name || `mottaker-${index + 1}`)
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-    const key = `ordre-${safeName}`
-    return {
-      data: orderData,
-      savedAt: now,
-      expiresAt: now + getRetentionMs(),
-      key,
-    }
-  })
-}
-
-export function getStoredOrders(): StoredOrder[] {
-  const stored = getCache().orders
-  const now = Date.now()
-  const active: Record<string, StoredOrder> = {}
-  let pruned = false
-  for (const [k, v] of Object.entries(stored)) {
-    if (now <= v.expiresAt) {
-      active[k] = v
-    } else {
-      pruned = true
-    }
-  }
-  if (pruned) setOrdersInCache(active)
-  return Object.values(active)
-}
-
-export function clearArchive(): void {
-  clearOrdersInCache()
-}
-
-export function deleteStoredOrder(key: string): void {
-  const rest = { ...getCache().orders }
-  delete rest[key]
-  setOrdersInCache(rest)
+): NewArchivedOrder[] {
+  return customers.map((customer) => ({
+    source: { customer, sender, delivery, items },
+    data: buildOrderData(customer, sender, delivery, items),
+  }))
 }

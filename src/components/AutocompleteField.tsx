@@ -8,6 +8,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@/components/ui/input-group'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { cn } from '@/lib/utils'
 
 interface AutocompleteFieldProps<T extends { id: number }> {
@@ -48,7 +49,7 @@ export default function AutocompleteField<T extends { id: number }>({
   renderSuggestion,
 }: AutocompleteFieldProps<T>) {
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [debouncedValue, setDebouncedValue] = useState('')
+  const debouncedValue = useDebouncedValue(field.state.value, 300)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
@@ -57,11 +58,6 @@ export default function AutocompleteField<T extends { id: number }>({
     left: number
     width: number
   } | null>(null)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(field.state.value), 300)
-    return () => clearTimeout(timer)
-  }, [field.state.value])
 
   const { data: suggestions = [] } = useQuery({
     queryKey: [field.name, debouncedValue],
@@ -104,7 +100,7 @@ export default function AutocompleteField<T extends { id: number }>({
   return (
     <Field data-invalid={isInvalid} data-disabled>
       <div className="relative">
-        <InputGroup className="gray:bg-input gray:border-border">
+        <InputGroup className="bg-card">
           <InputGroupAddon>{icon}</InputGroupAddon>
           <InputGroupInput
             id={id}

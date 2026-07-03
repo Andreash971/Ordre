@@ -6,7 +6,13 @@ import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
 import { registerBringHandlers } from './ipc/bring'
+import {
+  migrateLegacyOrders,
+  pruneExpiredOrders,
+  registerOrderHandlers,
+} from './ipc/orders'
 import { registerStoreHandlers } from './ipc/store'
+import { encryptStoredSecretsAtRest } from './secure-storage'
 import {
   spawnPrinterSidecar,
   killPrinterSidecar,
@@ -92,16 +98,23 @@ function createWindow(): BrowserWindow {
     void win.loadURL('http://localhost:3000')
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    void win.loadFile(path.join(__dirname, '../renderer/index.html'))
+    void win.loadFile(path.join(__dirname, '../../renderer/index.html'))
   }
 
   return win
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   runMigrations()
+  // Move any pre-SQLite archive into the orders table and drop expired rows
+  // before the renderer can query them.
+  await migrateLegacyOrders()
+  await pruneExpiredOrders()
+  // Upgrade secrets persisted in plaintext by older app versions.
+  await encryptStoredSecretsAtRest()
   registerCustomerHandlers()
   registerProductHandlers()
+  registerOrderHandlers()
   registerBringHandlers()
   registerStoreHandlers()
   registerPrinterHandlers()

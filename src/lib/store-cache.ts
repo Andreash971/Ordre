@@ -1,171 +1,81 @@
-import type {
-  AppSettings,
-  QuickSelectSettings,
-  SpecialItemsSettings,
-} from './settings'
-import type { ThemeMode } from './theme'
-import type { StoredOrder } from './order-utils'
+import type { AppSettings, PartialSettings, ThemeMode } from '@shared/settings'
+import {
+  DEFAULT_SETTINGS,
+  mergeSettings,
+  migrateSettings,
+  themeSchema,
+} from '@shared/settings'
 
-export const ORDERS_CHANGED_EVENT = 'orders-changed'
-export const SETTINGS_CHANGED_EVENT = 'settings-changed'
-
-const DEFAULT_QUICK_SELECT: QuickSelectSettings = {
-  cardSignatures: [],
-  instructionSuggestions: [],
-}
-
-const DEFAULT_SPECIAL_ITEMS: SpecialItemsSettings = {
-  frakt: { name: 'Frakt', price: 100 },
-  leveringstid: { name: 'Leveringstid', price: 100 },
-  kort: { name: 'Kort', price: 25 },
-}
-
-const DEFAULT_SETTINGS: AppSettings = {
-  archiveRetention: 7,
-  rowsPerPage: 14,
-  defaultPrinter: null,
-  company: {
-    name: '',
-    displayName: '',
-    address: '',
-    postCode: '',
-    phone: '',
-  },
-  quickSelect: DEFAULT_QUICK_SELECT,
-  bringApi: {
-    uid: '',
-    apiKey: '',
-  },
-  specialItems: DEFAULT_SPECIAL_ITEMS,
-  autoSaveCustomer: false,
-  betaChannel: false,
-  deliveryTimePresets: ['11:00', '12:00', '14:00', '15:00'],
-}
-
-type Cache = {
+export type StoreSnapshot = {
   theme: ThemeMode
   settings: AppSettings
-  orders: Record<string, StoredOrder>
   onboardingCompleted: boolean
 }
 
-const cache: Cache = {
+let snapshot: StoreSnapshot = {
   theme: 'auto',
   settings: DEFAULT_SETTINGS,
-  orders: {},
   onboardingCompleted: false,
 }
 
-let hydrated = false
+const listeners = new Set<() => void>()
 
-export function getCache(): Cache {
-  return cache
+/** Subscribe to store changes. Returns an unsubscribe function. */
+export function subscribeToStore(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+/**
+ * Current immutable snapshot. Components should use the hooks in
+ * store-hooks.ts instead; this is for imperative code paths (PDF building,
+ * event handlers).
+ */
+export function getCache(): StoreSnapshot {
+  return snapshot
+}
+
+function update(patch: Partial<StoreSnapshot>): void {
+  snapshot = { ...snapshot, ...patch }
+  for (const listener of listeners) listener()
 }
 
 export function setThemeInCache(mode: ThemeMode): void {
-  cache.theme = mode
+  update({ theme: mode })
   void window.electronAPI.store.setTheme(mode)
 }
 
-export function setSettingsInCache(partial: Partial<AppSettings>): void {
-  cache.settings = {
-    archiveRetention:
-      partial.archiveRetention ?? cache.settings.archiveRetention,
-    rowsPerPage: partial.rowsPerPage ?? cache.settings.rowsPerPage,
-    defaultPrinter:
-      partial.defaultPrinter !== undefined
-        ? partial.defaultPrinter
-        : cache.settings.defaultPrinter,
-    company: { ...cache.settings.company, ...(partial.company ?? {}) },
-    quickSelect: partial.quickSelect
-      ? { ...cache.settings.quickSelect, ...partial.quickSelect }
-      : cache.settings.quickSelect,
-    bringApi: { ...cache.settings.bringApi, ...(partial.bringApi ?? {}) },
-    specialItems: partial.specialItems
-      ? {
-          frakt: {
-            ...cache.settings.specialItems.frakt,
-            ...partial.specialItems.frakt,
-          },
-          leveringstid: {
-            ...cache.settings.specialItems.leveringstid,
-            ...partial.specialItems.leveringstid,
-          },
-          kort: {
-            ...cache.settings.specialItems.kort,
-            ...partial.specialItems.kort,
-          },
-        }
-      : cache.settings.specialItems,
-    autoSaveCustomer:
-      partial.autoSaveCustomer ?? cache.settings.autoSaveCustomer,
-    betaChannel: partial.betaChannel ?? cache.settings.betaChannel,
-    deliveryTimePresets:
-      partial.deliveryTimePresets ?? cache.settings.deliveryTimePresets,
-  }
+export function setSettingsInCache(partial: PartialSettings): void {
+  update({ settings: mergeSettings(snapshot.settings, partial) })
   void window.electronAPI.store.setSettings(partial)
-  window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT))
-}
-
-export function setOrdersInCache(orders: Record<string, StoredOrder>): void {
-  cache.orders = orders
-  void window.electronAPI.store.setOrders(orders)
-  window.dispatchEvent(new CustomEvent(ORDERS_CHANGED_EVENT))
-}
-
-export function clearOrdersInCache(): void {
-  cache.orders = {}
-  void window.electronAPI.store.clearOrders()
-  window.dispatchEvent(new CustomEvent(ORDERS_CHANGED_EVENT))
 }
 
 export function completeOnboardingInCache(): void {
-  cache.onboardingCompleted = true
+  update({ onboardingCompleted: true })
   void window.electronAPI.store.setOnboardingCompleted(true)
 }
+
+let hydrated = false
 
 export async function hydrateStoreCache(): Promise<void> {
   if (hydrated) return
   hydrated = true
 
   const remote = await window.electronAPI.store.getAll()
-  cache.theme = remote.theme
-  // Persisted settings from older app versions may lack newer fields; merge defaults.
-  const remoteSettings = remote.settings as Partial<AppSettings>
-  cache.settings = {
-    ...DEFAULT_SETTINGS,
-    ...remoteSettings,
-    company: { ...DEFAULT_SETTINGS.company, ...(remoteSettings.company ?? {}) },
-    quickSelect: remoteSettings.quickSelect ?? DEFAULT_QUICK_SELECT,
-    bringApi: remoteSettings.bringApi ?? DEFAULT_SETTINGS.bringApi,
-    specialItems: {
-      frakt: {
-        ...DEFAULT_SPECIAL_ITEMS.frakt,
-        ...(remoteSettings.specialItems?.frakt ?? {}),
-      },
-      leveringstid: {
-        ...DEFAULT_SPECIAL_ITEMS.leveringstid,
-        // Migrate values previously stored under the old `fraktTidspunktstillegg` key.
-        // Remove on or after 2026-09-28 — by then any user who has launched the app
-        // since the rename will have re-persisted under the new key.
-        ...(((
-          remoteSettings.specialItems as Record<string, unknown> | undefined
-        )?.fraktTidspunktstillegg as
-          | Partial<{ name: string; price: number }>
-          | undefined) ?? {}),
-        ...(remoteSettings.specialItems?.leveringstid ?? {}),
-      },
-      kort: {
-        ...DEFAULT_SPECIAL_ITEMS.kort,
-        ...(remoteSettings.specialItems?.kort ?? {}),
-      },
-    },
-  }
-  cache.orders = remote.orders
-  cache.onboardingCompleted = remote.onboardingCompleted
+  // Older app versions persisted theme names that no longer exist.
+  const parsedTheme = themeSchema.safeParse(remote.theme)
+  const theme = parsedTheme.success ? parsedTheme.data : 'auto'
+  update({
+    theme,
+    // migrateSettings fills fields missing from older app versions' data.
+    settings: migrateSettings(remote.settings),
+    onboardingCompleted: remote.onboardingCompleted,
+  })
 
   try {
-    window.localStorage.setItem('theme', cache.theme)
+    window.localStorage.setItem('theme', theme)
   } catch {
     // ignore
   }

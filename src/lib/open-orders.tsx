@@ -1,16 +1,9 @@
 import React from 'react'
 import { pdf, Document } from '@react-pdf/renderer'
 import type { DocumentProps } from '@react-pdf/renderer'
-import { OrderPage } from '#/components/pdf/order'
-import type {
-  Customer,
-  CustomerFormValues,
-  DeliveryValues,
-  StoredOrder,
-} from '#/lib/order-utils'
-import { exportOrdersToJson, getCurrentOrders } from '#/lib/order-utils'
-import type { Item } from '#/components/OrderColumns'
-import { getStoredSettings } from '#/lib/settings'
+import { OrderPage } from '@/components/pdf/order'
+import type { OrderData } from '@shared/orders'
+import { getStoredSettings } from '@/lib/settings'
 
 async function pdfElementToBuffer(
   element: React.ReactElement<DocumentProps>,
@@ -19,62 +12,25 @@ async function pdfElementToBuffer(
   return blob.arrayBuffer()
 }
 
-export async function openOrdersPdf(
-  customers: Customer[],
-  sender: CustomerFormValues | null,
-  delivery: DeliveryValues,
-  items: Item[],
-) {
-  exportOrdersToJson(customers, sender, delivery, items)
-  const orders = getCurrentOrders(customers, sender, delivery, items)
-  const element = (
+function orderDocument(dataList: OrderData[]) {
+  return (
     <Document>
-      {orders.map((o) => (
-        <OrderPage key={o.key} data={o.data} />
+      {dataList.map((data, i) => (
+        <OrderPage key={i} data={data} />
       ))}
     </Document>
   )
-  const buffer = await pdfElementToBuffer(element)
+}
+
+/** Render the given order slips to PDF and open it in the system viewer. */
+export async function openOrdersPdf(dataList: OrderData[]) {
+  const buffer = await pdfElementToBuffer(orderDocument(dataList))
   await window.electronAPI.pdf.open(buffer)
 }
 
-export async function openStoredOrderPdf(order: StoredOrder) {
-  const element = (
-    <Document>
-      <OrderPage key={order.key} data={order.data} />
-    </Document>
-  )
-  const buffer = await pdfElementToBuffer(element)
-  await window.electronAPI.pdf.open(buffer)
-}
-
-export async function printOrdersPdf(
-  customers: Customer[],
-  sender: CustomerFormValues | null,
-  delivery: DeliveryValues,
-  items: Item[],
-) {
-  exportOrdersToJson(customers, sender, delivery, items)
-  const orders = getCurrentOrders(customers, sender, delivery, items)
-  const element = (
-    <Document>
-      {orders.map((o) => (
-        <OrderPage key={o.key} data={o.data} />
-      ))}
-    </Document>
-  )
-  const buffer = await pdfElementToBuffer(element)
-  const { defaultPrinter } = getStoredSettings()
-  await window.electronAPI.printer.print(buffer, defaultPrinter ?? undefined)
-}
-
-export async function printStoredOrderPdf(order: StoredOrder) {
-  const element = (
-    <Document>
-      <OrderPage key={order.key} data={order.data} />
-    </Document>
-  )
-  const buffer = await pdfElementToBuffer(element)
+/** Render the given order slips to PDF and send them to the default printer. */
+export async function printOrdersPdf(dataList: OrderData[]) {
+  const buffer = await pdfElementToBuffer(orderDocument(dataList))
   const { defaultPrinter } = getStoredSettings()
   await window.electronAPI.printer.print(buffer, defaultPrinter ?? undefined)
 }

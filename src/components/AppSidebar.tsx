@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Sidebar,
@@ -21,29 +20,29 @@ import {
   Settings,
 } from 'lucide-react'
 
-import { getStoredSettings } from '@/lib/settings'
-import { SETTINGS_CHANGED_EVENT } from '@/lib/store-cache'
+import { PAGE_LABELS } from '@/lib/navigation'
+import { useSettings } from '@/lib/store-hooks'
 import UpdateCard from '@/components/UpdateCard'
 
 const Links = [
   {
     to: '/',
-    label: 'Oversikt',
+    label: PAGE_LABELS['/'],
     icon: <Home className="text-foreground" />,
   },
   {
     to: '/archive',
-    label: 'Arkiv',
+    label: PAGE_LABELS['/archive'],
     icon: <Archive className="text-foreground" />,
   },
   {
     to: '/customers',
-    label: 'Kunder',
+    label: PAGE_LABELS['/customers'],
     icon: <IdCard className="text-foreground" />,
   },
   {
     to: '/products',
-    label: 'Varer',
+    label: PAGE_LABELS['/products'],
     icon: <Package className="text-foreground" />,
   },
 ] as const
@@ -54,15 +53,7 @@ export default function AppSidebar() {
     if (isMobile) setOpenMobile(false)
   }
 
-  const [displayName, setDisplayName] = useState(
-    () => getStoredSettings().company.displayName,
-  )
-  useEffect(() => {
-    const handler = () =>
-      setDisplayName(getStoredSettings().company.displayName)
-    window.addEventListener(SETTINGS_CHANGED_EVENT, handler)
-    return () => window.removeEventListener(SETTINGS_CHANGED_EVENT, handler)
-  }, [])
+  const displayName = useSettings().company.displayName
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -82,17 +73,15 @@ export default function AppSidebar() {
               <SidebarMenuButton
                 asChild
                 size="lg"
-                className="group/new text-base hover:bg-accent hover:text-accent-foreground [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
+                className="group/new text-base bg-primary text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground data-active:bg-primary data-active:text-primary-foreground [&>svg]:size-6 group-data-[collapsible=icon]:[&>svg]:ml-1"
               >
                 <Link
                   to="/new"
-                  activeProps={
-                    { 'data-active': 'true' } as Record<string, string>
-                  }
+                  activeProps={{ 'data-active': 'true' }}
                   activeOptions={{ exact: true }}
                   onClick={handleNavClick}
                 >
-                  <FilePlusIcon className="text-foreground group-hover/new:text-accent-foreground" />
+                  <FilePlusIcon className="text-primary-foreground data-active:text-primary-foreground" />
                   Ny ordre
                 </Link>
               </SidebarMenuButton>
@@ -111,9 +100,7 @@ export default function AppSidebar() {
                 >
                   <Link
                     to={to}
-                    activeProps={
-                      { 'data-active': 'true' } as Record<string, string>
-                    }
+                    activeProps={{ 'data-active': 'true' }}
                     activeOptions={{ exact: true }}
                     onClick={handleNavClick}
                   >
@@ -136,7 +123,7 @@ export default function AppSidebar() {
         >
           <Link
             to="/settings"
-            activeProps={{ 'data-active': 'true' } as Record<string, string>}
+            activeProps={{ 'data-active': 'true' }}
             onClick={handleNavClick}
           >
             <Settings className="text-foreground" />

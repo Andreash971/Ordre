@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import * as z from 'zod'
+import type { OrderItem } from '@shared/orders'
 import type { ColumnDef, Row, RowData, Table } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -17,12 +17,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useIsMobile } from '@/hooks/use-mobile'
-import AddProductForm from '#/components/AddProductForm'
-import type { AddProductFormValues } from '#/components/AddProductForm'
-import { insertProduct, updateProduct } from '#/lib/product-server-fns'
-import { queryKeys } from '#/lib/query-keys'
-import type { SpecialItemKey } from '#/lib/settings'
-import { TOGGLE_DRIVEN_SPECIAL_KEYS } from '#/lib/special-items'
+import { cn } from '@/lib/utils'
+import AddProductForm from '@/components/AddProductForm'
+import type { AddProductFormValues } from '@/components/AddProductForm'
+import { insertProduct, updateProduct } from '@/lib/product-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import type { SpecialItemKey } from '@/lib/settings'
+import { TOGGLE_DRIVEN_SPECIAL_KEYS } from '@/lib/special-items'
+import { formatNok } from '@/lib/format'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -37,26 +39,7 @@ declare module '@tanstack/react-table' {
   }
 }
 
-const specialItemKeySchema = z.union([
-  z.literal('frakt'),
-  z.literal('leveringstid'),
-  z.literal('kort'),
-])
-
-const itemSchema = z.object({
-  productId: z.number().optional(),
-  specialKey: specialItemKeySchema.optional(),
-  name: z.string(),
-  description: z.string().default(''),
-  category: z.string().optional(),
-  price: z.number(),
-  quantity: z.number(),
-  originalName: z.string().optional(),
-  originalDescription: z.string().optional(),
-  originalPrice: z.number().optional(),
-})
-
-export type Item = z.infer<typeof itemSchema>
+export type Item = OrderItem
 
 function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const { name, description } = row.original
@@ -92,7 +75,7 @@ function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
     <div
       className="flex flex-col gap-1 min-w-0"
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
           setIsEditing(false)
         }
       }}
@@ -213,13 +196,6 @@ function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
-const nokFormatter = new Intl.NumberFormat('no-NB', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-
 function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const isSpecial = row.original.specialKey != null
   const isNew = !isSpecial && row.original.productId == null
@@ -234,7 +210,7 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
         onClick={isMobile ? () => setIsEditing(true) : undefined}
         onDoubleClick={!isMobile ? () => setIsEditing(true) : undefined}
       >
-        {nokFormatter.format(price)}
+        {formatNok(price)}
       </div>
     )
   }
@@ -261,36 +237,42 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
+const HEADER_LABEL =
+  'font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground'
+
 export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: 'name',
-    header: () => <div className="text-left">Vare</div>,
+    header: () => <div className={cn(HEADER_LABEL, 'text-left')}>Vare</div>,
     cell: ({ row, table }) => <NameCell row={row} table={table} />,
     meta: { priority: 'primary' },
   },
   {
     id: 'quantity',
-    header: () => <div className="text-right ml-auto">Antall</div>,
+    header: () => (
+      <div className={cn(HEADER_LABEL, 'ml-auto text-right')}>Antall</div>
+    ),
     cell: ({ row, table }) => <QuantityCell row={row} table={table} />,
   },
   {
     accessorKey: 'price',
-    header: () => <div className="text-right w-fit ml-auto">Pris/Stk</div>,
+    header: () => (
+      <div className={cn(HEADER_LABEL, 'ml-auto w-fit text-right')}>
+        Pris/Stk
+      </div>
+    ),
     cell: ({ row, table }) => <PriceCell row={row} table={table} />,
   },
   {
     id: 'total',
-    header: () => <div className="text-right w-fit ml-auto">Total</div>,
-    cell: ({ row }) => {
-      const formatted = new Intl.NumberFormat('no-NB', {
-        style: 'currency',
-        currency: 'NOK',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }).format(row.original.price * row.original.quantity)
-
-      return <div className="text-right">{formatted}</div>
-    },
+    header: () => (
+      <div className={cn(HEADER_LABEL, 'ml-auto w-fit text-right')}>Total</div>
+    ),
+    cell: ({ row }) => (
+      <div className="text-right">
+        {formatNok(row.original.price * row.original.quantity)}
+      </div>
+    ),
     meta: { priority: 'primary' },
   },
   {
@@ -423,7 +405,7 @@ function ActionCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
             )}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="sm:max-w-sm note:bg-secondary">
+            <DialogContent className="sm:max-w-sm">
               <DialogHeader>
                 <DialogTitle>Lagre vare</DialogTitle>
                 <DialogDescription>

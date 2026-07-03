@@ -1,7 +1,8 @@
 import * as React from 'react'
 import { Trash2 } from 'lucide-react'
 
-import type { StoredOrder } from '#/lib/order-utils'
+import type { ArchivedOrder } from '@shared/orders'
+import { formatNok } from '@/lib/format'
 import {
   Sheet,
   SheetContent,
@@ -9,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import OpenOrderButton from '@/components/ui/open-order-button'
+import OpenOrderButton from '@/components/OpenOrderButton'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,18 +30,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-
 export function OrderDetail({
   order,
   onDelete,
 }: {
-  order: StoredOrder
+  order: ArchivedOrder
   onDelete?: () => void
 }) {
   const { data } = order
@@ -153,7 +147,7 @@ export function OrderDetail({
                   ×{line.quantity}
                 </TableCell>
                 <TableCell className="text-right font-mono">
-                  {nokFormatter.format(line.total)}
+                  {formatNok(line.total)}
                 </TableCell>
               </TableRow>
             ))}
@@ -187,7 +181,7 @@ export function OrderDetail({
         <div className="grid grid-cols-2 gap-y-1 text-sm">
           <div className="text-muted-foreground">Totalt</div>
           <div className="text-right font-mono font-medium">
-            {nokFormatter.format(sum)}
+            {formatNok(sum)}
           </div>
         </div>
       </div>
@@ -199,10 +193,11 @@ export function OrderDetail({
             dateStyle: 'medium',
           })}
           {' · '}
-          Utløper{' '}
-          {new Date(order.expiresAt).toLocaleDateString('nb-NO', {
-            dateStyle: 'medium',
-          })}
+          {order.expiresAt === null
+            ? 'Utløper aldri'
+            : `Utløper ${new Date(order.expiresAt).toLocaleDateString('nb-NO', {
+                dateStyle: 'medium',
+              })}`}
         </div>
         <div className="flex items-center justify-between gap-2">
           {onDelete ? (
@@ -258,13 +253,13 @@ export function OrderDetailSheet({
   onOpenChange,
   onDelete,
 }: {
-  order: StoredOrder | null
+  order: ArchivedOrder | null
   onOpenChange: (open: boolean) => void
   onDelete?: () => void
 }) {
   return (
     <Sheet open={order !== null} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+      <SheetContent className="w-full lg:min-w-xl overflow-y-auto">
         {order ? <OrderDetail order={order} onDelete={onDelete} /> : null}
       </SheetContent>
     </Sheet>

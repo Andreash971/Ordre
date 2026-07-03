@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import * as z from 'zod'
 
+import { decryptSecret } from '../secure-storage'
 import { getStore } from '../store'
 
 const postcodeSchema = z.string().regex(/^\d{4}$/)
@@ -31,8 +32,9 @@ const TARGET = 5
 async function getCredentials() {
   const store = await getStore()
   const { uid, apiKey } = store.get('settings').bringApi
-  if (!uid || !apiKey) throw new Error('Bring API credentials missing')
-  return { uid, key: apiKey }
+  const key = decryptSecret(apiKey)
+  if (!uid || !key) throw new Error('Bring API credentials missing')
+  return { uid, key }
 }
 
 export function registerBringHandlers() {

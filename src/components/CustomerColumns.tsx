@@ -22,10 +22,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-import type { AddCustomerFormValues } from '#/components/AddCustomerForm'
-import AddCustomerForm from '#/components/AddCustomerForm'
-import { deleteCustomer, updateCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import type { AddCustomerFormValues } from '@/components/AddCustomerForm'
+import AddCustomerForm from '@/components/AddCustomerForm'
+import { deleteCustomer, updateCustomer } from '@/lib/customer-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 
 const customerSchema = z.object({
   id: z.number(),

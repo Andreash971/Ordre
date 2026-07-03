@@ -1,14 +1,15 @@
 import * as React from 'react'
 import { nb } from 'date-fns/locale'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarIcon,
   ChevronDown,
   ChevronUp,
+  Info,
   Trash2,
   UserPlus,
 } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -29,121 +30,70 @@ import {
 import { EmptyButton } from '@/components/ui/empty-button'
 import { cn } from '@/lib/utils'
 
-import CustomerForm from '#/components/CustomerForm'
-import { formatDeliveryDate } from '#/lib/order-utils'
-import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import { CustomerFields, SaveCustomerButton } from '@/components/CustomerForm'
+import { formatDeliveryDate, pickCustomerFormValues } from '@/lib/order-utils'
+import { toIsoDate } from '@/lib/format'
+import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
+import type { Customer, CustomerFormValues } from '@/lib/order-utils'
 import type {
-  Customer,
-  CustomerFormValues,
-  DeliveryValues,
-} from '#/lib/order-utils'
+  OrderDraft,
+  OrderDraftAction,
+  SharedOrderDefaults,
+} from '@/components/new-order/order-draft'
+import { sharedDefaults } from '@/components/new-order/order-draft'
 
-interface SectionRecipientsProps {
-  recipients: Customer[]
-  onRecipientsChange: React.Dispatch<React.SetStateAction<Customer[]>>
-  onRecipientIdsChange: React.Dispatch<
-    React.SetStateAction<(number | null)[]>
-  >
+interface RecipientListProps {
+  draft: OrderDraft
+  dispatch: React.Dispatch<OrderDraftAction>
   autoSaveCustomer: boolean
-  defaults: {
-    delivery: DeliveryValues
-    showTime: boolean
-    cardEnabled: boolean
-    cardValue: string
-    instructionsEnabled: boolean
-    instructionsValue: string
-  }
 }
 
-const emptyRecipient = (): Customer => ({
-  name: '',
-  phone: '',
-  company: '',
-  address: '',
-  postcode: '',
-  city: '',
-  careof: '',
-  cardmsg: '',
-  instructmsg: '',
-  date: '',
-  time: null,
-  leaveDoor: false,
-  leaveNeighbour: false,
-})
-
-function toIso(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+/** Number of fields a recipient overrides vs. the shared (master) defaults. */
+function countOverrides(r: Customer, defaults: SharedOrderDefaults): number {
+  return [
+    Boolean(r.date && r.date !== defaults.delivery.date),
+    r.time !== defaults.delivery.time && defaults.showTime,
+    r.leaveDoor !== defaults.delivery.leaveDoor,
+    r.leaveNeighbour !== defaults.delivery.leaveNeighbour,
+    defaults.cardEnabled &&
+      Boolean(r.cardmsg) &&
+      r.cardmsg !== defaults.cardValue,
+    defaults.instructionsEnabled &&
+      Boolean(r.instructmsg) &&
+      r.instructmsg !== defaults.instructionsValue,
+  ].filter(Boolean).length
 }
 
-export default function SectionRecipients({
-  recipients,
-  onRecipientsChange,
-  onRecipientIdsChange,
+export default function RecipientList({
+  draft,
+  dispatch,
   autoSaveCustomer,
-  defaults,
-}: SectionRecipientsProps) {
+}: RecipientListProps) {
+  const recipients = draft.recipients
+  const defaults = sharedDefaults(draft)
   const [expanded, setExpanded] = React.useState<number | null>(0)
-  const queryClient = useQueryClient()
-  const saveCustomerMutation = useMutation({
-    mutationFn: async ({
-      values,
-      id,
-    }: {
-      values: CustomerFormValues
-      id: number | null
-    }) => {
-      if (id != null) {
-        await updateCustomer({ data: { id, ...values } })
-      } else {
-        await insertCustomer({ data: values })
-      }
-    },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
-  })
+  const saveCustomerMutation = useSaveCustomerMutation()
   const saveCustomer = (
     values: CustomerFormValues,
     ctx: { id: number | null },
   ) => saveCustomerMutation.mutateAsync({ values, id: ctx.id })
 
   const addRecipient = () => {
-    const nextIndex = recipients.length
-    const next: Customer = {
-      ...emptyRecipient(),
-      date: defaults.delivery.date,
-      time: defaults.delivery.time,
-      leaveDoor: defaults.delivery.leaveDoor,
-      leaveNeighbour: defaults.delivery.leaveNeighbour,
-      cardmsg: defaults.cardEnabled ? defaults.cardValue : '',
-      instructmsg: defaults.instructionsEnabled
-        ? defaults.instructionsValue
-        : '',
-    }
-    onRecipientsChange((prev) => [...prev, next])
-    onRecipientIdsChange((prev) => [...prev, null])
-    setExpanded(nextIndex)
+    dispatch({ type: 'addRecipient' })
+    setExpanded(recipients.length)
   }
 
   const removeRecipient = (index: number) => {
-    onRecipientsChange((prev) => prev.filter((_, i) => i !== index))
-    onRecipientIdsChange((prev) => prev.filter((_, i) => i !== index))
+    dispatch({ type: 'removeRecipient', index })
     setExpanded(null)
   }
 
   const updateRecipient = (index: number, patch: Partial<Customer>) => {
-    onRecipientsChange((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, ...patch } : c)),
-    )
+    dispatch({ type: 'patchRecipient', index, patch })
   }
 
   const updateRecipientId = (index: number, id: number | null) => {
-    onRecipientIdsChange((prev) =>
-      prev.map((existing, i) => (i === index ? id : existing)),
-    )
+    dispatch({ type: 'setRecipientId', index, id })
   }
 
   function titleButton() {
@@ -159,9 +109,9 @@ export default function SectionRecipients({
       {recipients.length === 0 ? (
         <Empty className="border border-dashed">
           <EmptyHeader>
-            <EmptyTitle>Ingen mottakere</EmptyTitle>
+            <EmptyTitle>Ingen definerte mottakere</EmptyTitle>
             <EmptyDescription>
-              Når det ikke er noen mottakere settes avsenderen som mottaker.
+              Avsender vil automatisk settes som mottaker.
             </EmptyDescription>
             <EmptyContent>
               <Button type="button" variant="default" onClick={addRecipient}>
@@ -171,7 +121,17 @@ export default function SectionRecipients({
             </EmptyContent>
           </EmptyHeader>
         </Empty>
-      ) : null}
+      ) : (
+        <div className="flex items-start gap-2 rounded-lg border bg-muted px-3 py-2 text-xs text-muted-foreground">
+          <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
+          <span>
+            Hver mottaker arver de{' '}
+            <b className="font-medium text-foreground">felles</b> verdiene over.
+            Du trenger bare å fylle ut mottakerens informasjon, og endre det som
+            skal være <b className="font-medium text-foreground">annerledes</b>.
+          </span>
+        </div>
+      )}
 
       {recipients.map((r, i) => (
         <RecipientRow
@@ -213,7 +173,7 @@ interface RecipientRowProps {
   ) => Promise<void>
   onIdChange: (id: number | null) => void
   hideSaveButton: boolean
-  defaults: SectionRecipientsProps['defaults']
+  defaults: SharedOrderDefaults
 }
 
 function RecipientRow({
@@ -230,55 +190,81 @@ function RecipientRow({
 }: RecipientRowProps) {
   const summaryDate = value.date || defaults.delivery.date
   const formattedDate = summaryDate ? formatDeliveryDate(summaryDate) : null
+  const overrides = countOverrides(value, defaults)
 
-  const customerDefaults: Partial<CustomerFormValues> = {
-    name: value.name,
-    phone: value.phone,
-    company: value.company,
-    address: value.address,
-    postcode: value.postcode,
-    city: value.city,
-    careof: value.careof,
-  }
+  const customerDefaults: Partial<CustomerFormValues> =
+    pickCustomerFormValues(value)
 
   return (
-    <div className="rounded-lg border">
+    <div
+      className={cn(
+        'rounded-lg border bg-card',
+        overrides > 0 && 'border-primary ring-1 ring-primary/10',
+      )}
+    >
       <button
         type="button"
         onClick={onExpand}
         className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
-        <div className="flex size-7 items-center justify-center rounded-full bg-muted font-mono text-xs">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-xs">
           {String(index + 1).padStart(2, '0')}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-medium truncate">
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">
             {value.name || `Mottaker ${index + 1}`}
           </div>
-          <div className="text-xs text-muted-foreground truncate">
-            {formattedDate?.shortDate ?? '—'} · {value.time ?? '—'} ·{' '}
-            {value.address || '—'}
+          <div className="truncate text-xs text-muted-foreground">
+            {value.address || 'Ingen adresse'}
           </div>
         </div>
-        {expanded ? (
-          <ChevronUp className="size-4 text-muted-foreground" />
+        <div className="hidden flex-col items-end text-right sm:flex">
+          <div className="text-xs">
+            Leveres {formattedDate?.shortDate ?? '—'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {value.time ? `kl. ${value.time}` : 'Ingen leveringstid'}
+          </div>
+        </div>
+        {overrides === 0 ? (
+          <Badge
+            variant="secondary"
+            className="shrink-0 font-mono text-[10px] uppercase tracking-wider"
+          >
+            Alt felles
+          </Badge>
         ) : (
-          <ChevronDown className="size-4 text-muted-foreground" />
+          <Badge
+            variant="soft"
+            className="shrink-0 gap-1 font-mono text-[10px] uppercase tracking-wider"
+          >
+            <span className="size-1.5 rounded-full bg-current" />
+            {overrides} endret felt
+          </Badge>
+        )}
+        {expanded ? (
+          <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
         )}
       </button>
 
       {expanded ? (
-        <div className="grid grid-cols-[15rem_1fr] grid-rows-[auto_auto] border-t px-4 pb-4 pt-4 gap-4">
-          <CustomerForm
-            bare
-            formButtons
-            size="sm"
-            showCareof
-            hideSaveButton={hideSaveButton}
+        <div className="grid grid-cols-[15rem_1fr] grid-rows-[auto_auto] gap-4 border-t px-4 pb-4 pt-4">
+          <CustomerFields
             defaultValues={customerDefaults}
             onValuesChange={(v) => onChange(v)}
             onIdChange={onIdChange}
             onSubmit={onSaveCustomer}
+            footer={
+              hideSaveButton
+                ? undefined
+                : (ctx) => (
+                    <div className="flex justify-end gap-2">
+                      <SaveCustomerButton {...ctx} />
+                    </div>
+                  )
+            }
           />
 
           {/* Overrides */}
@@ -345,6 +331,58 @@ function RecipientRow({
   )
 }
 
+/** A small "Endret" tag on an overridden field label. */
+function EndretTag() {
+  return (
+    <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-primary">
+      Endret
+    </span>
+  )
+}
+
+/** A muted "· felles" hint appended to a field label when it is inherited. */
+function FellesHint() {
+  return (
+    <span className="font-normal normal-case tracking-normal text-muted-foreground/70">
+      · felles
+    </span>
+  )
+}
+
+function OvrHead({
+  label,
+  isOverride,
+  disabled = false,
+  resetLabel,
+  onReset,
+}: {
+  label: string
+  isOverride: boolean
+  disabled?: boolean
+  resetLabel: string
+  onReset: () => void
+}) {
+  return (
+    <div className="flex min-h-6 items-center justify-between gap-2">
+      <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        {label}
+        {isOverride ? <EndretTag /> : !disabled ? <FellesHint /> : null}
+      </span>
+      {isOverride && !disabled ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-6 px-2 text-[11px]"
+          onClick={onReset}
+        >
+          {resetLabel}
+        </Button>
+      ) : null}
+    </div>
+  )
+}
+
 function OverrideDate({
   value,
   fallback,
@@ -362,42 +400,25 @@ function OverrideDate({
   const isOverride = Boolean(value) && value !== fallback
 
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-2 rounded-lg border p-3',
-        isOverride && 'border-primary/50 bg-accent/10',
-        className,
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Leveringsdato
-        </div>
-        {isOverride ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange('')}
-          >
-            Nullstill
-          </Button>
-        ) : null}
-      </div>
+    <div className={cn('flex flex-col gap-2', className)}>
+      <OvrHead
+        label="Leveringsdato"
+        isOverride={isOverride}
+        resetLabel="Nullstill"
+        onReset={() => onChange('')}
+      />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
             variant="outline"
-            className="justify-start gap-2 font-normal"
+            className={cn(
+              'justify-start gap-2 font-normal',
+              isOverride && 'border-primary',
+            )}
           >
             <CalendarIcon className="size-4 text-muted-foreground" />
             {formatted ? formatted.fullDate : 'Velg dato'}
-            {isOverride ? (
-              <span className="ml-auto text-xs font-mono uppercase text-primary">
-                Overstyrt
-              </span>
-            ) : null}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -408,7 +429,7 @@ function OverrideDate({
             selected={effective ? new Date(effective + 'T00:00:00') : undefined}
             onSelect={(d) => {
               if (d) {
-                onChange(toIso(d))
+                onChange(toIsoDate(d))
                 setOpen(false)
               }
             }}
@@ -442,33 +463,20 @@ function OverrideTime({
   const isOverride = value !== fallback
 
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-2 rounded-lg border p-3',
-        isOverride && !disabled && 'border-primary/50 bg-accent/10',
-        className,
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Leveringstid
-        </div>
-        {isOverride && !disabled ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(fallback)}
-          >
-            Nullstill
-          </Button>
-        ) : null}
-      </div>
+    <div className={cn('flex flex-col gap-2', className)}>
+      <OvrHead
+        label="Leveringstid"
+        isOverride={isOverride}
+        disabled={disabled}
+        resetLabel="Nullstill"
+        onReset={() => onChange(fallback)}
+      />
       <TimePicker
         value={value}
         onChange={onChange}
         allowNull
         disabled={disabled}
+        className={cn(isOverride && !disabled && 'border-primary')}
       />
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
@@ -496,44 +504,29 @@ function OverrideToggles({
     leaveDoor !== fallbackLeaveDoor || leaveNeighbour !== fallbackLeaveNeighbour
 
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-2 rounded-lg border p-3',
-        isOverride && 'border-primary/50 bg-accent/10',
-        className,
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Leveringsvalg
-        </div>
-        {isOverride ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onLeaveDoorChange(fallbackLeaveDoor)
-              onLeaveNeighbourChange(fallbackLeaveNeighbour)
-            }}
-          >
-            Nullstill
-          </Button>
-        ) : null}
-      </div>
+    <div className={cn('flex flex-col gap-2', className)}>
+      <OvrHead
+        label="Leveringsvalg"
+        isOverride={isOverride}
+        resetLabel="Nullstill"
+        onReset={() => {
+          onLeaveDoorChange(fallbackLeaveDoor)
+          onLeaveNeighbourChange(fallbackLeaveNeighbour)
+        }}
+      />
       <label className="flex items-center gap-2 text-sm">
         <Checkbox
           checked={leaveDoor}
           onCheckedChange={(v) => onLeaveDoorChange(v === true)}
         />
-        Sett igjen ved dør
+        Kan settes igjen ved dør
       </label>
       <label className="flex items-center gap-2 text-sm">
         <Checkbox
           checked={leaveNeighbour}
           onCheckedChange={(v) => onLeaveNeighbourChange(v === true)}
         />
-        Levere til nabo
+        Kan leveres til nabo
       </label>
     </div>
   )
@@ -558,36 +551,20 @@ function OverrideText({
 }) {
   const isOverride = value !== fallback
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-2 min-h-full rounded-lg border p-3',
-        isOverride && 'border-primary/50 bg-accent/10',
-        className,
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center">
-          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            {label}
-          </span>
-        </div>
-        {isOverride ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(fallback)}
-          >
-            Bruk felles
-          </Button>
-        ) : null}
-      </div>
+    <div className={cn('flex min-h-full flex-col gap-2', className)}>
+      <OvrHead
+        label={label}
+        isOverride={isOverride}
+        disabled={disabled}
+        resetLabel="Bruk felles"
+        onReset={() => onChange(fallback)}
+      />
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="flex-1 resize-none gray:bg-background gray:border-border"
+        className={cn('flex-1 resize-none', isOverride && 'border-primary')}
       />
     </div>
   )

@@ -14,7 +14,8 @@ import { Separator } from '../components/ui/separator'
 import NotFound from '../components/NotFound'
 
 import AppSidebar from '../components/AppSidebar'
-import { getOnboardingCompleted } from '../lib/settings'
+import { PAGE_LABELS } from '../lib/navigation'
+import { useOnboardingCompleted } from '../lib/store-hooks'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -31,18 +32,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   notFoundComponent: () => <NotFound />,
 })
 
-const pageLabels: Record<string, string> = {
-  '/': 'Oversikt',
-  '/new': 'Ny Ordre',
-  '/archive': 'Arkiv',
-  '/customers': 'Kunder',
-  '/products': 'Varer',
-  '/settings': 'Innstillinger',
-}
-
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const onboardingCompleted = getOnboardingCompleted()
+  const onboardingCompleted = useOnboardingCompleted()
 
   if (!onboardingCompleted && pathname !== '/onboarding') {
     return <Navigate to="/onboarding" />
@@ -73,7 +65,7 @@ function RootLayout() {
                 orientation="vertical"
                 className="mr-2 data-[orientation=vertical]:h-8"
               />
-              <h1>{pageLabels[pathname] ?? 'Ordre'}</h1>
+              <h1>{PAGE_LABELS[pathname] ?? 'Ordre'}</h1>
             </div>
           </header>
           <Outlet />

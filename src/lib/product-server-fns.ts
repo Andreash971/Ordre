@@ -1,8 +1,8 @@
 import type {
-  Product,
   InsertProductInput,
+  Product,
   UpdateProductInput,
-} from './api-types'
+} from '@shared/products'
 
 export type { Product, InsertProductInput, UpdateProductInput }
 

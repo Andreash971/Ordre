@@ -1,4 +1,5 @@
-import { BrowserWindow, Menu } from 'electron'
+import type { BrowserWindow } from 'electron'
+import { Menu } from 'electron'
 
 export function registerContextMenuHandlers(win: BrowserWindow): void {
   win.webContents.on('context-menu', () => {

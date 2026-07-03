@@ -24,7 +24,7 @@ import {
 
 import type { CompanyInfo } from '@/lib/settings'
 import { completeOnboarding, updateSettings } from '@/lib/settings'
-import type { DiscoveredPrinter, Printer as PrinterInfo } from '@/lib/electron'
+import type { DiscoveredPrinter, PrinterInfo } from '@shared/printing'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingPage,
@@ -133,7 +133,7 @@ function OnboardingPage() {
 
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-12 bg-background">
-      <Card className="w-full max-w-xl dark:bg-card gray:bg-card">
+      <Card className="w-full max-w-xl dark:bg-card">
         <CardHeader>
           <CardTitle className="font-heading text-2xl">Oppsett</CardTitle>
           <CardDescription>
@@ -231,7 +231,7 @@ function OnboardingPage() {
                     setSelectedPrinter(v === '__none__' ? null : v)
                   }
                 >
-                  <SelectTrigger className="flex-1 gray:border-border gray:bg-input">
+                  <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Ingen skriver valgt" />
                   </SelectTrigger>
                   <SelectContent>
@@ -315,7 +315,6 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         aria-invalid={!!error}
-        className="gray:border-border gray:bg-input"
       />
       {error && (
         <p className="text-xs text-destructive" role="alert">
