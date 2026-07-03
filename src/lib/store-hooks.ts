@@ -6,7 +6,6 @@
 import { useSyncExternalStore } from 'react'
 
 import type { AppSettings, ThemeMode } from '@shared/settings'
-import type { StoredOrder } from '@shared/orders'
 import type { StoreSnapshot } from './store-cache'
 import { getCache, subscribeToStore } from './store-cache'
 
@@ -20,10 +19,6 @@ export function useSettings(): AppSettings {
 
 export function useTheme(): ThemeMode {
   return useStoreSnapshot().theme
-}
-
-export function useOrders(): Record<string, StoredOrder> {
-  return useStoreSnapshot().orders
 }
 
 export function useOnboardingCompleted(): boolean {

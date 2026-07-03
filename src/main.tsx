@@ -5,7 +5,6 @@ import { RouterProvider } from '@tanstack/react-router'
 import { getRouter } from './router'
 import TanStackQueryProvider from './integrations/tanstack-query/root-provider'
 import { hydrateStoreCache } from './lib/store-cache'
-import { pruneExpiredOrders } from './lib/order-utils'
 import { applyTheme, getStoredTheme, initTheme } from './lib/theme'
 
 import './styles.css'
@@ -13,7 +12,6 @@ import './styles.css'
 initTheme()
 await hydrateStoreCache()
 applyTheme(getStoredTheme())
-pruneExpiredOrders()
 
 const router = getRouter()
 

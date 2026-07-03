@@ -54,9 +54,3 @@ export function getOnboardingCompleted(): boolean {
 export function completeOnboarding(): void {
   completeOnboardingInCache()
 }
-
-export function getRetentionMs(): number {
-  const { archiveRetention } = getStoredSettings()
-  if (archiveRetention === 'never') return Number.MAX_SAFE_INTEGER
-  return archiveRetention * 24 * 60 * 60 * 1000
-}

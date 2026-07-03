@@ -16,7 +16,7 @@ import type {
   PartialSettings,
   ThemeMode,
 } from '../shared/settings'
-import type { StoredOrder } from '../shared/orders'
+import type { ArchivedOrder, NewArchivedOrder } from '../shared/orders'
 import type { DiscoveredPrinter, PrinterInfo } from '../shared/printing'
 import type { PendingUpdate } from '../shared/updates'
 
@@ -59,18 +59,25 @@ const api = {
     getAll: (): Promise<{
       theme: ThemeMode
       settings: AppSettings
-      orders: Record<string, StoredOrder>
       onboardingCompleted: boolean
     }> => ipcRenderer.invoke('store:getAll'),
     setTheme: (mode: ThemeMode): Promise<void> =>
       ipcRenderer.invoke('store:setTheme', mode),
     setSettings: (partial: PartialSettings): Promise<AppSettings> =>
       ipcRenderer.invoke('store:setSettings', partial),
-    setOrders: (orders: Record<string, StoredOrder>): Promise<void> =>
-      ipcRenderer.invoke('store:setOrders', orders),
-    clearOrders: (): Promise<void> => ipcRenderer.invoke('store:clearOrders'),
     setOnboardingCompleted: (completed: boolean): Promise<void> =>
       ipcRenderer.invoke('store:setOnboardingCompleted', completed),
+  },
+  orders: {
+    getAll: (): Promise<Array<ArchivedOrder>> =>
+      ipcRenderer.invoke('orders:getAll'),
+    insert: (payloads: Array<NewArchivedOrder>): Promise<void> =>
+      ipcRenderer.invoke('orders:insert', payloads),
+    delete: (id: string): Promise<void> =>
+      ipcRenderer.invoke('orders:delete', id),
+    clear: (): Promise<void> => ipcRenderer.invoke('orders:clear'),
+    pruneExpired: (): Promise<void> =>
+      ipcRenderer.invoke('orders:pruneExpired'),
   },
   printer: {
     list: (): Promise<Array<PrinterInfo>> => ipcRenderer.invoke('printer:list'),

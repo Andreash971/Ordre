@@ -13,31 +13,30 @@ import {
 } from '@/components/ui/table'
 import { OrderDetailSheet } from '@/components/OrderDetailSheet'
 import { formatDeliveryDate } from '@/lib/order-utils'
-import type { StoredOrder } from '@/lib/order-utils'
-import { useOrders } from '@/lib/store-hooks'
+import type { ArchivedOrder } from '@shared/orders'
+import { useQuery } from '@tanstack/react-query'
+import { getAllOrders } from '@/lib/order-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 import { formatNok, toIsoDate } from '@/lib/format'
 
 export const Route = createFileRoute('/')({ component: Dashboard })
 
 function Dashboard() {
-  const ordersById = useOrders()
-  const orders = React.useMemo(() => Object.values(ordersById), [ordersById])
-  const [open, setOpen] = React.useState<StoredOrder | null>(null)
+  const { data: orders = [] } = useQuery({
+    queryKey: queryKeys.orders.all,
+    queryFn: getAllOrders,
+  })
+  const [open, setOpen] = React.useState<ArchivedOrder | null>(null)
 
   const today = toIsoDate()
   const upcoming = React.useMemo(
     () =>
       orders
-        .filter((o) => (o.data.delivery.shortDate ? true : false))
-        .filter((o) => {
-          const iso = shortDateToIso(o.data.delivery.shortDate)
-          return iso >= today
-        })
-        .sort((a, b) =>
-          shortDateToIso(a.data.delivery.shortDate).localeCompare(
-            shortDateToIso(b.data.delivery.shortDate),
-          ),
-        ),
+        .filter(
+          (o): o is ArchivedOrder & { deliveryDate: string } =>
+            o.deliveryDate != null && o.deliveryDate >= today,
+        )
+        .sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate)),
     [orders, today],
   )
 
@@ -106,26 +105,25 @@ function Dashboard() {
                 </TableHeader>
                 <TableBody>
                   {upcoming.slice(0, 8).map((o) => {
-                    const iso = shortDateToIso(o.data.delivery.shortDate)
-                    const info = iso ? formatDeliveryDate(iso) : null
+                    const info = formatDeliveryDate(o.deliveryDate)
                     const sum = o.data.orderContent.reduce(
                       (s, l) => s + l.total,
                       0,
                     )
-                    const isToday = iso === today
+                    const isToday = o.deliveryDate === today
                     return (
                       <TableRow
-                        key={o.key}
+                        key={o.id}
                         onClick={() => setOpen(o)}
                         className="cursor-pointer"
                       >
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-mono text-xs">
-                              {info?.shortDate ?? o.data.delivery.shortDate}
+                              {info.shortDate}
                             </span>
                             <span className="text-[10px] text-muted-foreground">
-                              {info?.dayText}
+                              {info.dayText}
                             </span>
                           </div>
                         </TableCell>
@@ -194,7 +192,7 @@ function Dashboard() {
             <div className="divide-y border-t">
               {recent.map((o) => (
                 <div
-                  key={o.key}
+                  key={o.id}
                   className="flex items-start justify-center gap-3 px-4 py-3"
                 >
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px]">
@@ -226,13 +224,4 @@ function Dashboard() {
       />
     </main>
   )
-}
-
-function shortDateToIso(short: string): string {
-  // short format: "DD.MM.YYYY"
-  if (!short) return ''
-  const parts = short.split('.')
-  if (parts.length !== 3) return ''
-  const [d, m, y] = parts
-  return `${y}-${m}-${d}`
 }

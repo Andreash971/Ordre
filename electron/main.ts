@@ -6,6 +6,11 @@ import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
 import { registerProductHandlers } from './ipc/products'
 import { registerBringHandlers } from './ipc/bring'
+import {
+  migrateLegacyOrders,
+  pruneExpiredOrders,
+  registerOrderHandlers,
+} from './ipc/orders'
 import { registerStoreHandlers } from './ipc/store'
 import {
   spawnPrinterSidecar,
@@ -98,10 +103,15 @@ function createWindow(): BrowserWindow {
   return win
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   runMigrations()
+  // Move any pre-SQLite archive into the orders table and drop expired rows
+  // before the renderer can query them.
+  await migrateLegacyOrders()
+  await pruneExpiredOrders()
   registerCustomerHandlers()
   registerProductHandlers()
+  registerOrderHandlers()
   registerBringHandlers()
   registerStoreHandlers()
   registerPrinterHandlers()

@@ -1,8 +1,6 @@
 import { ipcMain } from 'electron'
 import * as z from 'zod'
 
-import type { StoredOrder } from '../../shared/orders'
-import { storedOrderSchema } from '../../shared/orders'
 import {
   mergeSettings,
   migrateSettings,
@@ -11,15 +9,12 @@ import {
 } from '../../shared/settings'
 import { getStore } from '../store'
 
-const ordersSchema = z.record(z.string(), storedOrderSchema)
-
 export function registerStoreHandlers() {
   ipcMain.handle('store:getAll', async () => {
     const store = await getStore()
     return {
       theme: store.get('theme'),
       settings: store.get('settings'),
-      orders: store.get('orders'),
       onboardingCompleted: store.get('onboardingCompleted'),
     }
   })
@@ -44,16 +39,5 @@ export function registerStoreHandlers() {
     const next = mergeSettings(current, partial)
     store.set('settings', next)
     return next
-  })
-
-  ipcMain.handle('store:setOrders', async (_e, raw: unknown) => {
-    const orders = ordersSchema.parse(raw) as Record<string, StoredOrder>
-    const store = await getStore()
-    store.set('orders', orders)
-  })
-
-  ipcMain.handle('store:clearOrders', async () => {
-    const store = await getStore()
-    store.set('orders', {})
   })
 }

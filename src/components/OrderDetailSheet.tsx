@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Trash2 } from 'lucide-react'
 
-import type { StoredOrder } from '@/lib/order-utils'
+import type { ArchivedOrder } from '@shared/orders'
 import { formatNok } from '@/lib/format'
 import {
   Sheet,
@@ -34,7 +34,7 @@ export function OrderDetail({
   order,
   onDelete,
 }: {
-  order: StoredOrder
+  order: ArchivedOrder
   onDelete?: () => void
 }) {
   const { data } = order
@@ -193,10 +193,11 @@ export function OrderDetail({
             dateStyle: 'medium',
           })}
           {' · '}
-          Utløper{' '}
-          {new Date(order.expiresAt).toLocaleDateString('nb-NO', {
-            dateStyle: 'medium',
-          })}
+          {order.expiresAt === null
+            ? 'Utløper aldri'
+            : `Utløper ${new Date(order.expiresAt).toLocaleDateString('nb-NO', {
+                dateStyle: 'medium',
+              })}`}
         </div>
         <div className="flex items-center justify-between gap-2">
           {onDelete ? (
@@ -252,7 +253,7 @@ export function OrderDetailSheet({
   onOpenChange,
   onDelete,
 }: {
-  order: StoredOrder | null
+  order: ArchivedOrder | null
   onOpenChange: (open: boolean) => void
   onDelete?: () => void
 }) {

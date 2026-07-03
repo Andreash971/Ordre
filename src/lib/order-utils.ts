@@ -1,45 +1,16 @@
 import type { Item } from '@/components/OrderColumns'
-import type { OrderData, StoredOrder } from '@shared/orders'
-import { getRetentionMs, getStoredSettings } from '@/lib/settings'
+import type {
+  CustomerFormValues,
+  DeliveryValues,
+  NewArchivedOrder,
+  OrderData,
+  OrderRecipient,
+} from '@shared/orders'
+import { getStoredSettings } from '@/lib/settings'
 import { getSpecialKeyForItem } from '@/lib/special-items'
-import {
-  clearOrdersInCache,
-  getCache,
-  setOrdersInCache,
-} from '@/lib/store-cache'
 
-export type CustomerFormValues = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  careof: string
-}
-
-export type Customer = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  careof: string
-  cardmsg: string
-  instructmsg: string
-  date: string
-  time: string | null
-  leaveDoor: boolean
-  leaveNeighbour: boolean
-}
-
-export type DeliveryValues = {
-  date: string
-  time: string | null
-  leaveDoor: boolean
-  leaveNeighbour: boolean
-}
+export type { CustomerFormValues, DeliveryValues }
+export type Customer = OrderRecipient
 
 /** Copy just the customer-form fields from any customer-shaped object. */
 export function pickCustomerFormValues(
@@ -133,90 +104,18 @@ export function buildOrderData(
   }
 }
 
-export type { StoredOrder }
-
 /**
- * Deterministic key derived from the order contents. Re-generating the same
- * order (e.g. "save PDF" followed by "print") overwrites its archive entry
- * instead of duplicating it, while orders that differ in any field — even to
- * recipients with identical names — never collide.
+ * One archive payload per recipient: the raw draft (source) plus the derived
+ * print snapshot. The main process assigns ids, timestamps, and retention.
  */
-function orderKey(data: OrderData): string {
-  const json = JSON.stringify(data)
-  let hash = 5381
-  for (let i = 0; i < json.length; i++) {
-    hash = (((hash << 5) + hash) ^ json.charCodeAt(i)) >>> 0
-  }
-  return `ordre-${hash.toString(36)}-${json.length.toString(36)}`
-}
-
-function buildStoredOrder(
-  customer: Customer,
-  sender: CustomerFormValues | null,
-  delivery: DeliveryValues,
-  items: Item[],
-): StoredOrder {
-  const data = buildOrderData(customer, sender, delivery, items)
-  const now = Date.now()
-  return {
-    data,
-    savedAt: now,
-    expiresAt: now + getRetentionMs(),
-    key: orderKey(data),
-  }
-}
-
-export function exportOrdersToJson(
+export function buildArchivedOrderPayloads(
   customers: Customer[],
   sender: CustomerFormValues | null,
   delivery: DeliveryValues,
   items: Item[],
-) {
-  const stored: Record<string, StoredOrder> = { ...getCache().orders }
-  for (const customer of customers) {
-    const order = buildStoredOrder(customer, sender, delivery, items)
-    stored[order.key] = order
-  }
-  setOrdersInCache(stored)
-}
-
-export function getCurrentOrders(
-  customers: Customer[],
-  sender: CustomerFormValues | null,
-  delivery: DeliveryValues,
-  items: Item[],
-): StoredOrder[] {
-  return customers.map((customer) =>
-    buildStoredOrder(customer, sender, delivery, items),
-  )
-}
-
-export function getStoredOrders(): StoredOrder[] {
-  return Object.values(getCache().orders)
-}
-
-/** Drop expired orders from the archive. Called once at app startup. */
-export function pruneExpiredOrders(): void {
-  const stored = getCache().orders
-  const now = Date.now()
-  const active: Record<string, StoredOrder> = {}
-  let pruned = false
-  for (const [k, v] of Object.entries(stored)) {
-    if (now <= v.expiresAt) {
-      active[k] = v
-    } else {
-      pruned = true
-    }
-  }
-  if (pruned) setOrdersInCache(active)
-}
-
-export function clearArchive(): void {
-  clearOrdersInCache()
-}
-
-export function deleteStoredOrder(key: string): void {
-  const rest = { ...getCache().orders }
-  delete rest[key]
-  setOrdersInCache(rest)
+): NewArchivedOrder[] {
+  return customers.map((customer) => ({
+    source: { customer, sender, delivery, items },
+    data: buildOrderData(customer, sender, delivery, items),
+  }))
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import * as z from 'zod'
+import type { OrderItem } from '@shared/orders'
 import type { ColumnDef, Row, RowData, Table } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -39,26 +39,7 @@ declare module '@tanstack/react-table' {
   }
 }
 
-const specialItemKeySchema = z.union([
-  z.literal('frakt'),
-  z.literal('leveringstid'),
-  z.literal('kort'),
-])
-
-const itemSchema = z.object({
-  productId: z.number().optional(),
-  specialKey: specialItemKeySchema.optional(),
-  name: z.string(),
-  description: z.string().default(''),
-  category: z.string().optional(),
-  price: z.number(),
-  quantity: z.number(),
-  originalName: z.string().optional(),
-  originalDescription: z.string().optional(),
-  originalPrice: z.number().optional(),
-})
-
-export type Item = z.infer<typeof itemSchema>
+export type Item = OrderItem
 
 function NameCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const { name, description } = row.original

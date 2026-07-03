@@ -5,19 +5,16 @@ import {
   migrateSettings,
   themeSchema,
 } from '@shared/settings'
-import type { StoredOrder } from '@shared/orders'
 
 export type StoreSnapshot = {
   theme: ThemeMode
   settings: AppSettings
-  orders: Record<string, StoredOrder>
   onboardingCompleted: boolean
 }
 
 let snapshot: StoreSnapshot = {
   theme: 'auto',
   settings: DEFAULT_SETTINGS,
-  orders: {},
   onboardingCompleted: false,
 }
 
@@ -55,16 +52,6 @@ export function setSettingsInCache(partial: PartialSettings): void {
   void window.electronAPI.store.setSettings(partial)
 }
 
-export function setOrdersInCache(orders: Record<string, StoredOrder>): void {
-  update({ orders })
-  void window.electronAPI.store.setOrders(orders)
-}
-
-export function clearOrdersInCache(): void {
-  update({ orders: {} })
-  void window.electronAPI.store.clearOrders()
-}
-
 export function completeOnboardingInCache(): void {
   update({ onboardingCompleted: true })
   void window.electronAPI.store.setOnboardingCompleted(true)
@@ -84,7 +71,6 @@ export async function hydrateStoreCache(): Promise<void> {
     theme,
     // migrateSettings fills fields missing from older app versions' data.
     settings: migrateSettings(remote.settings),
-    orders: remote.orders,
     onboardingCompleted: remote.onboardingCompleted,
   })
 

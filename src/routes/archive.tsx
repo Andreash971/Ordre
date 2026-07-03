@@ -3,9 +3,11 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, Eye, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { deleteStoredOrder } from '@/lib/order-utils'
-import type { StoredOrder } from '@/lib/order-utils'
-import { useOrders } from '@/lib/store-hooks'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+import type { ArchivedOrder } from '@shared/orders'
+import { deleteOrder, getAllOrders } from '@/lib/order-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 import { formatNok } from '@/lib/format'
 import { isSpecial } from '@/lib/special-items'
 import { Button } from '@/components/ui/button'
@@ -28,18 +30,18 @@ import { OrderDetail } from '@/components/OrderDetailSheet'
 
 export const Route = createFileRoute('/archive')({ component: ArchivePage })
 
-function orderSum(order: StoredOrder) {
+function orderSum(order: ArchivedOrder) {
   return order.data.orderContent.reduce((s, l) => s + l.total, 0)
 }
 
-function orderVisibleItemCount(order: StoredOrder) {
+function orderVisibleItemCount(order: ArchivedOrder) {
   return order.data.orderContent.filter((l) => !isSpecial({ name: l.product }))
     .length
 }
 
 function buildColumns(
-  onView: (order: StoredOrder) => void,
-): ColumnDef<StoredOrder>[] {
+  onView: (order: ArchivedOrder) => void,
+): ColumnDef<ArchivedOrder>[] {
   return [
     {
       id: 'date',
@@ -138,20 +140,27 @@ function buildColumns(
 }
 
 function ArchivePage() {
-  const ordersById = useOrders()
-  const orders = React.useMemo(() => Object.values(ordersById), [ordersById])
+  const queryClient = useQueryClient()
+  const { data: orders = [] } = useQuery({
+    queryKey: queryKeys.orders.all,
+    queryFn: getAllOrders,
+  })
   const [query, setQuery] = React.useState('')
-  const [open, setOpen] = React.useState<StoredOrder | null>(null)
+  const [open, setOpen] = React.useState<ArchivedOrder | null>(null)
 
-  const sorted = React.useMemo(
-    () => [...orders].sort((a, b) => b.savedAt - a.savedAt),
-    [orders],
-  )
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteOrder({ data: id }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
+  })
+
+  // orders:getAll already returns rows sorted by savedAt descending.
+  const sorted = orders
 
   const columns = React.useMemo(() => buildColumns(setOpen), [])
 
-  function handleDelete(order: StoredOrder) {
-    deleteStoredOrder(order.key)
+  function handleDelete(order: ArchivedOrder) {
+    deleteMutation.mutate(order.id)
     setOpen(null)
   }
 

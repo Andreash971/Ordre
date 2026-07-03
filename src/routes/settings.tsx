@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { version } from '../../package.json'
 
 import {
@@ -75,7 +76,8 @@ import {
   updateSettings,
 } from '@/lib/settings'
 import type { DiscoveredPrinter, PrinterInfo } from '@shared/printing'
-import { clearArchive } from '@/lib/order-utils'
+import { clearOrders } from '@/lib/order-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -158,9 +160,12 @@ function SelectRetention() {
 
 function ClearArchiveButton() {
   const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   function handleConfirm() {
-    clearArchive()
+    void clearOrders().then(() =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
+    )
     setOpen(false)
   }
 
