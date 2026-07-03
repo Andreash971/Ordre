@@ -2,6 +2,7 @@ import { app, BrowserWindow, autoUpdater, ipcMain } from 'electron'
 import { updateElectronApp } from 'update-electron-app'
 import type { IUpdateInfo } from 'update-electron-app'
 import type { PendingUpdate } from '../shared/updates'
+import { isNewerVersion } from '../shared/version'
 import { getStore } from './store'
 
 const REPO = 'Andreash971/Ordre'
@@ -11,16 +12,6 @@ let pendingUpdate: PendingUpdate | null = null
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Compare two semver strings, ignoring any pre-release suffix. */
-function isNewerVersion(candidate: string, current: string): boolean {
-  const parse = (v: string) => v.replace(/-.*$/, '').split('.').map(Number)
-  const [caMaj = 0, caMin = 0, caPatch = 0] = parse(candidate)
-  const [cuMaj = 0, cuMin = 0, cuPatch = 0] = parse(current)
-  if (caMaj !== cuMaj) return caMaj > cuMaj
-  if (caMin !== cuMin) return caMin > cuMin
-  return caPatch > cuPatch
-}
 
 async function fetchChangelog(version: string): Promise<string> {
   const tag = version.startsWith('v') ? version : `v${version}`
