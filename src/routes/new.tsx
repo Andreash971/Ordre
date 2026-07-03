@@ -1,15 +1,14 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import OrderSection from '#/components/OrderSection'
-import CustomerForm from '#/components/CustomerForm'
+import OrderSection from '@/components/OrderSection'
+import CustomerForm from '@/components/CustomerForm'
 import { Empty, EmptyDescription } from '@/components/ui/empty'
-import OrderItems from '#/components/new-order/OrderItems'
-import SharedDetails from '#/components/new-order/SharedDetails'
-import RecipientList from '#/components/new-order/RecipientList'
-import OrderProof from '#/components/new-order/OrderProof'
-import type { Item } from '#/components/OrderColumns'
+import OrderItems from '@/components/new-order/OrderItems'
+import SharedDetails from '@/components/new-order/SharedDetails'
+import RecipientList from '@/components/new-order/RecipientList'
+import OrderProof from '@/components/new-order/OrderProof'
+import type { Item } from '@/components/OrderColumns'
 import {
   Dialog,
   DialogContent,
@@ -19,18 +18,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { getLocalDateString } from '#/lib/order-utils'
-import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import { pickCustomerFormValues } from '@/lib/order-utils'
+import { toIsoDate } from '@/lib/format'
+import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
-} from '#/lib/order-utils'
-import { getStoredSettings } from '#/lib/settings'
-import type { SpecialItemKey } from '#/lib/settings'
+} from '@/lib/order-utils'
+import { getStoredSettings } from '@/lib/settings'
+import type { SpecialItemKey } from '@/lib/settings'
 import { useSettings } from '@/lib/store-hooks'
-import { isSpecial } from '#/lib/special-items'
+import { isSpecial } from '@/lib/special-items'
 
 const EMPTY_SENDER: CustomerFormValues = {
   name: '',
@@ -49,30 +48,13 @@ function isSenderFilled(s: CustomerFormValues) {
 export const Route = createFileRoute('/new')({ component: NewOrderPage })
 
 function NewOrderPage() {
-  const queryClient = useQueryClient()
   const [sender, setSender] = React.useState<CustomerFormValues>(EMPTY_SENDER)
   const senderIdRef = React.useRef<number | null>(null)
   const autoSaveCustomer = useSettings().autoSaveCustomer
-  const saveCustomerMutation = useMutation({
-    mutationFn: async ({
-      values,
-      id,
-    }: {
-      values: CustomerFormValues
-      id: number | null
-    }) => {
-      if (id != null) {
-        await updateCustomer({ data: { id, ...values } })
-      } else {
-        await insertCustomer({ data: values })
-      }
-    },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
-  })
+  const saveCustomerMutation = useSaveCustomerMutation()
 
   const [delivery, setDelivery] = React.useState<DeliveryValues>({
-    date: getLocalDateString(),
+    date: toIsoDate(),
     time: null,
     leaveDoor: false,
     leaveNeighbour: false,
@@ -124,15 +106,7 @@ function NewOrderPage() {
       targets.push({ values: sender, id: senderIdRef.current })
     }
     recipients.forEach((r, i) => {
-      const values: CustomerFormValues = {
-        name: r.name,
-        phone: r.phone,
-        company: r.company,
-        address: r.address,
-        postcode: r.postcode,
-        city: r.city,
-        careof: r.careof,
-      }
+      const values = pickCustomerFormValues(r)
       if (isSenderFilled(values)) {
         targets.push({ values, id: recipientIds[i] ?? null })
       }

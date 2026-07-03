@@ -12,25 +12,19 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { OrderDetailSheet } from '@/components/OrderDetailSheet'
-import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
-import type { StoredOrder } from '#/lib/order-utils'
+import { formatDeliveryDate } from '@/lib/order-utils'
+import type { StoredOrder } from '@/lib/order-utils'
 import { useOrders } from '@/lib/store-hooks'
+import { formatNok, toIsoDate } from '@/lib/format'
 
 export const Route = createFileRoute('/')({ component: Dashboard })
-
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
 
 function Dashboard() {
   const ordersById = useOrders()
   const orders = React.useMemo(() => Object.values(ordersById), [ordersById])
   const [open, setOpen] = React.useState<StoredOrder | null>(null)
 
-  const today = getLocalDateString()
+  const today = toIsoDate()
   const upcoming = React.useMemo(
     () =>
       orders
@@ -163,7 +157,7 @@ function Dashboard() {
                           {o.data.delivery.deliveryTime || '—'}
                         </TableCell>
                         <TableCell className="text-right font-mono text-xs">
-                          {nokFormatter.format(sum)}
+                          {formatNok(sum)}
                         </TableCell>
                         {isToday ? (
                           <TableCell className="w-0 whitespace-nowrap pl-2 pr-3">

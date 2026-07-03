@@ -1,12 +1,13 @@
 import * as React from 'react'
 
 import { DataTable } from '@/components/ui/DataTable'
-import ProductPicker from '#/components/ProductPicker'
-import type { PickedProduct } from '#/components/ProductPicker'
-import { columns as orderColumns } from '#/components/OrderColumns'
-import type { Item } from '#/components/OrderColumns'
-import type { SpecialItemKey } from '#/lib/settings'
-import { isSpecial } from '#/lib/special-items'
+import ProductPicker from '@/components/ProductPicker'
+import type { PickedProduct } from '@/components/ProductPicker'
+import { columns as orderColumns } from '@/components/OrderColumns'
+import type { Item } from '@/components/OrderColumns'
+import type { SpecialItemKey } from '@/lib/settings'
+import { isSpecial } from '@/lib/special-items'
+import { formatNok } from '@/lib/format'
 
 interface OrderItemsProps {
   items: Item[]
@@ -14,13 +15,6 @@ interface OrderItemsProps {
   onSpecialPicked?: (key: SpecialItemKey) => void
   onSpecialRemoved?: (key: SpecialItemKey) => void
 }
-
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
 
 export default function OrderItems({
   items,
@@ -112,7 +106,7 @@ export default function OrderItems({
       <div className="flex items-center justify-between rounded-lg border bg-muted px-4 py-3">
         <span className="text-sm font-medium">Totalt</span>
         <div className="font-mono text-base font-medium">
-          {nokFormatter.format(grandTotal)}
+          {formatNok(grandTotal)}
         </div>
       </div>
     </div>

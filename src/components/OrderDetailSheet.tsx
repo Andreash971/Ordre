@@ -1,7 +1,8 @@
 import * as React from 'react'
 import { Trash2 } from 'lucide-react'
 
-import type { StoredOrder } from '#/lib/order-utils'
+import type { StoredOrder } from '@/lib/order-utils'
+import { formatNok } from '@/lib/format'
 import {
   Sheet,
   SheetContent,
@@ -9,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import OpenOrderButton from '@/components/ui/open-order-button'
+import OpenOrderButton from '@/components/OpenOrderButton'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -28,13 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
 
 export function OrderDetail({
   order,
@@ -153,7 +147,7 @@ export function OrderDetail({
                   ×{line.quantity}
                 </TableCell>
                 <TableCell className="text-right font-mono">
-                  {nokFormatter.format(line.total)}
+                  {formatNok(line.total)}
                 </TableCell>
               </TableRow>
             ))}
@@ -187,7 +181,7 @@ export function OrderDetail({
         <div className="grid grid-cols-2 gap-y-1 text-sm">
           <div className="text-muted-foreground">Totalt</div>
           <div className="text-right font-mono font-medium">
-            {nokFormatter.format(sum)}
+            {formatNok(sum)}
           </div>
         </div>
       </div>

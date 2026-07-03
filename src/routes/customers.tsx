@@ -18,11 +18,11 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import type { AddCustomerFormValues } from '#/components/AddCustomerForm'
-import AddCustomerForm from '#/components/AddCustomerForm'
-import { customerColumns } from '#/components/CustomerColumns'
-import { getAllCustomers, insertCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import type { AddCustomerFormValues } from '@/components/AddCustomerForm'
+import AddCustomerForm from '@/components/AddCustomerForm'
+import { customerColumns } from '@/components/CustomerColumns'
+import { getAllCustomers, insertCustomer } from '@/lib/customer-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 import { useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/customers')({

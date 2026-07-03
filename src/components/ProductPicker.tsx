@@ -9,12 +9,14 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import { searchProducts } from '#/lib/product-server-fns'
-import type { Item } from '#/components/OrderColumns'
-import { queryKeys } from '#/lib/query-keys'
-import type { SpecialItemKey } from '#/lib/settings'
-import { SPECIAL_ITEM_KEYS } from '#/lib/special-items'
+import { searchProducts } from '@/lib/product-server-fns'
+import type { Item } from '@/components/OrderColumns'
+import { queryKeys } from '@/lib/query-keys'
+import type { SpecialItemKey } from '@/lib/settings'
+import { SPECIAL_ITEM_KEYS } from '@/lib/special-items'
 import { useSettings } from '@/lib/store-hooks'
+import { formatNok } from '@/lib/format'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { cn } from '@/lib/utils'
 
 export type PickedProduct = {
@@ -35,12 +37,6 @@ interface ProductPickerProps {
   className?: string
 }
 
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  maximumFractionDigits: 0,
-})
-
 export default function ProductPicker({
   onPick,
   onAddNew,
@@ -50,13 +46,8 @@ export default function ProductPicker({
   className,
 }: ProductPickerProps) {
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [debouncedQuery, setDebouncedQuery] = React.useState('')
+  const debouncedQuery = useDebouncedValue(searchQuery, 250)
   const [showSuggestions, setShowSuggestions] = React.useState(false)
-
-  React.useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(searchQuery), 250)
-    return () => clearTimeout(t)
-  }, [searchQuery])
 
   const { data: suggestions = [] } = useQuery({
     queryKey: queryKeys.products.search(debouncedQuery),
@@ -128,7 +119,7 @@ export default function ProductPicker({
                   ) : null}
                 </div>
                 <div className="font-mono text-sm shrink-0">
-                  {nokFormatter.format(Number(p.price))}
+                  {formatNok(Number(p.price))}
                 </div>
               </li>
             ))}
@@ -155,7 +146,7 @@ export default function ProductPicker({
                   </span>
                 </div>
                 <div className="font-mono text-sm shrink-0">
-                  {nokFormatter.format(s.price)}
+                  {formatNok(s.price)}
                 </div>
               </li>
             ))}

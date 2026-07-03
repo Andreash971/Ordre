@@ -3,10 +3,11 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, Eye, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { deleteStoredOrder } from '#/lib/order-utils'
-import type { StoredOrder } from '#/lib/order-utils'
+import { deleteStoredOrder } from '@/lib/order-utils'
+import type { StoredOrder } from '@/lib/order-utils'
 import { useOrders } from '@/lib/store-hooks'
-import { isSpecial } from '#/lib/special-items'
+import { formatNok } from '@/lib/format'
+import { isSpecial } from '@/lib/special-items'
 import { Button } from '@/components/ui/button'
 import {
   InputGroup,
@@ -26,13 +27,6 @@ import { DataTable } from '@/components/ui/DataTable'
 import { OrderDetail } from '@/components/OrderDetailSheet'
 
 export const Route = createFileRoute('/archive')({ component: ArchivePage })
-
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
 
 function orderSum(order: StoredOrder) {
   return order.data.orderContent.reduce((s, l) => s + l.total, 0)
@@ -115,7 +109,7 @@ function buildColumns(
       accessorFn: (o) => orderSum(o),
       cell: ({ row }) => (
         <div className="text-right font-mono text-xs">
-          {nokFormatter.format(orderSum(row.original))}
+          {formatNok(orderSum(row.original))}
         </div>
       ),
     },

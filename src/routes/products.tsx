@@ -18,12 +18,12 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 
-import type { AddProductFormValues } from '#/components/AddProductForm'
-import AddProductForm from '#/components/AddProductForm'
-import CategorySelect from '#/components/CategorySelect'
-import { productColumns } from '#/components/ProductColumns'
-import { getAllProducts, insertProduct } from '#/lib/product-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import type { AddProductFormValues } from '@/components/AddProductForm'
+import AddProductForm from '@/components/AddProductForm'
+import CategorySelect from '@/components/CategorySelect'
+import { productColumns } from '@/components/ProductColumns'
+import { getAllProducts, insertProduct } from '@/lib/product-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 import { useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/products')({

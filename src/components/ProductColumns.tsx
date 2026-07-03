@@ -21,11 +21,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-import type { AddProductFormValues } from '#/components/AddProductForm'
-import AddProductForm from '#/components/AddProductForm'
+import type { AddProductFormValues } from '@/components/AddProductForm'
+import AddProductForm from '@/components/AddProductForm'
 import type { Product } from '@shared/products'
-import { deleteProduct, updateProduct } from '#/lib/product-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import { formatNok } from '@/lib/format'
+import { deleteProduct, updateProduct } from '@/lib/product-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 
 export type { Product }
 
@@ -184,14 +185,7 @@ export const productColumns: ColumnDef<Product>[] = [
   {
     accessorKey: 'price',
     header: 'Pris',
-    cell: ({ row }) => {
-      const formatted = new Intl.NumberFormat('no-NB', {
-        style: 'currency',
-        currency: 'NOK',
-      }).format(Number(row.original.price))
-
-      return <div>{formatted}</div>
-    },
+    cell: ({ row }) => <div>{formatNok(Number(row.original.price))}</div>,
   },
   {
     id: 'actions',

@@ -20,28 +20,29 @@ import {
   Settings,
 } from 'lucide-react'
 
+import { PAGE_LABELS } from '@/lib/navigation'
 import { useSettings } from '@/lib/store-hooks'
 import UpdateCard from '@/components/UpdateCard'
 
 const Links = [
   {
     to: '/',
-    label: 'Oversikt',
+    label: PAGE_LABELS['/'],
     icon: <Home className="text-foreground" />,
   },
   {
     to: '/archive',
-    label: 'Arkiv',
+    label: PAGE_LABELS['/archive'],
     icon: <Archive className="text-foreground" />,
   },
   {
     to: '/customers',
-    label: 'Kunder',
+    label: PAGE_LABELS['/customers'],
     icon: <IdCard className="text-foreground" />,
   },
   {
     to: '/products',
-    label: 'Varer',
+    label: PAGE_LABELS['/products'],
     icon: <Package className="text-foreground" />,
   },
 ] as const

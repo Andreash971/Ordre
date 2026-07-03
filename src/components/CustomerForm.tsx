@@ -28,26 +28,18 @@ import {
 } from '@/components/ui/card'
 import { FieldGroup } from '@/components/ui/field'
 
-import AutocompleteField from '#/components/AutocompleteField'
-import FormInputField from '#/components/FormInputField'
-import type { CustomerSuggestion } from '#/lib/customer-server-fns'
+import AutocompleteField from '@/components/AutocompleteField'
+import FormInputField from '@/components/FormInputField'
+import type { CustomerSuggestion } from '@/lib/customer-server-fns'
 import {
   searchCustomers,
   searchCustomersByBusiness,
   searchCustomersByPhone,
-} from '#/lib/customer-server-fns'
-import { lookupPostcode, suggestAddresses } from '#/lib/bring-server-fns'
-import type { AddressSuggestion } from '#/lib/bring-server-fns'
-
-type CustomerFormValues = {
-  name: string
-  phone: string
-  company: string
-  address: string
-  postcode: string
-  city: string
-  careof: string
-}
+} from '@/lib/customer-server-fns'
+import { lookupPostcode, suggestAddresses } from '@/lib/bring-server-fns'
+import type { AddressSuggestion } from '@/lib/bring-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import type { CustomerFormValues } from '@/lib/order-utils'
 
 interface CustomerFormProps {
   className?: string
@@ -216,7 +208,7 @@ export default function CustomerForm({
   const isSubmitting = useStore(form.store, (s) => s.isSubmitting)
 
   const { data: bringLookup } = useQuery({
-    queryKey: ['bring-postcode', postcode],
+    queryKey: queryKeys.bring.postcode(postcode),
     queryFn: () => lookupPostcode({ data: postcode }),
     enabled: /^\d{4}$/.test(postcode),
     staleTime: Infinity,

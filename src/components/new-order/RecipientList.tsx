@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { nb } from 'date-fns/locale'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarIcon,
   ChevronDown,
@@ -31,15 +30,15 @@ import {
 import { EmptyButton } from '@/components/ui/empty-button'
 import { cn } from '@/lib/utils'
 
-import CustomerForm from '#/components/CustomerForm'
-import { formatDeliveryDate } from '#/lib/order-utils'
-import { insertCustomer, updateCustomer } from '#/lib/customer-server-fns'
-import { queryKeys } from '#/lib/query-keys'
+import CustomerForm from '@/components/CustomerForm'
+import { formatDeliveryDate, pickCustomerFormValues } from '@/lib/order-utils'
+import { toIsoDate } from '@/lib/format'
+import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
-} from '#/lib/order-utils'
+} from '@/lib/order-utils'
 
 interface RecipientListProps {
   recipients: Customer[]
@@ -72,13 +71,6 @@ const emptyRecipient = (): Customer => ({
   leaveNeighbour: false,
 })
 
-function toIso(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
 /** Number of fields a recipient overrides vs. the shared (master) defaults. */
 function countOverrides(
   r: Customer,
@@ -106,24 +98,7 @@ export default function RecipientList({
   defaults,
 }: RecipientListProps) {
   const [expanded, setExpanded] = React.useState<number | null>(0)
-  const queryClient = useQueryClient()
-  const saveCustomerMutation = useMutation({
-    mutationFn: async ({
-      values,
-      id,
-    }: {
-      values: CustomerFormValues
-      id: number | null
-    }) => {
-      if (id != null) {
-        await updateCustomer({ data: { id, ...values } })
-      } else {
-        await insertCustomer({ data: values })
-      }
-    },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
-  })
+  const saveCustomerMutation = useSaveCustomerMutation()
   const saveCustomer = (
     values: CustomerFormValues,
     ctx: { id: number | null },
@@ -261,15 +236,8 @@ function RecipientRow({
   const formattedDate = summaryDate ? formatDeliveryDate(summaryDate) : null
   const overrides = countOverrides(value, defaults)
 
-  const customerDefaults: Partial<CustomerFormValues> = {
-    name: value.name,
-    phone: value.phone,
-    company: value.company,
-    address: value.address,
-    postcode: value.postcode,
-    city: value.city,
-    careof: value.careof,
-  }
+  const customerDefaults: Partial<CustomerFormValues> =
+    pickCustomerFormValues(value)
 
   return (
     <div
@@ -501,7 +469,7 @@ function OverrideDate({
             selected={effective ? new Date(effective + 'T00:00:00') : undefined}
             onSelect={(d) => {
               if (d) {
-                onChange(toIso(d))
+                onChange(toIsoDate(d))
                 setOpen(false)
               }
             }}

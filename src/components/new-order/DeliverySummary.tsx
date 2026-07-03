@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { formatDeliveryDate } from '#/lib/order-utils'
+import { formatDeliveryDate } from '@/lib/order-utils'
 
 interface DeliverySummaryProps {
   date: string

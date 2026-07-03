@@ -18,12 +18,13 @@ import {
 } from '@/components/ui/dialog'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
-import AddProductForm from '#/components/AddProductForm'
-import type { AddProductFormValues } from '#/components/AddProductForm'
-import { insertProduct, updateProduct } from '#/lib/product-server-fns'
-import { queryKeys } from '#/lib/query-keys'
-import type { SpecialItemKey } from '#/lib/settings'
-import { TOGGLE_DRIVEN_SPECIAL_KEYS } from '#/lib/special-items'
+import AddProductForm from '@/components/AddProductForm'
+import type { AddProductFormValues } from '@/components/AddProductForm'
+import { insertProduct, updateProduct } from '@/lib/product-server-fns'
+import { queryKeys } from '@/lib/query-keys'
+import type { SpecialItemKey } from '@/lib/settings'
+import { TOGGLE_DRIVEN_SPECIAL_KEYS } from '@/lib/special-items'
+import { formatNok } from '@/lib/format'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -214,13 +215,6 @@ function QuantityCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   )
 }
 
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-
 function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
   const isSpecial = row.original.specialKey != null
   const isNew = !isSpecial && row.original.productId == null
@@ -235,7 +229,7 @@ function PriceCell({ row, table }: { row: Row<Item>; table: Table<Item> }) {
         onClick={isMobile ? () => setIsEditing(true) : undefined}
         onDoubleClick={!isMobile ? () => setIsEditing(true) : undefined}
       >
-        {nokFormatter.format(price)}
+        {formatNok(price)}
       </div>
     )
   }
@@ -295,7 +289,7 @@ export const columns: ColumnDef<Item>[] = [
     ),
     cell: ({ row }) => (
       <div className="text-right">
-        {nokFormatter.format(row.original.price * row.original.quantity)}
+        {formatNok(row.original.price * row.original.quantity)}
       </div>
     ),
     meta: { priority: 'primary' },

@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/popover'
 import { TimePicker } from '@/components/ui/time-picker'
 import { Checkbox } from '@/components/ui/checkbox'
-import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
+import { formatDeliveryDate } from '@/lib/order-utils'
+import { toIsoDate } from '@/lib/format'
 import { useSettings } from '@/lib/store-hooks'
 
 interface DeliveryDefaultsProps {
@@ -25,13 +26,6 @@ interface DeliveryDefaultsProps {
   onShowTimeChange: (show: boolean) => void
   onLeaveDoorChange: (value: boolean) => void
   onLeaveNeighbourChange: (value: boolean) => void
-}
-
-function toIso(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
 }
 
 function addDays(base: Date, days: number) {
@@ -64,10 +58,10 @@ export default function DeliveryDefaults({
   today.setHours(0, 0, 0, 0)
 
   const quickPicks = [
-    { label: 'I dag', value: toIso(today) },
-    { label: 'I morgen', value: toIso(addDays(today, 1)) },
-    { label: 'Fredag', value: toIso(nextWeekday(today, 5)) },
-    { label: 'Lørdag', value: toIso(nextWeekday(today, 6)) },
+    { label: 'I dag', value: toIsoDate(today) },
+    { label: 'I morgen', value: toIsoDate(addDays(today, 1)) },
+    { label: 'Fredag', value: toIsoDate(nextWeekday(today, 5)) },
+    { label: 'Lørdag', value: toIsoDate(nextWeekday(today, 6)) },
   ]
 
   const selectedDate = date ? new Date(date + 'T00:00:00') : undefined
@@ -107,7 +101,7 @@ export default function DeliveryDefaults({
               weekStartsOn={1}
               selected={selectedDate}
               onSelect={(d) => {
-                if (d) onDateChange(toIso(d))
+                if (d) onDateChange(toIsoDate(d))
               }}
               disabled={(d) => {
                 const todayStart = new Date()
@@ -177,7 +171,7 @@ export default function DeliveryDefaults({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onDateChange(getLocalDateString())}
+            onClick={() => onDateChange(toIsoDate())}
             className="self-start"
           >
             <ClockPlus />

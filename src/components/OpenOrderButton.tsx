@@ -8,15 +8,15 @@ import {
   openStoredOrderPdf,
   printOrdersPdf,
   printStoredOrderPdf,
-} from '#/lib/open-orders'
+} from '@/lib/open-orders'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
   StoredOrder,
-} from '#/lib/order-utils'
-import type { Item } from '#/components/OrderColumns'
-import { TooltipWrapper } from './TooltipWrapper'
+} from '@/lib/order-utils'
+import type { Item } from '@/components/OrderColumns'
+import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
 import { useSettings } from '@/lib/store-hooks'
 
 type OpenOrderButtonProps =

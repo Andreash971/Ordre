@@ -10,4 +10,7 @@ export const queryKeys = {
     all: ['products'] as const,
     search: (q: string) => ['products', 'search', q] as const,
   },
+  bring: {
+    postcode: (code: string) => ['bring', 'postcode', code] as const,
+  },
 }

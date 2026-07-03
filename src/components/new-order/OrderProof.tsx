@@ -2,24 +2,19 @@ import * as React from 'react'
 import { FileText, Info } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { formatNok } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
-import OpenOrderButton from '@/components/ui/open-order-button'
-import type { Item } from '#/components/OrderColumns'
-import { formatDeliveryDate } from '#/lib/order-utils'
+import OpenOrderButton from '@/components/OpenOrderButton'
+import type { Item } from '@/components/OrderColumns'
+import { formatDeliveryDate } from '@/lib/order-utils'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
-} from '#/lib/order-utils'
-import { getSpecialKeyForItem, isSpecial } from '#/lib/special-items'
+} from '@/lib/order-utils'
+import { getSpecialKeyForItem, isSpecial } from '@/lib/special-items'
 
-const nokFormatter = new Intl.NumberFormat('nb-NO', {
-  style: 'currency',
-  currency: 'NOK',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-const nok = (n: number) => nokFormatter.format(n)
+const nok = formatNok
 
 interface OrderProofProps {
   sender: CustomerFormValues | null

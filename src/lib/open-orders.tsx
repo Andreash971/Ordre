@@ -1,16 +1,16 @@
 import React from 'react'
 import { pdf, Document } from '@react-pdf/renderer'
 import type { DocumentProps } from '@react-pdf/renderer'
-import { OrderPage } from '#/components/pdf/order'
+import { OrderPage } from '@/components/pdf/order'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
   StoredOrder,
-} from '#/lib/order-utils'
-import { exportOrdersToJson, getCurrentOrders } from '#/lib/order-utils'
-import type { Item } from '#/components/OrderColumns'
-import { getStoredSettings } from '#/lib/settings'
+} from '@/lib/order-utils'
+import { exportOrdersToJson, getCurrentOrders } from '@/lib/order-utils'
+import type { Item } from '@/components/OrderColumns'
+import { getStoredSettings } from '@/lib/settings'
 
 async function pdfElementToBuffer(
   element: React.ReactElement<DocumentProps>,

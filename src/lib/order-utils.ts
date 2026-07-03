@@ -1,12 +1,12 @@
-import type { Item } from '#/components/OrderColumns'
+import type { Item } from '@/components/OrderColumns'
 import type { OrderData, StoredOrder } from '@shared/orders'
-import { getRetentionMs, getStoredSettings } from '#/lib/settings'
-import { getSpecialKeyForItem } from '#/lib/special-items'
+import { getRetentionMs, getStoredSettings } from '@/lib/settings'
+import { getSpecialKeyForItem } from '@/lib/special-items'
 import {
   clearOrdersInCache,
   getCache,
   setOrdersInCache,
-} from '#/lib/store-cache'
+} from '@/lib/store-cache'
 
 export type CustomerFormValues = {
   name: string
@@ -41,12 +41,19 @@ export type DeliveryValues = {
   leaveNeighbour: boolean
 }
 
-export function getLocalDateString() {
-  const d = new Date()
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+/** Copy just the customer-form fields from any customer-shaped object. */
+export function pickCustomerFormValues(
+  c: CustomerFormValues,
+): CustomerFormValues {
+  return {
+    name: c.name,
+    phone: c.phone,
+    company: c.company,
+    address: c.address,
+    postcode: c.postcode,
+    city: c.city,
+    careof: c.careof,
+  }
 }
 
 export function formatDeliveryDate(dateStr: string) {

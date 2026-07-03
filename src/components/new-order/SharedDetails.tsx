@@ -1,5 +1,5 @@
-import DeliveryDefaults from '#/components/new-order/DeliveryDefaults'
-import CardAndInstructions from '#/components/new-order/CardAndInstructions'
+import DeliveryDefaults from '@/components/new-order/DeliveryDefaults'
+import CardAndInstructions from '@/components/new-order/CardAndInstructions'
 
 interface SharedDetailsProps {
   // Delivery defaults

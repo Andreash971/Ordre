@@ -17,10 +17,10 @@ import { Button } from '@/components/ui/button'
 import { FieldGroup } from '@/components/ui/field'
 import { DialogClose } from '@/components/ui/dialog'
 
-import AutocompleteField from '#/components/AutocompleteField'
-import FormInputField from '#/components/FormInputField'
-import { lookupPostcode, suggestAddresses } from '#/lib/bring-server-fns'
-import type { AddressSuggestion } from '#/lib/bring-server-fns'
+import AutocompleteField from '@/components/AutocompleteField'
+import FormInputField from '@/components/FormInputField'
+import { lookupPostcode, suggestAddresses } from '@/lib/bring-server-fns'
+import type { AddressSuggestion } from '@/lib/bring-server-fns'
 
 export type AddCustomerFormValues = {
   name: string

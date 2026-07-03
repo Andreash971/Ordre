@@ -10,9 +10,6 @@
   },
   "license": "AGPL-3.0",
   "main": "dist/electron/electron/main.js",
-  "imports": {
-    "#/*": "./src/*"
-  },
   "scripts": {
     "dev:renderer": "vite --port 3000",
     "clean:main": "node -e \"require('fs').rmSync('dist/electron',{recursive:true,force:true})\"",
