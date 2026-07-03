@@ -12,6 +12,7 @@ import {
   registerOrderHandlers,
 } from './ipc/orders'
 import { registerStoreHandlers } from './ipc/store'
+import { encryptStoredSecretsAtRest } from './secure-storage'
 import {
   spawnPrinterSidecar,
   killPrinterSidecar,
@@ -109,6 +110,8 @@ app.whenReady().then(async () => {
   // before the renderer can query them.
   await migrateLegacyOrders()
   await pruneExpiredOrders()
+  // Upgrade secrets persisted in plaintext by older app versions.
+  await encryptStoredSecretsAtRest()
   registerCustomerHandlers()
   registerProductHandlers()
   registerOrderHandlers()

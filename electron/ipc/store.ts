@@ -7,6 +7,7 @@ import {
   partialSettingsSchema,
   themeSchema,
 } from '../../shared/settings'
+import { withDecryptedSecrets, withEncryptedSecrets } from '../secure-storage'
 import { getStore } from '../store'
 
 export function registerStoreHandlers() {
@@ -14,7 +15,7 @@ export function registerStoreHandlers() {
     const store = await getStore()
     return {
       theme: store.get('theme'),
-      settings: store.get('settings'),
+      settings: withDecryptedSecrets(migrateSettings(store.get('settings'))),
       onboardingCompleted: store.get('onboardingCompleted'),
     }
   })
@@ -34,10 +35,12 @@ export function registerStoreHandlers() {
   ipcMain.handle('store:setSettings', async (_e, raw: unknown) => {
     const partial = partialSettingsSchema.parse(raw)
     const store = await getStore()
-    // migrateSettings normalizes data persisted by older app versions.
+    // migrateSettings normalizes data persisted by older app versions. The
+    // renderer sends secrets in plaintext; encrypt before they hit disk and
+    // hand plaintext back so its settings cache stays consistent.
     const current = migrateSettings(store.get('settings'))
     const next = mergeSettings(current, partial)
-    store.set('settings', next)
-    return next
+    store.set('settings', withEncryptedSecrets(next))
+    return withDecryptedSecrets(next)
   })
 }
