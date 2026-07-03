@@ -185,6 +185,11 @@ export function getCurrentOrders(
 }
 
 export function getStoredOrders(): StoredOrder[] {
+  return Object.values(getCache().orders)
+}
+
+/** Drop expired orders from the archive. Called once at app startup. */
+export function pruneExpiredOrders(): void {
   const stored = getCache().orders
   const now = Date.now()
   const active: Record<string, StoredOrder> = {}
@@ -197,7 +202,6 @@ export function getStoredOrders(): StoredOrder[] {
     }
   }
   if (pruned) setOrdersInCache(active)
-  return Object.values(active)
 }
 
 export function clearArchive(): void {

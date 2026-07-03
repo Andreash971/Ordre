@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Sidebar,
@@ -21,8 +20,7 @@ import {
   Settings,
 } from 'lucide-react'
 
-import { getStoredSettings } from '@/lib/settings'
-import { SETTINGS_CHANGED_EVENT } from '@/lib/store-cache'
+import { useSettings } from '@/lib/store-hooks'
 import UpdateCard from '@/components/UpdateCard'
 
 const Links = [
@@ -54,15 +52,7 @@ export default function AppSidebar() {
     if (isMobile) setOpenMobile(false)
   }
 
-  const [displayName, setDisplayName] = useState(
-    () => getStoredSettings().company.displayName,
-  )
-  useEffect(() => {
-    const handler = () =>
-      setDisplayName(getStoredSettings().company.displayName)
-    window.addEventListener(SETTINGS_CHANGED_EVENT, handler)
-    return () => window.removeEventListener(SETTINGS_CHANGED_EVENT, handler)
-  }, [])
+  const displayName = useSettings().company.displayName
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">

@@ -29,7 +29,7 @@ import type {
 } from '#/lib/order-utils'
 import { getStoredSettings } from '#/lib/settings'
 import type { SpecialItemKey } from '#/lib/settings'
-import { SETTINGS_CHANGED_EVENT } from '#/lib/store-cache'
+import { useSettings } from '@/lib/store-hooks'
 import { isSpecial } from '#/lib/special-items'
 
 const EMPTY_SENDER: CustomerFormValues = {
@@ -52,17 +52,7 @@ function NewOrderPage() {
   const queryClient = useQueryClient()
   const [sender, setSender] = React.useState<CustomerFormValues>(EMPTY_SENDER)
   const senderIdRef = React.useRef<number | null>(null)
-  const [autoSaveCustomer, setAutoSaveCustomer] = React.useState<boolean>(
-    () => getStoredSettings().autoSaveCustomer,
-  )
-  React.useEffect(() => {
-    const onSettingsChanged = () => {
-      setAutoSaveCustomer(getStoredSettings().autoSaveCustomer)
-    }
-    window.addEventListener(SETTINGS_CHANGED_EVENT, onSettingsChanged)
-    return () =>
-      window.removeEventListener(SETTINGS_CHANGED_EVENT, onSettingsChanged)
-  }, [])
+  const autoSaveCustomer = useSettings().autoSaveCustomer
   const saveCustomerMutation = useMutation({
     mutationFn: async ({
       values,

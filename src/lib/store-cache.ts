@@ -3,73 +3,93 @@ import {
   DEFAULT_SETTINGS,
   mergeSettings,
   migrateSettings,
+  themeSchema,
 } from '@shared/settings'
 import type { StoredOrder } from '@shared/orders'
 
-export const ORDERS_CHANGED_EVENT = 'orders-changed'
-export const SETTINGS_CHANGED_EVENT = 'settings-changed'
-
-type Cache = {
+export type StoreSnapshot = {
   theme: ThemeMode
   settings: AppSettings
   orders: Record<string, StoredOrder>
   onboardingCompleted: boolean
 }
 
-const cache: Cache = {
+let snapshot: StoreSnapshot = {
   theme: 'auto',
   settings: DEFAULT_SETTINGS,
   orders: {},
   onboardingCompleted: false,
 }
 
-let hydrated = false
+const listeners = new Set<() => void>()
 
-export function getCache(): Cache {
-  return cache
+/** Subscribe to store changes. Returns an unsubscribe function. */
+export function subscribeToStore(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+/**
+ * Current immutable snapshot. Components should use the hooks in
+ * store-hooks.ts instead; this is for imperative code paths (PDF building,
+ * event handlers).
+ */
+export function getCache(): StoreSnapshot {
+  return snapshot
+}
+
+function update(patch: Partial<StoreSnapshot>): void {
+  snapshot = { ...snapshot, ...patch }
+  for (const listener of listeners) listener()
 }
 
 export function setThemeInCache(mode: ThemeMode): void {
-  cache.theme = mode
+  update({ theme: mode })
   void window.electronAPI.store.setTheme(mode)
 }
 
 export function setSettingsInCache(partial: PartialSettings): void {
-  cache.settings = mergeSettings(cache.settings, partial)
+  update({ settings: mergeSettings(snapshot.settings, partial) })
   void window.electronAPI.store.setSettings(partial)
-  window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT))
 }
 
 export function setOrdersInCache(orders: Record<string, StoredOrder>): void {
-  cache.orders = orders
+  update({ orders })
   void window.electronAPI.store.setOrders(orders)
-  window.dispatchEvent(new CustomEvent(ORDERS_CHANGED_EVENT))
 }
 
 export function clearOrdersInCache(): void {
-  cache.orders = {}
+  update({ orders: {} })
   void window.electronAPI.store.clearOrders()
-  window.dispatchEvent(new CustomEvent(ORDERS_CHANGED_EVENT))
 }
 
 export function completeOnboardingInCache(): void {
-  cache.onboardingCompleted = true
+  update({ onboardingCompleted: true })
   void window.electronAPI.store.setOnboardingCompleted(true)
 }
+
+let hydrated = false
 
 export async function hydrateStoreCache(): Promise<void> {
   if (hydrated) return
   hydrated = true
 
   const remote = await window.electronAPI.store.getAll()
-  cache.theme = remote.theme
-  // migrateSettings fills fields missing from older app versions' data.
-  cache.settings = migrateSettings(remote.settings)
-  cache.orders = remote.orders
-  cache.onboardingCompleted = remote.onboardingCompleted
+  // Older app versions persisted theme names that no longer exist.
+  const parsedTheme = themeSchema.safeParse(remote.theme)
+  const theme = parsedTheme.success ? parsedTheme.data : 'auto'
+  update({
+    theme,
+    // migrateSettings fills fields missing from older app versions' data.
+    settings: migrateSettings(remote.settings),
+    orders: remote.orders,
+    onboardingCompleted: remote.onboardingCompleted,
+  })
 
   try {
-    window.localStorage.setItem('theme', cache.theme)
+    window.localStorage.setItem('theme', theme)
   } catch {
     // ignore
   }

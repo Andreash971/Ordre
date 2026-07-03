@@ -58,7 +58,8 @@ import {
 } from 'lucide-react'
 
 import type { ThemeMode } from '@/lib/theme'
-import { THEMES, getStoredTheme, setTheme } from '@/lib/theme'
+import { THEMES, setTheme } from '@/lib/theme'
+import { useSettings, useTheme } from '@/lib/store-hooks'
 import type {
   BringApiCredentials,
   CompanyInfo,
@@ -81,12 +82,10 @@ export const Route = createFileRoute('/settings')({
 })
 
 function SelectTheme() {
-  const [mode, setMode] = useState<ThemeMode>(() => getStoredTheme())
+  const mode = useTheme()
 
   function handleChange(value: string) {
-    const next = value as ThemeMode
-    setMode(next)
-    setTheme(next)
+    setTheme(value as ThemeMode)
   }
 
   // Group options: ungrouped first, then grouped
@@ -132,13 +131,10 @@ function SelectTheme() {
 }
 
 function SelectRetention() {
-  const [value, setValue] = useState<RetentionOption>(
-    () => getStoredSettings().archiveRetention,
-  )
+  const value = useSettings().archiveRetention
 
   function handleChange(v: string) {
     const next = (v === 'never' ? 'never' : Number(v)) as RetentionOption
-    setValue(next)
     updateSettings({ archiveRetention: next })
   }
 
@@ -195,39 +191,30 @@ function ClearArchiveButton() {
 }
 
 function ToggleAutoSaveCustomer() {
-  const [enabled, setEnabled] = useState<boolean>(
-    () => getStoredSettings().autoSaveCustomer,
+  const enabled = useSettings().autoSaveCustomer
+  return (
+    <Switch
+      checked={enabled}
+      onCheckedChange={(next) => updateSettings({ autoSaveCustomer: next })}
+    />
   )
-
-  function handleChange(next: boolean) {
-    setEnabled(next)
-    updateSettings({ autoSaveCustomer: next })
-  }
-
-  return <Switch checked={enabled} onCheckedChange={handleChange} />
 }
 
 function ToggleBetaChannel() {
-  const [enabled, setEnabled] = useState<boolean>(
-    () => getStoredSettings().betaChannel,
+  const enabled = useSettings().betaChannel
+  return (
+    <Switch
+      checked={enabled}
+      onCheckedChange={(next) => updateSettings({ betaChannel: next })}
+    />
   )
-
-  function handleChange(next: boolean) {
-    setEnabled(next)
-    updateSettings({ betaChannel: next })
-  }
-
-  return <Switch checked={enabled} onCheckedChange={handleChange} />
 }
 
 function SelectRowsPerPage() {
-  const [value, setValue] = useState<PageSizeOption>(
-    () => getStoredSettings().rowsPerPage,
-  )
+  const value = useSettings().rowsPerPage
 
   function handleChange(v: string) {
     const next = Number(v) as PageSizeOption
-    setValue(next)
     updateSettings({ rowsPerPage: next })
   }
 
@@ -477,14 +464,11 @@ function QuickSelectList({
 }
 
 function DeliveryTimePresetsForm() {
-  const [presets, setPresets] = useState<[string, string, string, string]>(
-    () => getStoredSettings().deliveryTimePresets,
-  )
+  const presets = useSettings().deliveryTimePresets
 
   function handleChange(index: number, value: string) {
     const next = [...presets] as [string, string, string, string]
     next[index] = value
-    setPresets(next)
     updateSettings({ deliveryTimePresets: next })
   }
 
@@ -505,12 +489,9 @@ function DeliveryTimePresetsForm() {
 }
 
 function QuickSelectForm() {
-  const [quickSelect, setQuickSelect] = useState<QuickSelectSettings>(
-    () => getStoredSettings().quickSelect,
-  )
+  const quickSelect = useSettings().quickSelect
 
   function update(next: QuickSelectSettings) {
-    setQuickSelect(next)
     updateSettings({ quickSelect: next })
   }
 
@@ -693,9 +674,7 @@ function PrinterSettings() {
   const [printers, setPrinters] = useState<
     Array<PrinterInfo | DiscoveredPrinter>
   >([])
-  const [defaultPrinter, setDefaultPrinter] = useState<string | null>(
-    () => getStoredSettings().defaultPrinter,
-  )
+  const defaultPrinter = useSettings().defaultPrinter
   const [loading, setLoading] = useState(false)
   const [discovering, setDiscovering] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -738,9 +717,7 @@ function PrinterSettings() {
   }
 
   function handleSelect(name: string) {
-    const next = name === '__none__' ? null : name
-    setDefaultPrinter(next)
-    updateSettings({ defaultPrinter: next })
+    updateSettings({ defaultPrinter: name === '__none__' ? null : name })
   }
 
   return (

@@ -14,7 +14,7 @@ import { Separator } from '../components/ui/separator'
 import NotFound from '../components/NotFound'
 
 import AppSidebar from '../components/AppSidebar'
-import { getOnboardingCompleted } from '../lib/settings'
+import { useOnboardingCompleted } from '../lib/store-hooks'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -42,7 +42,7 @@ const pageLabels: Record<string, string> = {
 
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const onboardingCompleted = getOnboardingCompleted()
+  const onboardingCompleted = useOnboardingCompleted()
 
   if (!onboardingCompleted && pathname !== '/onboarding') {
     return <Navigate to="/onboarding" />

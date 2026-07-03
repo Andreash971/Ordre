@@ -23,7 +23,7 @@ import AddCustomerForm from '#/components/AddCustomerForm'
 import { customerColumns } from '#/components/CustomerColumns'
 import { getAllCustomers, insertCustomer } from '#/lib/customer-server-fns'
 import { queryKeys } from '#/lib/query-keys'
-import { getStoredSettings } from '@/lib/settings'
+import { useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/customers')({
   component: CustomersPage,
@@ -33,7 +33,7 @@ function CustomersPage() {
   const queryClient = useQueryClient()
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
-  const pageSize = getStoredSettings().rowsPerPage
+  const pageSize = useSettings().rowsPerPage
 
   const { data = [] } = useQuery({
     queryKey: queryKeys.customers.all,

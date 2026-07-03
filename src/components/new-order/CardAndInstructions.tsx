@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Chip } from '@/components/ui/chip'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyButton } from '@/components/ui/empty-button'
-import { getStoredSettings } from '@/lib/settings'
+import { useSettings } from '@/lib/store-hooks'
 
 interface CardAndInstructionsProps {
   cardEnabled: boolean
@@ -42,8 +42,7 @@ export default function CardAndInstructions({
   onInstructionsEnabledChange,
   onInstructionsValueChange,
 }: CardAndInstructionsProps) {
-  const { cardSignatures, instructionSuggestions } =
-    getStoredSettings().quickSelect
+  const { cardSignatures, instructionSuggestions } = useSettings().quickSelect
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {/* Instruksjoner */}

@@ -12,7 +12,7 @@ import {
 import { TimePicker } from '@/components/ui/time-picker'
 import { Checkbox } from '@/components/ui/checkbox'
 import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
-import { getStoredSettings } from '#/lib/settings'
+import { useSettings } from '@/lib/store-hooks'
 
 interface DeliveryDefaultsProps {
   date: string
@@ -59,7 +59,7 @@ export default function DeliveryDefaults({
   onLeaveDoorChange,
   onLeaveNeighbourChange,
 }: DeliveryDefaultsProps) {
-  const TIME_PRESETS = getStoredSettings().deliveryTimePresets
+  const TIME_PRESETS = useSettings().deliveryTimePresets
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 

@@ -24,7 +24,7 @@ import CategorySelect from '#/components/CategorySelect'
 import { productColumns } from '#/components/ProductColumns'
 import { getAllProducts, insertProduct } from '#/lib/product-server-fns'
 import { queryKeys } from '#/lib/query-keys'
-import { getStoredSettings } from '@/lib/settings'
+import { useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/products')({
   component: ProductsPage,
@@ -35,7 +35,7 @@ function ProductsPage() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [category, setCategory] = useState('')
   const [addOpen, setAddOpen] = useState(false)
-  const pageSize = getStoredSettings().rowsPerPage
+  const pageSize = useSettings().rowsPerPage
 
   const { data = [] } = useQuery({
     queryKey: queryKeys.products.all,

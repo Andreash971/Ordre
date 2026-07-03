@@ -12,12 +12,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { OrderDetailSheet } from '@/components/OrderDetailSheet'
-import {
-  formatDeliveryDate,
-  getLocalDateString,
-  getStoredOrders,
-} from '#/lib/order-utils'
+import { formatDeliveryDate, getLocalDateString } from '#/lib/order-utils'
 import type { StoredOrder } from '#/lib/order-utils'
+import { useOrders } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/')({ component: Dashboard })
 
@@ -29,11 +26,9 @@ const nokFormatter = new Intl.NumberFormat('nb-NO', {
 })
 
 function Dashboard() {
-  const [orders, setOrders] = React.useState<StoredOrder[]>([])
+  const ordersById = useOrders()
+  const orders = React.useMemo(() => Object.values(ordersById), [ordersById])
   const [open, setOpen] = React.useState<StoredOrder | null>(null)
-  React.useEffect(() => {
-    setOrders(getStoredOrders())
-  }, [])
 
   const today = getLocalDateString()
   const upcoming = React.useMemo(

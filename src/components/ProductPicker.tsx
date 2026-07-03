@@ -12,9 +12,9 @@ import {
 import { searchProducts } from '#/lib/product-server-fns'
 import type { Item } from '#/components/OrderColumns'
 import { queryKeys } from '#/lib/query-keys'
-import { getStoredSettings } from '#/lib/settings'
 import type { SpecialItemKey } from '#/lib/settings'
 import { SPECIAL_ITEM_KEYS } from '#/lib/special-items'
+import { useSettings } from '@/lib/store-hooks'
 import { cn } from '@/lib/utils'
 
 export type PickedProduct = {
@@ -65,9 +65,9 @@ export default function ProductPicker({
     staleTime: 1000 * 10,
   })
 
+  const specialItems = useSettings().specialItems
   const specialSuggestions = React.useMemo(() => {
     if (debouncedQuery.length < 1) return []
-    const specialItems = getStoredSettings().specialItems
     const presentKeys = new Set(
       (currentItems ?? [])
         .map((i) => i.specialKey)
@@ -77,7 +77,7 @@ export default function ProductPicker({
     return SPECIAL_ITEM_KEYS.filter((key) => !presentKeys.has(key))
       .map((key) => ({ key, ...specialItems[key] }))
       .filter((s) => s.name.toLowerCase().includes(lower))
-  }, [debouncedQuery, currentItems])
+  }, [debouncedQuery, currentItems, specialItems])
 
   const hasAnySuggestion =
     suggestions.length > 0 || specialSuggestions.length > 0

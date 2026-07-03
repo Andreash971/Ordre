@@ -3,8 +3,9 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, Eye, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { deleteStoredOrder, getStoredOrders } from '#/lib/order-utils'
+import { deleteStoredOrder } from '#/lib/order-utils'
 import type { StoredOrder } from '#/lib/order-utils'
+import { useOrders } from '@/lib/store-hooks'
 import { isSpecial } from '#/lib/special-items'
 import { Button } from '@/components/ui/button'
 import {
@@ -143,13 +144,10 @@ function buildColumns(
 }
 
 function ArchivePage() {
-  const [orders, setOrders] = React.useState<StoredOrder[]>([])
+  const ordersById = useOrders()
+  const orders = React.useMemo(() => Object.values(ordersById), [ordersById])
   const [query, setQuery] = React.useState('')
   const [open, setOpen] = React.useState<StoredOrder | null>(null)
-
-  React.useEffect(() => {
-    setOrders(getStoredOrders())
-  }, [])
 
   const sorted = React.useMemo(
     () => [...orders].sort((a, b) => b.savedAt - a.savedAt),
@@ -160,7 +158,6 @@ function ArchivePage() {
 
   function handleDelete(order: StoredOrder) {
     deleteStoredOrder(order.key)
-    setOrders((prev) => prev.filter((o) => o.key !== order.key))
     setOpen(null)
   }
 

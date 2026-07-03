@@ -17,7 +17,7 @@ import type {
 } from '#/lib/order-utils'
 import type { Item } from '#/components/OrderColumns'
 import { TooltipWrapper } from './TooltipWrapper'
-import { getStoredSettings } from '#/lib/settings'
+import { useSettings } from '@/lib/store-hooks'
 
 type OpenOrderButtonProps =
   | {
@@ -49,7 +49,7 @@ export default function OpenOrderButton({
   variant = 'default',
 }: OpenOrderButtonProps) {
   const [isPrinting, setIsPrinting] = useState(false)
-  const defaultPrinter = getStoredSettings().defaultPrinter
+  const defaultPrinter = useSettings().defaultPrinter
 
   const handleOpenPdf = async () => {
     setIsPrinting(true)
