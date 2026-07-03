@@ -6,6 +6,9 @@ import { containsInsensitive, getDb, schema } from '../db'
 
 const { products } = schema
 
+/** Autocomplete dropdowns show at most this many suggestions. */
+const SEARCH_RESULT_LIMIT = 3
+
 const productSelect = {
   id: products.id,
   name: products.name,
@@ -27,7 +30,7 @@ export function registerProductHandlers() {
       .select(productSelect)
       .from(products)
       .where(containsInsensitive(products.name, query))
-      .limit(3)
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
   ipcMain.handle('products:delete', async (_e, raw: unknown) => {

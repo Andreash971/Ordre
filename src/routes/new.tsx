@@ -2,7 +2,7 @@ import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import OrderSection from '@/components/OrderSection'
-import CustomerForm from '@/components/CustomerForm'
+import { CustomerFormCard } from '@/components/CustomerForm'
 import { Empty, EmptyDescription } from '@/components/ui/empty'
 import OrderItems from '@/components/new-order/OrderItems'
 import SharedDetails from '@/components/new-order/SharedDetails'
@@ -114,11 +114,8 @@ function NewOrderPage() {
 
       <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[17rem_1fr]">
         <OrderSection title="Kundeinformasjon" subtitle="Avsender / betaler">
-          <CustomerForm
-            hideHeader
-            formButtons
-            showCareof
-            hideSaveButton={autoSaveCustomer}
+          <CustomerFormCard
+            showSaveButton={!autoSaveCustomer}
             defaultValues={draft.sender}
             onValuesChange={(values) => dispatch({ type: 'setSender', values })}
             onIdChange={(id) => dispatch({ type: 'setSenderId', id })}

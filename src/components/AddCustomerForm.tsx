@@ -21,6 +21,7 @@ import AutocompleteField from '@/components/AutocompleteField'
 import FormInputField from '@/components/FormInputField'
 import { lookupPostcode, suggestAddresses } from '@/lib/bring-server-fns'
 import type { AddressSuggestion } from '@/lib/bring-server-fns'
+import { queryKeys } from '@/lib/query-keys'
 
 export type AddCustomerFormValues = {
   name: string
@@ -107,7 +108,7 @@ export default function AddCustomerForm({
   const postcode = useStore(form.store, (s) => s.values.postcode)
 
   const { data: bringLookup } = useQuery({
-    queryKey: ['bring-postcode', postcode],
+    queryKey: queryKeys.bring.postcode(postcode),
     queryFn: () => lookupPostcode({ data: postcode }),
     enabled: /^\d{4}$/.test(postcode),
     staleTime: Infinity,

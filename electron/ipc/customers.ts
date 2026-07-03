@@ -6,6 +6,9 @@ import { containsInsensitive, getDb, schema } from '../db'
 
 const { customers } = schema
 
+/** Autocomplete dropdowns show at most this many suggestions. */
+const SEARCH_RESULT_LIMIT = 3
+
 const customerSelect = {
   id: customers.id,
   name: customers.name,
@@ -30,7 +33,7 @@ export function registerCustomerHandlers() {
       .select(customerSelect)
       .from(customers)
       .where(containsInsensitive(customers.name, query))
-      .limit(3)
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
   ipcMain.handle('customers:searchByPhone', async (_e, query: string) => {
@@ -39,7 +42,7 @@ export function registerCustomerHandlers() {
       .select(customerSelect)
       .from(customers)
       .where(containsInsensitive(customers.phone, query))
-      .limit(3)
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
   ipcMain.handle('customers:searchByBusiness', async (_e, query: string) => {
@@ -48,7 +51,7 @@ export function registerCustomerHandlers() {
       .select(customerSelect)
       .from(customers)
       .where(containsInsensitive(customers.company, query))
-      .limit(3)
+      .limit(SEARCH_RESULT_LIMIT)
   })
 
   ipcMain.handle('customers:delete', async (_e, raw: unknown) => {

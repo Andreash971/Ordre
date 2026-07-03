@@ -30,7 +30,7 @@ import {
 import { EmptyButton } from '@/components/ui/empty-button'
 import { cn } from '@/lib/utils'
 
-import CustomerForm from '@/components/CustomerForm'
+import { CustomerFields, SaveCustomerButton } from '@/components/CustomerForm'
 import { formatDeliveryDate, pickCustomerFormValues } from '@/lib/order-utils'
 import { toIsoDate } from '@/lib/format'
 import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
@@ -251,16 +251,20 @@ function RecipientRow({
 
       {expanded ? (
         <div className="grid grid-cols-[15rem_1fr] grid-rows-[auto_auto] gap-4 border-t px-4 pb-4 pt-4">
-          <CustomerForm
-            bare
-            formButtons
-            size="sm"
-            showCareof
-            hideSaveButton={hideSaveButton}
+          <CustomerFields
             defaultValues={customerDefaults}
             onValuesChange={(v) => onChange(v)}
             onIdChange={onIdChange}
             onSubmit={onSaveCustomer}
+            footer={
+              hideSaveButton
+                ? undefined
+                : (ctx) => (
+                    <div className="flex justify-end gap-2">
+                      <SaveCustomerButton {...ctx} />
+                    </div>
+                  )
+            }
           />
 
           {/* Overrides */}
