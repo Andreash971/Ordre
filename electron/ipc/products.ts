@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron'
-import { eq, like, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { productIdSchema, productSchema } from '../../shared/products'
-import { getDb, schema } from '../db'
+import { containsInsensitive, getDb, schema } from '../db'
 
 const { products } = schema
 
@@ -26,7 +26,7 @@ export function registerProductHandlers() {
     return db
       .select(productSelect)
       .from(products)
-      .where(like(sql`LOWER(${products.name})`, `%${query.toLowerCase()}%`))
+      .where(containsInsensitive(products.name, query))
       .limit(3)
   })
 

@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron'
-import { eq, like, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { customerIdSchema, customerSchema } from '../../shared/customers'
-import { getDb, schema } from '../db'
+import { containsInsensitive, getDb, schema } from '../db'
 
 const { customers } = schema
 
@@ -17,10 +17,6 @@ const customerSelect = {
   careof: customers.careof,
 }
 
-function ilikePattern(query: string) {
-  return `%${query.toLowerCase()}%`
-}
-
 export function registerCustomerHandlers() {
   const db = getDb()
 
@@ -33,7 +29,7 @@ export function registerCustomerHandlers() {
     return db
       .select(customerSelect)
       .from(customers)
-      .where(like(sql`LOWER(${customers.name})`, ilikePattern(query)))
+      .where(containsInsensitive(customers.name, query))
       .limit(3)
   })
 
@@ -42,7 +38,7 @@ export function registerCustomerHandlers() {
     return db
       .select(customerSelect)
       .from(customers)
-      .where(like(sql`LOWER(${customers.phone})`, ilikePattern(query)))
+      .where(containsInsensitive(customers.phone, query))
       .limit(3)
   })
 
@@ -51,7 +47,7 @@ export function registerCustomerHandlers() {
     return db
       .select(customerSelect)
       .from(customers)
-      .where(like(sql`LOWER(${customers.company})`, ilikePattern(query)))
+      .where(containsInsensitive(customers.company, query))
       .limit(3)
   })
 

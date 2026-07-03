@@ -18,7 +18,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
 import {
   Card,
   CardContent,

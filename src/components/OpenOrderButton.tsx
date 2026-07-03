@@ -15,7 +15,7 @@ import type { ArchivedOrder, OrderData } from '@shared/orders'
 import { insertOrders } from '@/lib/order-server-fns'
 import { queryKeys } from '@/lib/query-keys'
 import type { Item } from '@/components/OrderColumns'
-import { TooltipWrapper } from '@/components/ui/TooltipWrapper'
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
 import { useSettings } from '@/lib/store-hooks'
 
 type OpenOrderButtonProps =
