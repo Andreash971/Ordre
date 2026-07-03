@@ -8,7 +8,6 @@ import OrderItems from '@/components/new-order/OrderItems'
 import SharedDetails from '@/components/new-order/SharedDetails'
 import RecipientList from '@/components/new-order/RecipientList'
 import OrderProof from '@/components/new-order/OrderProof'
-import type { Item } from '@/components/OrderColumns'
 import {
   Dialog,
   DialogContent,
@@ -19,27 +18,14 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { pickCustomerFormValues } from '@/lib/order-utils'
-import { toIsoDate } from '@/lib/format'
 import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
-import type {
-  Customer,
-  CustomerFormValues,
-  DeliveryValues,
-} from '@/lib/order-utils'
-import { getStoredSettings } from '@/lib/settings'
-import type { SpecialItemKey } from '@/lib/settings'
+import type { CustomerFormValues } from '@/lib/order-utils'
 import { useSettings } from '@/lib/store-hooks'
 import { isSpecial } from '@/lib/special-items'
-
-const EMPTY_SENDER: CustomerFormValues = {
-  name: '',
-  phone: '',
-  company: '',
-  address: '',
-  postcode: '',
-  city: '',
-  careof: '',
-}
+import {
+  initOrderDraft,
+  orderDraftReducer,
+} from '@/components/new-order/order-draft'
 
 function isSenderFilled(s: CustomerFormValues) {
   return Boolean(s.name || s.phone || s.address)
@@ -48,38 +34,15 @@ function isSenderFilled(s: CustomerFormValues) {
 export const Route = createFileRoute('/new')({ component: NewOrderPage })
 
 function NewOrderPage() {
-  const [sender, setSender] = React.useState<CustomerFormValues>(EMPTY_SENDER)
-  const senderIdRef = React.useRef<number | null>(null)
-  const autoSaveCustomer = useSettings().autoSaveCustomer
+  const settings = useSettings()
+  const autoSaveCustomer = settings.autoSaveCustomer
   const saveCustomerMutation = useSaveCustomerMutation()
 
-  const [delivery, setDelivery] = React.useState<DeliveryValues>({
-    date: toIsoDate(),
-    time: null,
-    leaveDoor: false,
-    leaveNeighbour: false,
-  })
-  const [showTime, setShowTime] = React.useState(false)
-
-  const [cardEnabled, setCardEnabled] = React.useState(false)
-  const [cardValue, setCardValue] = React.useState('')
-  const [instructionsEnabled, setInstructionsEnabled] = React.useState(false)
-  const [instructionsValue, setInstructionsValue] = React.useState('')
-
-  const [items, setItems] = React.useState<Item[]>(() => {
-    const { frakt } = getStoredSettings().specialItems
-    return [
-      {
-        specialKey: 'frakt',
-        name: frakt.name,
-        description: '',
-        price: frakt.price,
-        quantity: 1,
-      },
-    ]
-  })
-  const [recipients, setRecipients] = React.useState<Customer[]>([])
-  const [recipientIds, setRecipientIds] = React.useState<(number | null)[]>([])
+  const [draft, dispatch] = React.useReducer(
+    orderDraftReducer,
+    settings.specialItems,
+    initOrderDraft,
+  )
 
   const [saveErrorMessage, setSaveErrorMessage] = React.useState<string | null>(
     null,
@@ -102,15 +65,15 @@ function NewOrderPage() {
       values: CustomerFormValues
       id: number | null
     }> = []
-    if (isSenderFilled(sender)) {
-      targets.push({ values: sender, id: senderIdRef.current })
+    if (isSenderFilled(draft.sender)) {
+      targets.push({ values: draft.sender, id: draft.senderId })
     }
-    recipients.forEach((r, i) => {
+    for (const r of draft.recipients) {
       const values = pickCustomerFormValues(r)
       if (isSenderFilled(values)) {
-        targets.push({ values, id: recipientIds[i] ?? null })
+        targets.push({ values, id: r.customerId })
       }
-    })
+    }
 
     for (const target of targets) {
       try {
@@ -125,71 +88,17 @@ function NewOrderPage() {
       }
     }
     return true
-  }, [autoSaveCustomer, sender, recipients, recipientIds, saveCustomerMutation])
+  }, [
+    autoSaveCustomer,
+    draft.sender,
+    draft.senderId,
+    draft.recipients,
+    saveCustomerMutation,
+  ])
 
-  // Sync extras rows with toggles
-  React.useEffect(() => {
-    setItems((prev) => {
-      if (showTime) {
-        if (prev.some((i) => i.specialKey === 'leveringstid')) {
-          return prev
-        }
-        const { leveringstid } = getStoredSettings().specialItems
-        return [
-          ...prev,
-          {
-            specialKey: 'leveringstid',
-            name: leveringstid.name,
-            description: '',
-            price: leveringstid.price,
-            quantity: 1,
-          },
-        ]
-      }
-      return prev.filter((i) => i.specialKey !== 'leveringstid')
-    })
-  }, [showTime])
-
-  React.useEffect(() => {
-    setItems((prev) => {
-      if (cardEnabled) {
-        if (prev.some((i) => i.specialKey === 'kort')) return prev
-        const { kort } = getStoredSettings().specialItems
-        return [
-          ...prev,
-          {
-            specialKey: 'kort',
-            name: kort.name,
-            description: '',
-            price: kort.price,
-            quantity: 1,
-          },
-        ]
-      }
-      return prev.filter((i) => i.specialKey !== 'kort')
-    })
-  }, [cardEnabled])
-
-  const handleSpecialPicked = React.useCallback((key: SpecialItemKey) => {
-    if (key === 'leveringstid') setShowTime(true)
-    if (key === 'kort') setCardEnabled(true)
-  }, [])
-
-  const handleSpecialRemoved = React.useCallback((key: SpecialItemKey) => {
-    if (key === 'leveringstid') {
-      setShowTime(false)
-      return
-    }
-    if (key === 'kort') {
-      setCardEnabled(false)
-      return
-    }
-    setItems((prev) => prev.filter((i) => i.specialKey !== key))
-  }, [])
-
-  const senderFilled = isSenderFilled(sender)
-  const recipientCount = recipients.length || (senderFilled ? 1 : 0)
-  const canShowReview = senderFilled && items.some((i) => !isSpecial(i))
+  const senderFilled = isSenderFilled(draft.sender)
+  const recipientCount = draft.recipients.length || (senderFilled ? 1 : 0)
+  const canShowReview = senderFilled && draft.items.some((i) => !isSpecial(i))
 
   return (
     <main className="rise-in page-wrap flex flex-col gap-10 px-4 pb-12 pt-6">
@@ -210,11 +119,9 @@ function NewOrderPage() {
             formButtons
             showCareof
             hideSaveButton={autoSaveCustomer}
-            defaultValues={sender}
-            onValuesChange={setSender}
-            onIdChange={(id) => {
-              senderIdRef.current = id
-            }}
+            defaultValues={draft.sender}
+            onValuesChange={(values) => dispatch({ type: 'setSender', values })}
+            onIdChange={(id) => dispatch({ type: 'setSenderId', id })}
             onSubmit={(values, { id }) =>
               saveCustomerMutation.mutateAsync({ values, id })
             }
@@ -227,10 +134,18 @@ function NewOrderPage() {
           bodyClassName="flex min-h-0 flex-1 flex-col"
         >
           <OrderItems
-            items={items}
-            setItems={setItems}
-            onSpecialPicked={handleSpecialPicked}
-            onSpecialRemoved={handleSpecialRemoved}
+            items={draft.items}
+            setItems={(updater) => dispatch({ type: 'updateItems', updater })}
+            onSpecialPicked={(key) =>
+              dispatch({
+                type: 'specialPicked',
+                key,
+                specialItems: settings.specialItems,
+              })
+            }
+            onSpecialRemoved={(key) =>
+              dispatch({ type: 'specialRemoved', key })
+            }
           />
         </OrderSection>
       </div>
@@ -239,30 +154,7 @@ function NewOrderPage() {
         title="Leveringsdetaljer & kort"
         subtitle="Standard informasjon for hele ordren. Gjelder alle mottakere og kan overstyres per mottaker."
       >
-        <SharedDetails
-          date={delivery.date}
-          time={delivery.time}
-          showTime={showTime}
-          leaveDoor={delivery.leaveDoor}
-          leaveNeighbour={delivery.leaveNeighbour}
-          onDateChange={(d) => setDelivery((prev) => ({ ...prev, date: d }))}
-          onTimeChange={(t) => setDelivery((prev) => ({ ...prev, time: t }))}
-          onShowTimeChange={setShowTime}
-          onLeaveDoorChange={(v) =>
-            setDelivery((prev) => ({ ...prev, leaveDoor: v }))
-          }
-          onLeaveNeighbourChange={(v) =>
-            setDelivery((prev) => ({ ...prev, leaveNeighbour: v }))
-          }
-          cardEnabled={cardEnabled}
-          cardValue={cardValue}
-          onCardEnabledChange={setCardEnabled}
-          onCardValueChange={setCardValue}
-          instructionsEnabled={instructionsEnabled}
-          instructionsValue={instructionsValue}
-          onInstructionsEnabledChange={setInstructionsEnabled}
-          onInstructionsValueChange={setInstructionsValue}
-        />
+        <SharedDetails draft={draft} dispatch={dispatch} />
       </OrderSection>
 
       <OrderSection
@@ -274,18 +166,9 @@ function NewOrderPage() {
         }
       >
         <RecipientList
-          recipients={recipients}
-          onRecipientsChange={setRecipients}
-          onRecipientIdsChange={setRecipientIds}
+          draft={draft}
+          dispatch={dispatch}
           autoSaveCustomer={autoSaveCustomer}
-          defaults={{
-            delivery,
-            showTime,
-            cardEnabled,
-            cardValue,
-            instructionsEnabled,
-            instructionsValue,
-          }}
         />
       </OrderSection>
 
@@ -294,17 +177,7 @@ function NewOrderPage() {
           title="Kontroller & generer"
           subtitle="Siste sjekk før utskrift"
         >
-          <OrderProof
-            sender={sender}
-            delivery={delivery}
-            items={items}
-            recipients={recipients}
-            cardEnabled={cardEnabled}
-            cardValue={cardValue}
-            instructionsEnabled={instructionsEnabled}
-            instructionsValue={instructionsValue}
-            beforeSubmit={beforeSubmit}
-          />
+          <OrderProof draft={draft} beforeSubmit={beforeSubmit} />
         </OrderSection>
       ) : (
         <Empty className="border border-dashed rise-in">

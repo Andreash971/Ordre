@@ -1,74 +1,63 @@
+import type { Dispatch } from 'react'
+
 import DeliveryDefaults from '@/components/new-order/DeliveryDefaults'
 import CardAndInstructions from '@/components/new-order/CardAndInstructions'
+import type {
+  OrderDraft,
+  OrderDraftAction,
+} from '@/components/new-order/order-draft'
+import { useSettings } from '@/lib/store-hooks'
 
 interface SharedDetailsProps {
-  // Delivery defaults
-  date: string
-  time: string | null
-  showTime: boolean
-  leaveDoor: boolean
-  leaveNeighbour: boolean
-  onDateChange: (date: string) => void
-  onTimeChange: (time: string | null) => void
-  onShowTimeChange: (show: boolean) => void
-  onLeaveDoorChange: (value: boolean) => void
-  onLeaveNeighbourChange: (value: boolean) => void
-
-  // Card & instructions
-  cardEnabled: boolean
-  cardValue: string
-  onCardEnabledChange: (enabled: boolean) => void
-  onCardValueChange: (value: string) => void
-  instructionsEnabled: boolean
-  instructionsValue: string
-  onInstructionsEnabledChange: (enabled: boolean) => void
-  onInstructionsValueChange: (value: string) => void
+  draft: OrderDraft
+  dispatch: Dispatch<OrderDraftAction>
 }
 
-export default function SharedDetails({
-  date,
-  time,
-  showTime,
-  leaveDoor,
-  leaveNeighbour,
-  onDateChange,
-  onTimeChange,
-  onShowTimeChange,
-  onLeaveDoorChange,
-  onLeaveNeighbourChange,
-  cardEnabled,
-  cardValue,
-  onCardEnabledChange,
-  onCardValueChange,
-  instructionsEnabled,
-  instructionsValue,
-  onInstructionsEnabledChange,
-  onInstructionsValueChange,
-}: SharedDetailsProps) {
+export default function SharedDetails({ draft, dispatch }: SharedDetailsProps) {
+  const specialItems = useSettings().specialItems
+
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
       <div className="grid items-stretch gap-6 p-5 lg:grid-cols-[minmax(0,17rem)_1fr]">
         <DeliveryDefaults
-          date={date}
-          time={time}
-          showTime={showTime}
-          leaveDoor={leaveDoor}
-          leaveNeighbour={leaveNeighbour}
-          onDateChange={onDateChange}
-          onTimeChange={onTimeChange}
-          onShowTimeChange={onShowTimeChange}
-          onLeaveDoorChange={onLeaveDoorChange}
-          onLeaveNeighbourChange={onLeaveNeighbourChange}
+          date={draft.delivery.date}
+          time={draft.delivery.time}
+          showTime={draft.showTime}
+          leaveDoor={draft.delivery.leaveDoor}
+          leaveNeighbour={draft.delivery.leaveNeighbour}
+          onDateChange={(date) =>
+            dispatch({ type: 'patchDelivery', patch: { date } })
+          }
+          onTimeChange={(time) =>
+            dispatch({ type: 'patchDelivery', patch: { time } })
+          }
+          onShowTimeChange={(value) =>
+            dispatch({ type: 'setShowTime', value, specialItems })
+          }
+          onLeaveDoorChange={(leaveDoor) =>
+            dispatch({ type: 'patchDelivery', patch: { leaveDoor } })
+          }
+          onLeaveNeighbourChange={(leaveNeighbour) =>
+            dispatch({ type: 'patchDelivery', patch: { leaveNeighbour } })
+          }
         />
         <CardAndInstructions
-          cardEnabled={cardEnabled}
-          cardValue={cardValue}
-          onCardEnabledChange={onCardEnabledChange}
-          onCardValueChange={onCardValueChange}
-          instructionsEnabled={instructionsEnabled}
-          instructionsValue={instructionsValue}
-          onInstructionsEnabledChange={onInstructionsEnabledChange}
-          onInstructionsValueChange={onInstructionsValueChange}
+          cardEnabled={draft.card.enabled}
+          cardValue={draft.card.text}
+          onCardEnabledChange={(value) =>
+            dispatch({ type: 'setCardEnabled', value, specialItems })
+          }
+          onCardValueChange={(value) =>
+            dispatch({ type: 'setCardText', value })
+          }
+          instructionsEnabled={draft.instructions.enabled}
+          instructionsValue={draft.instructions.text}
+          onInstructionsEnabledChange={(value) =>
+            dispatch({ type: 'setInstructionsEnabled', value })
+          }
+          onInstructionsValueChange={(value) =>
+            dispatch({ type: 'setInstructionsText', value })
+          }
         />
       </div>
     </div>

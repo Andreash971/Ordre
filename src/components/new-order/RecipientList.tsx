@@ -34,48 +34,22 @@ import CustomerForm from '@/components/CustomerForm'
 import { formatDeliveryDate, pickCustomerFormValues } from '@/lib/order-utils'
 import { toIsoDate } from '@/lib/format'
 import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
+import type { Customer, CustomerFormValues } from '@/lib/order-utils'
 import type {
-  Customer,
-  CustomerFormValues,
-  DeliveryValues,
-} from '@/lib/order-utils'
+  OrderDraft,
+  OrderDraftAction,
+  SharedOrderDefaults,
+} from '@/components/new-order/order-draft'
+import { sharedDefaults } from '@/components/new-order/order-draft'
 
 interface RecipientListProps {
-  recipients: Customer[]
-  onRecipientsChange: React.Dispatch<React.SetStateAction<Customer[]>>
-  onRecipientIdsChange: React.Dispatch<React.SetStateAction<(number | null)[]>>
+  draft: OrderDraft
+  dispatch: React.Dispatch<OrderDraftAction>
   autoSaveCustomer: boolean
-  defaults: {
-    delivery: DeliveryValues
-    showTime: boolean
-    cardEnabled: boolean
-    cardValue: string
-    instructionsEnabled: boolean
-    instructionsValue: string
-  }
 }
 
-const emptyRecipient = (): Customer => ({
-  name: '',
-  phone: '',
-  company: '',
-  address: '',
-  postcode: '',
-  city: '',
-  careof: '',
-  cardmsg: '',
-  instructmsg: '',
-  date: '',
-  time: null,
-  leaveDoor: false,
-  leaveNeighbour: false,
-})
-
 /** Number of fields a recipient overrides vs. the shared (master) defaults. */
-function countOverrides(
-  r: Customer,
-  defaults: RecipientListProps['defaults'],
-): number {
+function countOverrides(r: Customer, defaults: SharedOrderDefaults): number {
   return [
     Boolean(r.date && r.date !== defaults.delivery.date),
     r.time !== defaults.delivery.time && defaults.showTime,
@@ -91,12 +65,12 @@ function countOverrides(
 }
 
 export default function RecipientList({
-  recipients,
-  onRecipientsChange,
-  onRecipientIdsChange,
+  draft,
+  dispatch,
   autoSaveCustomer,
-  defaults,
 }: RecipientListProps) {
+  const recipients = draft.recipients
+  const defaults = sharedDefaults(draft)
   const [expanded, setExpanded] = React.useState<number | null>(0)
   const saveCustomerMutation = useSaveCustomerMutation()
   const saveCustomer = (
@@ -105,39 +79,21 @@ export default function RecipientList({
   ) => saveCustomerMutation.mutateAsync({ values, id: ctx.id })
 
   const addRecipient = () => {
-    const nextIndex = recipients.length
-    const next: Customer = {
-      ...emptyRecipient(),
-      date: defaults.delivery.date,
-      time: defaults.delivery.time,
-      leaveDoor: defaults.delivery.leaveDoor,
-      leaveNeighbour: defaults.delivery.leaveNeighbour,
-      cardmsg: defaults.cardEnabled ? defaults.cardValue : '',
-      instructmsg: defaults.instructionsEnabled
-        ? defaults.instructionsValue
-        : '',
-    }
-    onRecipientsChange((prev) => [...prev, next])
-    onRecipientIdsChange((prev) => [...prev, null])
-    setExpanded(nextIndex)
+    dispatch({ type: 'addRecipient' })
+    setExpanded(recipients.length)
   }
 
   const removeRecipient = (index: number) => {
-    onRecipientsChange((prev) => prev.filter((_, i) => i !== index))
-    onRecipientIdsChange((prev) => prev.filter((_, i) => i !== index))
+    dispatch({ type: 'removeRecipient', index })
     setExpanded(null)
   }
 
   const updateRecipient = (index: number, patch: Partial<Customer>) => {
-    onRecipientsChange((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, ...patch } : c)),
-    )
+    dispatch({ type: 'patchRecipient', index, patch })
   }
 
   const updateRecipientId = (index: number, id: number | null) => {
-    onRecipientIdsChange((prev) =>
-      prev.map((existing, i) => (i === index ? id : existing)),
-    )
+    dispatch({ type: 'setRecipientId', index, id })
   }
 
   function titleButton() {
@@ -217,7 +173,7 @@ interface RecipientRowProps {
   ) => Promise<void>
   onIdChange: (id: number | null) => void
   hideSaveButton: boolean
-  defaults: RecipientListProps['defaults']
+  defaults: SharedOrderDefaults
 }
 
 function RecipientRow({

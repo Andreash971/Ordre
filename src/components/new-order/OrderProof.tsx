@@ -5,26 +5,19 @@ import { cn } from '@/lib/utils'
 import { formatNok } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import OpenOrderButton from '@/components/OpenOrderButton'
-import type { Item } from '@/components/OrderColumns'
 import { formatDeliveryDate } from '@/lib/order-utils'
 import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
 } from '@/lib/order-utils'
+import type { OrderDraft } from '@/components/new-order/order-draft'
 import { getSpecialKeyForItem, isSpecial } from '@/lib/special-items'
 
 const nok = formatNok
 
 interface OrderProofProps {
-  sender: CustomerFormValues | null
-  delivery: DeliveryValues
-  items: Item[]
-  recipients: Customer[]
-  cardEnabled: boolean
-  cardValue: string
-  instructionsEnabled: boolean
-  instructionsValue: string
+  draft: OrderDraft
   beforeSubmit?: () => Promise<boolean>
 }
 
@@ -59,17 +52,13 @@ function formatAddress(c: { address: string; postcode: string; city: string }) {
 
 const HIGHLIGHT = 'border border-primary bg-primary/10'
 
-export default function OrderProof({
-  sender,
-  delivery,
-  items,
-  recipients,
-  cardEnabled,
-  cardValue,
-  instructionsEnabled,
-  instructionsValue,
-  beforeSubmit,
-}: OrderProofProps) {
+export default function OrderProof({ draft, beforeSubmit }: OrderProofProps) {
+  const { sender, delivery, items, recipients } = draft
+  const cardEnabled = draft.card.enabled
+  const cardValue = draft.card.text
+  const instructionsEnabled = draft.instructions.enabled
+  const instructionsValue = draft.instructions.text
+
   const regularItems = items.filter((i) => !isSpecial(i))
   const regularSubtotal = regularItems.reduce(
     (s, i) => s + i.price * i.quantity,
@@ -84,16 +73,14 @@ export default function OrderProof({
 
   const effectiveRecipients: Customer[] = recipients.length
     ? recipients
-    : sender
-      ? [
-          customerFromSender(
-            sender,
-            delivery,
-            cardEnabled ? cardValue : '',
-            instructionsEnabled ? instructionsValue : '',
-          ),
-        ]
-      : []
+    : [
+        customerFromSender(
+          sender,
+          delivery,
+          cardEnabled ? cardValue : '',
+          instructionsEnabled ? instructionsValue : '',
+        ),
+      ]
 
   const breakdown = [
     `Varer ${nok(regularSubtotal)}`,
@@ -114,28 +101,22 @@ export default function OrderProof({
           <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             Fakturering · kunde
           </div>
-          {sender ? (
-            <div className="mt-2 space-y-0.5 text-sm">
-              <div className="font-medium">{sender.name || 'Uten navn'}</div>
-              {sender.company ? (
-                <div className="text-muted-foreground">{sender.company}</div>
-              ) : null}
-              {formatAddress(sender) ? (
-                <div className="text-muted-foreground">
-                  {formatAddress(sender)}
-                </div>
-              ) : null}
-              {sender.phone ? (
-                <div className="font-mono text-xs text-muted-foreground">
-                  {sender.phone}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="mt-2 text-sm text-muted-foreground">
-              Ingen kunde valgt enda.
-            </div>
-          )}
+          <div className="mt-2 space-y-0.5 text-sm">
+            <div className="font-medium">{sender.name || 'Uten navn'}</div>
+            {sender.company ? (
+              <div className="text-muted-foreground">{sender.company}</div>
+            ) : null}
+            {formatAddress(sender) ? (
+              <div className="text-muted-foreground">
+                {formatAddress(sender)}
+              </div>
+            ) : null}
+            {sender.phone ? (
+              <div className="font-mono text-xs text-muted-foreground">
+                {sender.phone}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="sm:border-l sm:pl-6">
