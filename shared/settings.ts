@@ -8,6 +8,9 @@
  */
 import * as z from 'zod'
 
+import { customerTypeSchema } from './customers'
+import type { CustomerType } from './customers'
+
 // ---------------------------------------------------------------------------
 // Theme
 // ---------------------------------------------------------------------------
@@ -82,6 +85,30 @@ export const SPECIAL_ITEM_KEYS: ReadonlyArray<SpecialItemKey> =
 
 export type SpecialItemsSettings = Record<SpecialItemKey, SpecialItem>
 
+/** The places in the app that start on a customer-type tab. */
+export const customerTypeLocationSchema = z.enum([
+  'senderForm',
+  'recipientForm',
+  'customersPage',
+])
+export type CustomerTypeLocation = z.infer<typeof customerTypeLocationSchema>
+
+export const CUSTOMER_TYPE_LOCATIONS: ReadonlyArray<CustomerTypeLocation> =
+  customerTypeLocationSchema.options
+
+export const customerTypeDefaultsSchema = z.object({
+  /** App-wide default customer type; used when perLocation is off. */
+  global: customerTypeSchema,
+  /** When on, each location uses its own default instead of the global one. */
+  perLocation: z.boolean(),
+  locations: z.object({
+    senderForm: customerTypeSchema,
+    recipientForm: customerTypeSchema,
+    customersPage: customerTypeSchema,
+  }),
+})
+export type CustomerTypeDefaults = z.infer<typeof customerTypeDefaultsSchema>
+
 export const settingsSchema = z.object({
   archiveRetention: retentionSchema,
   rowsPerPage: pageSizeSchema,
@@ -95,6 +122,7 @@ export const settingsSchema = z.object({
     kort: specialItemSchema,
   }),
   autoSaveCustomer: z.boolean(),
+  customerTypeDefaults: customerTypeDefaultsSchema,
   betaChannel: z.boolean(),
   deliveryTimePresets: z.tuple([
     z.string(),
@@ -124,6 +152,19 @@ export const partialSettingsSchema = z.object({
     })
     .optional(),
   autoSaveCustomer: z.boolean().optional(),
+  customerTypeDefaults: z
+    .object({
+      global: customerTypeSchema.optional(),
+      perLocation: z.boolean().optional(),
+      locations: z
+        .object({
+          senderForm: customerTypeSchema.optional(),
+          recipientForm: customerTypeSchema.optional(),
+          customersPage: customerTypeSchema.optional(),
+        })
+        .optional(),
+    })
+    .optional(),
   betaChannel: z.boolean().optional(),
   deliveryTimePresets: z
     .tuple([z.string(), z.string(), z.string(), z.string()])
@@ -139,6 +180,16 @@ export const DEFAULT_SPECIAL_ITEMS: SpecialItemsSettings = {
   frakt: { name: 'Frakt', price: 100 },
   leveringstid: { name: 'Leveringstid', price: 100 },
   kort: { name: 'Kort', price: 25 },
+}
+
+export const DEFAULT_CUSTOMER_TYPE_DEFAULTS: CustomerTypeDefaults = {
+  global: 'private',
+  perLocation: false,
+  locations: {
+    senderForm: 'private',
+    recipientForm: 'private',
+    customersPage: 'private',
+  },
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -162,8 +213,18 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   specialItems: DEFAULT_SPECIAL_ITEMS,
   autoSaveCustomer: false,
+  customerTypeDefaults: DEFAULT_CUSTOMER_TYPE_DEFAULTS,
   betaChannel: false,
   deliveryTimePresets: ['11:00', '12:00', '14:00', '17:00'],
+}
+
+/** The effective default customer type for one location in the app. */
+export function resolveCustomerTypeDefault(
+  settings: AppSettings,
+  location: CustomerTypeLocation,
+): CustomerType {
+  const d = settings.customerTypeDefaults
+  return d.perLocation ? d.locations[location] : d.global
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +267,16 @@ export function migrateSettings(raw: unknown): AppSettings {
       kort: { ...DEFAULT_SPECIAL_ITEMS.kort, ...special?.kort },
     },
     autoSaveCustomer: persisted.autoSaveCustomer ?? false,
+    customerTypeDefaults: {
+      global:
+        persisted.customerTypeDefaults?.global ??
+        DEFAULT_CUSTOMER_TYPE_DEFAULTS.global,
+      perLocation: persisted.customerTypeDefaults?.perLocation ?? false,
+      locations: {
+        ...DEFAULT_CUSTOMER_TYPE_DEFAULTS.locations,
+        ...persisted.customerTypeDefaults?.locations,
+      },
+    },
     betaChannel: persisted.betaChannel ?? false,
     deliveryTimePresets:
       persisted.deliveryTimePresets ?? DEFAULT_SETTINGS.deliveryTimePresets,
@@ -243,6 +314,18 @@ export function mergeSettings(
       kort: { ...current.specialItems.kort, ...partial.specialItems?.kort },
     },
     autoSaveCustomer: partial.autoSaveCustomer ?? current.autoSaveCustomer,
+    customerTypeDefaults: {
+      global:
+        partial.customerTypeDefaults?.global ??
+        current.customerTypeDefaults.global,
+      perLocation:
+        partial.customerTypeDefaults?.perLocation ??
+        current.customerTypeDefaults.perLocation,
+      locations: {
+        ...current.customerTypeDefaults.locations,
+        ...partial.customerTypeDefaults?.locations,
+      },
+    },
     betaChannel: partial.betaChannel ?? current.betaChannel,
     deliveryTimePresets:
       partial.deliveryTimePresets ?? current.deliveryTimePresets,

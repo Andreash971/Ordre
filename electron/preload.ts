@@ -2,9 +2,18 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type {
   Customer,
   CustomerSuggestion,
+  CustomerType,
   InsertCustomerInput,
   UpdateCustomerInput,
 } from '../shared/customers'
+import type {
+  Contact,
+  ContactSearchInput,
+  ContactSuggestion,
+  ContactWithCompany,
+  InsertContactInput,
+  UpdateContactInput,
+} from '../shared/contacts'
 import type {
   InsertProductInput,
   Product,
@@ -24,18 +33,43 @@ const api = {
   customers: {
     getAll: (): Promise<Array<Customer>> =>
       ipcRenderer.invoke('customers:getAll'),
-    search: (q: string): Promise<Array<CustomerSuggestion>> =>
-      ipcRenderer.invoke('customers:search', q),
-    searchByPhone: (q: string): Promise<Array<CustomerSuggestion>> =>
-      ipcRenderer.invoke('customers:searchByPhone', q),
-    searchByBusiness: (q: string): Promise<Array<CustomerSuggestion>> =>
-      ipcRenderer.invoke('customers:searchByBusiness', q),
+    search: (
+      q: string,
+      type: CustomerType,
+    ): Promise<Array<CustomerSuggestion>> =>
+      ipcRenderer.invoke('customers:search', { query: q, type }),
+    searchByPhone: (
+      q: string,
+      type: CustomerType,
+    ): Promise<Array<CustomerSuggestion>> =>
+      ipcRenderer.invoke('customers:searchByPhone', { query: q, type }),
+    searchByBusiness: (
+      q: string,
+      type: CustomerType,
+    ): Promise<Array<CustomerSuggestion>> =>
+      ipcRenderer.invoke('customers:searchByBusiness', { query: q, type }),
     insert: (data: InsertCustomerInput): Promise<{ id: number }> =>
       ipcRenderer.invoke('customers:insert', data),
     update: (data: UpdateCustomerInput): Promise<void> =>
       ipcRenderer.invoke('customers:update', data),
     delete: (id: number): Promise<void> =>
       ipcRenderer.invoke('customers:delete', id),
+  },
+  contacts: {
+    getAll: (): Promise<Array<Contact>> =>
+      ipcRenderer.invoke('contacts:getAll'),
+    getByCompany: (customerId: number): Promise<Array<Contact>> =>
+      ipcRenderer.invoke('contacts:getByCompany', customerId),
+    search: (data: ContactSearchInput): Promise<Array<ContactSuggestion>> =>
+      ipcRenderer.invoke('contacts:search', data),
+    searchAll: (q: string): Promise<Array<ContactWithCompany>> =>
+      ipcRenderer.invoke('contacts:searchAll', q),
+    insert: (data: InsertContactInput): Promise<{ id: number }> =>
+      ipcRenderer.invoke('contacts:insert', data),
+    update: (data: UpdateContactInput): Promise<void> =>
+      ipcRenderer.invoke('contacts:update', data),
+    delete: (id: number): Promise<void> =>
+      ipcRenderer.invoke('contacts:delete', id),
   },
   products: {
     getAll: (): Promise<Array<Product>> =>

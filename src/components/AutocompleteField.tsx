@@ -31,6 +31,18 @@ interface AutocompleteFieldProps<T extends { id: number }> {
   type?: React.HTMLInputTypeAttribute
   disabled?: boolean
   autoComplete?: React.InputHTMLAttributes<HTMLInputElement>['autoComplete']
+  /**
+   * Cache key for the suggestion query. Defaults to the field name — pass an
+   * explicit key when the same field name searches different datasets (e.g.
+   * private customers vs. a company's contacts).
+   */
+  searchKey?: string
+  /**
+   * Minimum query length before suggestions are fetched/shown. 0 turns the
+   * field into a dropdown: focusing it lists everything `onSearch('')`
+   * returns, before any typing.
+   */
+  minChars?: number
   onSearch: (query: string) => Promise<T[]>
   onSelect: (item: T) => void
   renderSuggestion: (item: T) => React.ReactNode
@@ -44,6 +56,8 @@ export default function AutocompleteField<T extends { id: number }>({
   type = 'text',
   disabled,
   autoComplete = 'off',
+  searchKey,
+  minChars = 1,
   onSearch,
   onSelect,
   renderSuggestion,
@@ -60,9 +74,9 @@ export default function AutocompleteField<T extends { id: number }>({
   } | null>(null)
 
   const { data: suggestions = [] } = useQuery({
-    queryKey: [field.name, debouncedValue],
+    queryKey: [searchKey ?? field.name, debouncedValue],
     queryFn: () => onSearch(debouncedValue),
-    enabled: debouncedValue.length >= 1,
+    enabled: debouncedValue.length >= minChars,
     staleTime: 1000 * 10,
   })
 
@@ -112,11 +126,14 @@ export default function AutocompleteField<T extends { id: number }>({
             onChange={(e) => {
               field.handleChange(e.target.value)
               setHighlightedIndex(-1)
-              if (e.target.value.length >= 1) {
+              if (e.target.value.length >= Math.max(minChars, 1)) {
                 setShowSuggestions(true)
               } else {
-                setShowSuggestions(false)
+                setShowSuggestions(minChars === 0)
               }
+            }}
+            onFocus={() => {
+              if (minChars === 0) setShowSuggestions(true)
             }}
             onBlur={() => {
               field.handleBlur()

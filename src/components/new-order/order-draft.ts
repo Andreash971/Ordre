@@ -13,14 +13,19 @@ import type {
   DeliveryValues,
 } from '@/lib/order-utils'
 import type { SpecialItemKey, SpecialItemsSettings } from '@/lib/settings'
+import type { CustomerSelection, CustomerType } from '@shared/customers'
 import { toIsoDate } from '@/lib/format'
 
-/** A recipient carries the id of the saved customer it was loaded from. */
-export type Recipient = Customer & { customerId: number | null }
+function emptySelection(type: CustomerType): CustomerSelection {
+  return { type, customerId: null, contactId: null }
+}
+
+/** A recipient carries which saved customer/contact it was loaded from. */
+export type Recipient = Customer & { selection: CustomerSelection }
 
 export type OrderDraft = {
   sender: CustomerFormValues
-  senderId: number | null
+  senderSelection: CustomerSelection
   delivery: DeliveryValues
   showTime: boolean
   card: { enabled: boolean; text: string }
@@ -62,7 +67,7 @@ export const EMPTY_SENDER: CustomerFormValues = {
 
 export type OrderDraftAction =
   | { type: 'setSender'; values: CustomerFormValues }
-  | { type: 'setSenderId'; id: number | null }
+  | { type: 'setSenderSelection'; selection: CustomerSelection }
   | { type: 'patchDelivery'; patch: Partial<DeliveryValues> }
   | { type: 'setShowTime'; value: boolean; specialItems: SpecialItemsSettings }
   | {
@@ -80,9 +85,13 @@ export type OrderDraftAction =
       specialItems: SpecialItemsSettings
     }
   | { type: 'specialRemoved'; key: SpecialItemKey }
-  | { type: 'addRecipient' }
+  | { type: 'addRecipient'; customerType: CustomerType }
   | { type: 'patchRecipient'; index: number; patch: Partial<Customer> }
-  | { type: 'setRecipientId'; index: number; id: number | null }
+  | {
+      type: 'setRecipientSelection'
+      index: number
+      selection: CustomerSelection
+    }
   | { type: 'removeRecipient'; index: number }
 
 function specialRow(
@@ -113,9 +122,9 @@ function withoutSpecialRow(items: Item[], key: SpecialItemKey): Item[] {
 }
 
 /** New recipient inheriting the current shared defaults. */
-function emptyRecipient(draft: OrderDraft): Recipient {
+function emptyRecipient(draft: OrderDraft, type: CustomerType): Recipient {
   return {
-    customerId: null,
+    selection: emptySelection(type),
     name: '',
     phone: '',
     company: '',
@@ -132,10 +141,16 @@ function emptyRecipient(draft: OrderDraft): Recipient {
   }
 }
 
-export function initOrderDraft(specialItems: SpecialItemsSettings): OrderDraft {
+export function initOrderDraft({
+  specialItems,
+  senderType,
+}: {
+  specialItems: SpecialItemsSettings
+  senderType: CustomerType
+}): OrderDraft {
   return {
     sender: EMPTY_SENDER,
-    senderId: null,
+    senderSelection: emptySelection(senderType),
     delivery: {
       date: toIsoDate(),
       time: null,
@@ -157,8 +172,8 @@ export function orderDraftReducer(
   switch (action.type) {
     case 'setSender':
       return { ...draft, sender: action.values }
-    case 'setSenderId':
-      return { ...draft, senderId: action.id }
+    case 'setSenderSelection':
+      return { ...draft, senderSelection: action.selection }
     case 'patchDelivery':
       return { ...draft, delivery: { ...draft.delivery, ...action.patch } }
     case 'setShowTime':
@@ -241,7 +256,10 @@ export function orderDraftReducer(
     case 'addRecipient':
       return {
         ...draft,
-        recipients: [...draft.recipients, emptyRecipient(draft)],
+        recipients: [
+          ...draft.recipients,
+          emptyRecipient(draft, action.customerType),
+        ],
       }
     case 'patchRecipient':
       return {
@@ -250,11 +268,11 @@ export function orderDraftReducer(
           i === action.index ? { ...r, ...action.patch } : r,
         ),
       }
-    case 'setRecipientId':
+    case 'setRecipientSelection':
       return {
         ...draft,
         recipients: draft.recipients.map((r, i) =>
-          i === action.index ? { ...r, customerId: action.id } : r,
+          i === action.index ? { ...r, selection: action.selection } : r,
         ),
       }
     case 'removeRecipient':

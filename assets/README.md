@@ -8,19 +8,19 @@ should ship with the full set.
 
 ## Required files
 
-| File                    | Purpose                                          | Format                                            |
-| ----------------------- | ------------------------------------------------ | ------------------------------------------------- |
-| `icon.png`              | 1024×1024 master source (kept for regenerating)  | PNG with alpha                                    |
-| `icon.icns`             | macOS app bundle icon                            | `.icns` containing 16/32/64/128/256/512/1024 px   |
-| `icon.ico`              | Windows app + Squirrel installer icon            | `.ico` containing 16/24/32/48/64/128/256 px       |
-| `entitlements.mac.plist`| Hardened-runtime entitlements (committed)        | Apple plist                                       |
+| File                     | Purpose                                         | Format                                          |
+| ------------------------ | ----------------------------------------------- | ----------------------------------------------- |
+| `icon.png`               | 1024×1024 master source (kept for regenerating) | PNG with alpha                                  |
+| `icon.icns`              | macOS app bundle icon                           | `.icns` containing 16/32/64/128/256/512/1024 px |
+| `icon.ico`               | Windows app + Squirrel installer icon           | `.ico` containing 16/24/32/48/64/128/256 px     |
+| `entitlements.mac.plist` | Hardened-runtime entitlements (committed)       | Apple plist                                     |
 
 ## Optional files
 
-| File                       | Purpose                                  |
-| -------------------------- | ---------------------------------------- |
-| `installer-loading.gif`    | Animation shown during Squirrel install  |
-| `dmg-background.png`       | 540×380 DMG background (if DMG maker added) |
+| File                    | Purpose                                     |
+| ----------------------- | ------------------------------------------- |
+| `installer-loading.gif` | Animation shown during Squirrel install     |
+| `dmg-background.png`    | 540×380 DMG background (if DMG maker added) |
 
 ## Generating from a single PNG
 

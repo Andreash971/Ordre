@@ -115,4 +115,30 @@ describe('buildOrderData', () => {
       company: '',
     })
   })
+
+  it('snapshots a business recipient: the company with the chosen representative as contact', () => {
+    // A business recipient arrives as the same flat shape: company fields
+    // from the company row, name/phone from the selected representative.
+    const data = buildOrderData(
+      {
+        ...baseCustomer,
+        name: 'Nina Berg',
+        phone: '90011223',
+        company: 'Fjellblomst AS',
+        address: 'Bergveien 2',
+        postcode: '5003',
+        city: 'Bergen',
+      },
+      null,
+      delivery,
+      items,
+    )
+    expect(data.receiver).toMatchObject({
+      name: 'Nina Berg',
+      company: 'Fjellblomst AS',
+      address: 'Bergveien 2',
+      postCode: '5003 Bergen',
+      phone: '90011223',
+    })
+  })
 })

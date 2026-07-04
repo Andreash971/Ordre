@@ -3,12 +3,26 @@ import type { OrderData, OrderSource } from '../../shared/orders'
 
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  // 'private' (a person; company = employer) or 'business' (the row is the
+  // company; name mirrors company, representatives live in `contacts`).
+  type: text('type').notNull().default('private'),
   name: text('name').notNull(),
   phone: text('phone'),
   company: text('company'),
   address: text('address'),
   postcode: text('postcode'),
   city: text('city'),
+  careof: text('careof'),
+})
+
+/** Representatives (points of contact) for business customers. */
+export const contacts = sqliteTable('contacts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  customerId: integer('customer_id')
+    .notNull()
+    .references(() => customers.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  phone: text('phone'),
   careof: text('careof'),
 })
 

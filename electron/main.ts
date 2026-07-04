@@ -4,6 +4,7 @@ import started from 'electron-squirrel-startup'
 import { initUpdater, registerUpdateHandlers } from './updater'
 import { runMigrations } from './db'
 import { registerCustomerHandlers } from './ipc/customers'
+import { registerContactHandlers } from './ipc/contacts'
 import { registerProductHandlers } from './ipc/products'
 import { registerBringHandlers } from './ipc/bring'
 import {
@@ -113,6 +114,7 @@ app.whenReady().then(async () => {
   // Upgrade secrets persisted in plaintext by older app versions.
   await encryptStoredSecretsAtRest()
   registerCustomerHandlers()
+  registerContactHandlers()
   registerProductHandlers()
   registerOrderHandlers()
   registerBringHandlers()

@@ -8,14 +8,14 @@ Built as an Electron app with a React + TanStack renderer and a SQLite (Drizzle)
 
 ## Stack
 
-| Layer        | Tech                                                                |
-| ------------ | ------------------------------------------------------------------- |
-| Shell        | Electron 33 (sandboxed renderer, context isolation, strict CSP)     |
-| Renderer     | React 19, TanStack Router / Query / Form / Table / DB, Tailwind v4  |
-| UI           | shadcn/ui + Radix primitives, Lucide icons                          |
-| Database     | SQLite via `better-sqlite3`, schema and migrations with Drizzle ORM |
-| PDF          | `@react-pdf/renderer`                                               |
-| Build / pack | Vite (renderer), `tsc` (main), Electron Forge (installers)          |
+| Layer        | Tech                                                                    |
+| ------------ | ----------------------------------------------------------------------- |
+| Shell        | Electron 33 (sandboxed renderer, context isolation, strict CSP)         |
+| Renderer     | React 19, TanStack Router / Query / Form / Table / DB, Tailwind v4      |
+| UI           | shadcn/ui + Radix primitives, Lucide icons                              |
+| Database     | SQLite via `better-sqlite3`, schema and migrations with Drizzle ORM     |
+| PDF          | `@react-pdf/renderer`                                                   |
+| Build / pack | Vite (renderer), `tsc` (main), Electron Forge (installers)              |
 | Updates      | `update-electron-app` against `update.electronjs.org` (GitHub Releases) |
 
 ## Project layout

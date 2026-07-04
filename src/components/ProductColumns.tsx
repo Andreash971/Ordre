@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Eye, MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
+import { MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useDataTableSheet } from '@/components/ui/DataTable'
@@ -21,19 +21,27 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-import type { AddProductFormValues } from '@/components/AddProductForm'
-import AddProductForm from '@/components/AddProductForm'
 import type { Product } from '@shared/products'
 import { formatNok } from '@/lib/format'
-import { deleteProduct, updateProduct } from '@/lib/product-server-fns'
+import { deleteProduct } from '@/lib/product-server-fns'
 import { queryKeys } from '@/lib/query-keys'
 
 export type { Product }
 
-function ProductActionsCell({ row }: { row: Row<Product> }) {
+export type ProductColumnCallbacks = {
+  /** Open the detail/edit sheet for a product. */
+  onOpen: (product: Product) => void
+}
+
+function ProductActionsCell({
+  row,
+  callbacks,
+}: {
+  row: Row<Product>
+  callbacks: ProductColumnCallbacks
+}) {
   const queryClient = useQueryClient()
-  const { isInSheet, openSheet, closeSheet } = useDataTableSheet()
-  const [editOpen, setEditOpen] = useState(false)
+  const { isInSheet, closeSheet } = useDataTableSheet()
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const deleteMutation = useMutation({
@@ -42,26 +50,9 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
   })
 
-  const updateMutation = useMutation({
-    mutationFn: (values: AddProductFormValues) =>
-      updateProduct({
-        data: { id: row.original.id, ...values, price: Number(values.price) },
-      }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
-  })
-
-  const defaultValues: AddProductFormValues = {
-    name: row.original.name,
-    category: row.original.category,
-    price: String(row.original.price),
-    description: row.original.description ?? '',
-  }
-
-  async function handleEdit(values: AddProductFormValues) {
-    await updateMutation.mutateAsync(values)
-    setEditOpen(false)
+  function openEditor() {
     if (isInSheet) closeSheet()
+    callbacks.onOpen(row.original)
   }
 
   async function handleConfirmDelete() {
@@ -74,7 +65,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
     <>
       {isInSheet ? (
         <>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" size="sm" onClick={openEditor}>
             <SquarePen />
             Rediger
           </Button>
@@ -96,11 +87,7 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => openSheet(row.id)}>
-              <Eye />
-              Vis
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <DropdownMenuItem onSelect={openEditor}>
               <SquarePen />
               Rediger
             </DropdownMenuItem>
@@ -114,22 +101,6 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Rediger vare</DialogTitle>
-            <DialogDescription>Oppdater vareinformasjonen.</DialogDescription>
-          </DialogHeader>
-          <AddProductForm
-            saveText="Lagre"
-            close
-            disabled={updateMutation.isPending}
-            defaultValues={defaultValues}
-            onSubmit={handleEdit}
-          />
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
@@ -161,36 +132,40 @@ function ProductActionsCell({ row }: { row: Row<Product> }) {
   )
 }
 
-export const productColumns: ColumnDef<Product>[] = [
-  {
-    accessorKey: 'name',
-    header: 'Vare',
-    meta: { priority: 'primary', truncate: true, className: 'max-w-[20rem]' },
-    cell: ({ row }) => (
-      <div className="flex flex-col min-w-0">
-        <span className="font-medium truncate">{row.original.name}</span>
-        {row.original.description ? (
-          <span className="text-xs text-muted-foreground truncate">
-            {row.original.description}
-          </span>
-        ) : null}
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'category',
-    header: 'Kategori',
-    meta: { truncate: true, className: 'max-w-[10rem]' },
-  },
-  {
-    accessorKey: 'price',
-    header: 'Pris',
-    cell: ({ row }) => <div>{formatNok(Number(row.original.price))}</div>,
-  },
-  {
-    id: 'actions',
-    header: '',
-    meta: { className: 'w-0 whitespace-nowrap', action: true },
-    cell: ({ row }) => <ProductActionsCell row={row} />,
-  },
-]
+export function buildProductColumns(
+  callbacks: ProductColumnCallbacks,
+): ColumnDef<Product>[] {
+  return [
+    {
+      accessorKey: 'name',
+      header: 'Vare',
+      meta: { priority: 'primary', truncate: true, className: 'max-w-[20rem]' },
+      cell: ({ row }) => (
+        <div className="flex flex-col min-w-0">
+          <span className="font-medium truncate">{row.original.name}</span>
+          {row.original.description ? (
+            <span className="text-xs text-muted-foreground truncate">
+              {row.original.description}
+            </span>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'category',
+      header: 'Kategori',
+      meta: { truncate: true, className: 'max-w-[10rem]' },
+    },
+    {
+      accessorKey: 'price',
+      header: 'Pris',
+      cell: ({ row }) => <div>{formatNok(Number(row.original.price))}</div>,
+    },
+    {
+      id: 'actions',
+      header: '',
+      meta: { className: 'w-0 whitespace-nowrap', action: true },
+      cell: ({ row }) => <ProductActionsCell row={row} callbacks={callbacks} />,
+    },
+  ]
+}

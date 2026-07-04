@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, Fragment, useContext, useMemo, useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -70,6 +70,15 @@ interface DataTableProps<TData, TValue> {
   pageSize?: number
   rowClassName?: (row: Row<TData>) => string | undefined
   onRowClick?: (row: Row<TData>) => void
+  /**
+   * Extra rows rendered directly below a data row (e.g. a company's
+   * representatives). Receives how many columns are currently visible so the
+   * sub-rows can span them.
+   */
+  renderSubRows?: (
+    row: Row<TData>,
+    visibleColumnCount: number,
+  ) => React.ReactNode
   meta?: Record<string, unknown>
   className?: string
 }
@@ -85,6 +94,7 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   rowClassName,
   onRowClick,
+  renderSubRows,
   meta: extraMeta,
   className,
 }: DataTableProps<TData, TValue>) {
@@ -234,55 +244,63 @@ export function DataTable<TData, TValue>({
                         ? () => onRowClick(row)
                         : undefined
                     const clickable = Boolean(handleRowClick)
+                    const visibleColumnCount = isMobile
+                      ? mobilePrimaryIds.size + 1
+                      : row.getVisibleCells().length
                     return (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && 'selected'}
-                        onClick={handleRowClick}
-                        className={cn(
-                          clickable && 'cursor-pointer',
-                          extraRowClass,
-                        )}
-                      >
-                        {row
-                          .getVisibleCells()
-                          .filter(
-                            (cell) =>
-                              !isMobile ||
-                              isColumnVisibleOnMobile(cell.column.id),
-                          )
-                          .map((cell) => {
-                            const meta = cell.column.columnDef.meta
-                            const rendered = flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
+                      <Fragment key={row.id}>
+                        <TableRow
+                          data-state={row.getIsSelected() && 'selected'}
+                          onClick={handleRowClick}
+                          className={cn(
+                            clickable && 'cursor-pointer',
+                            extraRowClass,
+                          )}
+                        >
+                          {row
+                            .getVisibleCells()
+                            .filter(
+                              (cell) =>
+                                !isMobile ||
+                                isColumnVisibleOnMobile(cell.column.id),
                             )
-                            const truncateDesktop = meta?.truncate && !isMobile
-                            return (
-                              <TableCell
-                                key={cell.id}
-                                className={
-                                  truncateDesktop ? undefined : meta?.className
-                                }
-                              >
-                                {truncateDesktop ? (
-                                  <div
-                                    className={cn('truncate', meta.className)}
-                                  >
-                                    {rendered}
-                                  </div>
-                                ) : (
-                                  rendered
-                                )}
-                              </TableCell>
-                            )
-                          })}
-                        {isMobile && (
-                          <TableCell className="w-0 pr-3 text-muted-foreground">
-                            <ChevronRight className="size-4" />
-                          </TableCell>
-                        )}
-                      </TableRow>
+                            .map((cell) => {
+                              const meta = cell.column.columnDef.meta
+                              const rendered = flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )
+                              const truncateDesktop =
+                                meta?.truncate && !isMobile
+                              return (
+                                <TableCell
+                                  key={cell.id}
+                                  className={
+                                    truncateDesktop
+                                      ? undefined
+                                      : meta?.className
+                                  }
+                                >
+                                  {truncateDesktop ? (
+                                    <div
+                                      className={cn('truncate', meta.className)}
+                                    >
+                                      {rendered}
+                                    </div>
+                                  ) : (
+                                    rendered
+                                  )}
+                                </TableCell>
+                              )
+                            })}
+                          {isMobile && (
+                            <TableCell className="w-0 pr-3 text-muted-foreground">
+                              <ChevronRight className="size-4" />
+                            </TableCell>
+                          )}
+                        </TableRow>
+                        {renderSubRows?.(row, visibleColumnCount)}
+                      </Fragment>
                     )
                   })
                 ) : (

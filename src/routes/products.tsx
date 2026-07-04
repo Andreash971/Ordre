@@ -21,7 +21,9 @@ import {
 import type { AddProductFormValues } from '@/components/AddProductForm'
 import AddProductForm from '@/components/AddProductForm'
 import CategorySelect from '@/components/CategorySelect'
-import { productColumns } from '@/components/ProductColumns'
+import { buildProductColumns } from '@/components/ProductColumns'
+import { ProductSheet } from '@/components/ProductSheet'
+import type { Product } from '@shared/products'
 import { getAllProducts, insertProduct } from '@/lib/product-server-fns'
 import { queryKeys } from '@/lib/query-keys'
 import { useSettings } from '@/lib/store-hooks'
@@ -35,6 +37,7 @@ function ProductsPage() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [category, setCategory] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const [sheetProductId, setSheetProductId] = useState<number | null>(null)
   const pageSize = useSettings().rowsPerPage
 
   const { data = [] } = useQuery({
@@ -54,6 +57,20 @@ function ProductsPage() {
     if (!category) return data
     return data.filter((p) => p.category === category)
   }, [data, category])
+
+  // Resolved from live query data so the sheet reflects edits immediately.
+  const sheetProduct =
+    sheetProductId !== null
+      ? (data.find((p) => p.id === sheetProductId) ?? null)
+      : null
+
+  const columns = useMemo(
+    () =>
+      buildProductColumns({
+        onOpen: (product: Product) => setSheetProductId(product.id),
+      }),
+    [],
+  )
 
   const addMutation = useMutation({
     mutationFn: (values: AddProductFormValues) =>
@@ -121,12 +138,13 @@ function ProductsPage() {
         </Button>
       </div>
       <DataTable
-        columns={productColumns}
+        columns={columns}
         data={filtered}
         globalFilter={globalFilter}
         emptyMessage="Ingen varer funnet."
         pagination
         pageSize={pageSize}
+        onRowClick={(row) => setSheetProductId(row.original.id)}
       />
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -144,6 +162,13 @@ function ProductsPage() {
           />
         </DialogContent>
       </Dialog>
+
+      <ProductSheet
+        product={sheetProduct}
+        onOpenChange={(open) => {
+          if (!open) setSheetProductId(null)
+        }}
+      />
     </main>
   )
 }

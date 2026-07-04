@@ -12,13 +12,13 @@ function countRows(draft: OrderDraft, key: string): number {
 
 describe('orderDraftReducer — special items', () => {
   it('starts with exactly one frakt row', () => {
-    const draft = initOrderDraft(specialItems)
+    const draft = initOrderDraft({ specialItems, senderType: 'private' })
     expect(countRows(draft, 'frakt')).toBe(1)
     expect(draft.items).toHaveLength(1)
   })
 
   it('adds the leveringstid row exactly once when showTime toggles on', () => {
-    let draft = initOrderDraft(specialItems)
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     draft = orderDraftReducer(draft, {
       type: 'setShowTime',
       value: true,
@@ -39,7 +39,7 @@ describe('orderDraftReducer — special items', () => {
   })
 
   it('removes the leveringstid row when showTime toggles off', () => {
-    let draft = initOrderDraft(specialItems)
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     draft = orderDraftReducer(draft, {
       type: 'setShowTime',
       value: true,
@@ -55,7 +55,7 @@ describe('orderDraftReducer — special items', () => {
   })
 
   it('specialPicked kort enables the card and never duplicates an existing row', () => {
-    let draft = initOrderDraft(specialItems)
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     // Simulate the picker path: OrderItems adds the row first, then reports.
     draft = orderDraftReducer(draft, {
       type: 'updateItems',
@@ -80,7 +80,7 @@ describe('orderDraftReducer — special items', () => {
   })
 
   it('specialRemoved kort disables the card, clears its text, and drops the row', () => {
-    let draft = initOrderDraft(specialItems)
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     draft = orderDraftReducer(draft, {
       type: 'setCardEnabled',
       value: true,
@@ -93,7 +93,7 @@ describe('orderDraftReducer — special items', () => {
   })
 
   it('toggling the card off keeps the text (only explicit removal clears it)', () => {
-    let draft = initOrderDraft(specialItems)
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     draft = orderDraftReducer(draft, {
       type: 'setCardEnabled',
       value: true,
@@ -112,7 +112,7 @@ describe('orderDraftReducer — special items', () => {
 
 describe('orderDraftReducer — recipients', () => {
   it('new recipients inherit the current shared defaults', () => {
-    let draft = initOrderDraft(specialItems)
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     draft = orderDraftReducer(draft, {
       type: 'patchDelivery',
       patch: { date: '2026-07-10', leaveDoor: true },
@@ -126,22 +126,34 @@ describe('orderDraftReducer — recipients', () => {
       type: 'setCardText',
       value: 'Gratulerer',
     })
-    draft = orderDraftReducer(draft, { type: 'addRecipient' })
+    draft = orderDraftReducer(draft, {
+      type: 'addRecipient',
+      customerType: 'private',
+    })
 
     expect(draft.recipients).toHaveLength(1)
     expect(draft.recipients[0]).toMatchObject({
-      customerId: null,
+      selection: { type: 'private', customerId: null, contactId: null },
       date: '2026-07-10',
       leaveDoor: true,
       cardmsg: 'Gratulerer',
     })
   })
 
-  it('keeps customerId attached to the right recipient through patch and remove', () => {
-    let draft = initOrderDraft(specialItems)
-    draft = orderDraftReducer(draft, { type: 'addRecipient' })
-    draft = orderDraftReducer(draft, { type: 'addRecipient' })
-    draft = orderDraftReducer(draft, { type: 'addRecipient' })
+  it('keeps the selection attached to the right recipient through patch and remove', () => {
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
+    draft = orderDraftReducer(draft, {
+      type: 'addRecipient',
+      customerType: 'private',
+    })
+    draft = orderDraftReducer(draft, {
+      type: 'addRecipient',
+      customerType: 'private',
+    })
+    draft = orderDraftReducer(draft, {
+      type: 'addRecipient',
+      customerType: 'private',
+    })
 
     draft = orderDraftReducer(draft, {
       type: 'patchRecipient',
@@ -159,27 +171,32 @@ describe('orderDraftReducer — recipients', () => {
       patch: { name: 'Clara' },
     })
     draft = orderDraftReducer(draft, {
-      type: 'setRecipientId',
+      type: 'setRecipientSelection',
       index: 1,
-      id: 42,
+      selection: { type: 'private', customerId: 42, contactId: null },
     })
 
     // Removing the first recipient must not shift Bjørn's id onto Clara.
     draft = orderDraftReducer(draft, { type: 'removeRecipient', index: 0 })
 
-    expect(draft.recipients.map((r) => [r.name, r.customerId])).toEqual([
+    expect(
+      draft.recipients.map((r) => [r.name, r.selection.customerId]),
+    ).toEqual([
       ['Bjørn', 42],
       ['Clara', null],
     ])
   })
 
-  it('patching a recipient does not clobber its customerId', () => {
-    let draft = initOrderDraft(specialItems)
-    draft = orderDraftReducer(draft, { type: 'addRecipient' })
+  it('patching a recipient does not clobber its selection', () => {
+    let draft = initOrderDraft({ specialItems, senderType: 'private' })
     draft = orderDraftReducer(draft, {
-      type: 'setRecipientId',
+      type: 'addRecipient',
+      customerType: 'private',
+    })
+    draft = orderDraftReducer(draft, {
+      type: 'setRecipientSelection',
       index: 0,
-      id: 7,
+      selection: { type: 'business', customerId: 7, contactId: 3 },
     })
     draft = orderDraftReducer(draft, {
       type: 'patchRecipient',
@@ -189,7 +206,7 @@ describe('orderDraftReducer — recipients', () => {
     expect(draft.recipients[0]).toMatchObject({
       name: 'Ola',
       phone: '99887766',
-      customerId: 7,
+      selection: { type: 'business', customerId: 7, contactId: 3 },
     })
   })
 })

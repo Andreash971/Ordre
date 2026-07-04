@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button'
 import { pickCustomerFormValues } from '@/lib/order-utils'
 import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
 import type { CustomerFormValues } from '@/lib/order-utils'
+import type { CustomerSelection } from '@shared/customers'
+import { resolveCustomerTypeDefault } from '@shared/settings'
 import { useSettings } from '@/lib/store-hooks'
 import { isSpecial } from '@/lib/special-items'
 import {
@@ -28,7 +30,7 @@ import {
 } from '@/components/new-order/order-draft'
 
 function isSenderFilled(s: CustomerFormValues) {
-  return Boolean(s.name || s.phone || s.address)
+  return Boolean(s.name || s.phone || s.address || s.company)
 }
 
 export const Route = createFileRoute('/new')({ component: NewOrderPage })
@@ -38,9 +40,17 @@ function NewOrderPage() {
   const autoSaveCustomer = settings.autoSaveCustomer
   const saveCustomerMutation = useSaveCustomerMutation()
 
+  const recipientDefaultType = resolveCustomerTypeDefault(
+    settings,
+    'recipientForm',
+  )
+
   const [draft, dispatch] = React.useReducer(
     orderDraftReducer,
-    settings.specialItems,
+    {
+      specialItems: settings.specialItems,
+      senderType: resolveCustomerTypeDefault(settings, 'senderForm'),
+    },
     initOrderDraft,
   )
 
@@ -63,15 +73,15 @@ function NewOrderPage() {
 
     const targets: Array<{
       values: CustomerFormValues
-      id: number | null
+      selection: CustomerSelection
     }> = []
     if (isSenderFilled(draft.sender)) {
-      targets.push({ values: draft.sender, id: draft.senderId })
+      targets.push({ values: draft.sender, selection: draft.senderSelection })
     }
     for (const r of draft.recipients) {
       const values = pickCustomerFormValues(r)
       if (isSenderFilled(values)) {
-        targets.push({ values, id: r.customerId })
+        targets.push({ values, selection: r.selection })
       }
     }
 
@@ -91,7 +101,7 @@ function NewOrderPage() {
   }, [
     autoSaveCustomer,
     draft.sender,
-    draft.senderId,
+    draft.senderSelection,
     draft.recipients,
     saveCustomerMutation,
   ])
@@ -117,10 +127,13 @@ function NewOrderPage() {
           <CustomerFormCard
             showSaveButton={!autoSaveCustomer}
             defaultValues={draft.sender}
+            defaultSelection={draft.senderSelection}
             onValuesChange={(values) => dispatch({ type: 'setSender', values })}
-            onIdChange={(id) => dispatch({ type: 'setSenderId', id })}
-            onSubmit={(values, { id }) =>
-              saveCustomerMutation.mutateAsync({ values, id })
+            onSelectionChange={(selection) =>
+              dispatch({ type: 'setSenderSelection', selection })
+            }
+            onSubmit={(values, { selection }) =>
+              saveCustomerMutation.mutateAsync({ values, selection })
             }
           />
         </OrderSection>
@@ -166,6 +179,7 @@ function NewOrderPage() {
           draft={draft}
           dispatch={dispatch}
           autoSaveCustomer={autoSaveCustomer}
+          defaultCustomerType={recipientDefaultType}
         />
       </OrderSection>
 

@@ -5,6 +5,7 @@ import {
   DEFAULT_SPECIAL_ITEMS,
   mergeSettings,
   migrateSettings,
+  resolveCustomerTypeDefault,
 } from './settings'
 
 describe('migrateSettings', () => {
@@ -95,5 +96,49 @@ describe('mergeSettings', () => {
     })
     expect(next.quickSelect.cardSignatures).toEqual(['Hilsen C'])
     expect(next.quickSelect.instructionSuggestions).toEqual([])
+  })
+})
+
+describe('customerTypeDefaults', () => {
+  it('migrates older settings without the field to private everywhere', () => {
+    const migrated = migrateSettings({ rowsPerPage: 25 })
+    expect(migrated.customerTypeDefaults).toEqual({
+      global: 'private',
+      perLocation: false,
+      locations: {
+        senderForm: 'private',
+        recipientForm: 'private',
+        customersPage: 'private',
+      },
+    })
+  })
+
+  it('deep-merges partial updates to one location', () => {
+    const merged = mergeSettings(DEFAULT_SETTINGS, {
+      customerTypeDefaults: { locations: { customersPage: 'business' } },
+    })
+    expect(merged.customerTypeDefaults.locations).toEqual({
+      senderForm: 'private',
+      recipientForm: 'private',
+      customersPage: 'business',
+    })
+    expect(merged.customerTypeDefaults.global).toBe('private')
+  })
+
+  it('resolves the global default unless perLocation is on', () => {
+    const global = mergeSettings(DEFAULT_SETTINGS, {
+      customerTypeDefaults: {
+        global: 'business',
+        locations: { senderForm: 'private' },
+      },
+    })
+    expect(resolveCustomerTypeDefault(global, 'senderForm')).toBe('business')
+
+    const perLocation = mergeSettings(global, {
+      customerTypeDefaults: { perLocation: true },
+    })
+    expect(resolveCustomerTypeDefault(perLocation, 'senderForm')).toBe(
+      'private',
+    )
   })
 })

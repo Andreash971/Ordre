@@ -35,9 +35,11 @@ import { formatDeliveryDate, pickCustomerFormValues } from '@/lib/order-utils'
 import { toIsoDate } from '@/lib/format'
 import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
 import type { Customer, CustomerFormValues } from '@/lib/order-utils'
+import type { CustomerSelection, CustomerType } from '@shared/customers'
 import type {
   OrderDraft,
   OrderDraftAction,
+  Recipient,
   SharedOrderDefaults,
 } from '@/components/new-order/order-draft'
 import { sharedDefaults } from '@/components/new-order/order-draft'
@@ -46,6 +48,8 @@ interface RecipientListProps {
   draft: OrderDraft
   dispatch: React.Dispatch<OrderDraftAction>
   autoSaveCustomer: boolean
+  /** Customer type new recipients start on (from settings). */
+  defaultCustomerType: CustomerType
 }
 
 /** Number of fields a recipient overrides vs. the shared (master) defaults. */
@@ -68,6 +72,7 @@ export default function RecipientList({
   draft,
   dispatch,
   autoSaveCustomer,
+  defaultCustomerType,
 }: RecipientListProps) {
   const recipients = draft.recipients
   const defaults = sharedDefaults(draft)
@@ -75,11 +80,11 @@ export default function RecipientList({
   const saveCustomerMutation = useSaveCustomerMutation()
   const saveCustomer = (
     values: CustomerFormValues,
-    ctx: { id: number | null },
-  ) => saveCustomerMutation.mutateAsync({ values, id: ctx.id })
+    ctx: { selection: CustomerSelection },
+  ) => saveCustomerMutation.mutateAsync({ values, selection: ctx.selection })
 
   const addRecipient = () => {
-    dispatch({ type: 'addRecipient' })
+    dispatch({ type: 'addRecipient', customerType: defaultCustomerType })
     setExpanded(recipients.length)
   }
 
@@ -92,8 +97,11 @@ export default function RecipientList({
     dispatch({ type: 'patchRecipient', index, patch })
   }
 
-  const updateRecipientId = (index: number, id: number | null) => {
-    dispatch({ type: 'setRecipientId', index, id })
+  const updateRecipientSelection = (
+    index: number,
+    selection: CustomerSelection,
+  ) => {
+    dispatch({ type: 'setRecipientSelection', index, selection })
   }
 
   function titleButton() {
@@ -143,7 +151,9 @@ export default function RecipientList({
           onChange={(patch) => updateRecipient(i, patch)}
           onRemove={() => removeRecipient(i)}
           onSaveCustomer={saveCustomer}
-          onIdChange={(id) => updateRecipientId(i, id)}
+          onSelectionChange={(selection) =>
+            updateRecipientSelection(i, selection)
+          }
           hideSaveButton={autoSaveCustomer}
           defaults={defaults}
         />
@@ -162,16 +172,16 @@ export default function RecipientList({
 
 interface RecipientRowProps {
   index: number
-  value: Customer
+  value: Recipient
   expanded: boolean
   onExpand: () => void
   onChange: (patch: Partial<Customer>) => void
   onRemove: () => void
   onSaveCustomer: (
     values: CustomerFormValues,
-    ctx: { id: number | null },
+    ctx: { selection: CustomerSelection },
   ) => Promise<void>
-  onIdChange: (id: number | null) => void
+  onSelectionChange: (selection: CustomerSelection) => void
   hideSaveButton: boolean
   defaults: SharedOrderDefaults
 }
@@ -184,7 +194,7 @@ function RecipientRow({
   onChange,
   onRemove,
   onSaveCustomer,
-  onIdChange,
+  onSelectionChange,
   hideSaveButton,
   defaults,
 }: RecipientRowProps) {
@@ -194,6 +204,12 @@ function RecipientRow({
 
   const customerDefaults: Partial<CustomerFormValues> =
     pickCustomerFormValues(value)
+
+  // Business recipients are company-first; the name is the representative.
+  const title =
+    value.selection.type === 'business'
+      ? [value.company, value.name].filter(Boolean).join(' – ')
+      : value.name
 
   return (
     <div
@@ -212,7 +228,7 @@ function RecipientRow({
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">
-            {value.name || `Mottaker ${index + 1}`}
+            {title || `Mottaker ${index + 1}`}
           </div>
           <div className="truncate text-xs text-muted-foreground">
             {value.address || 'Ingen adresse'}
@@ -253,8 +269,9 @@ function RecipientRow({
         <div className="grid grid-cols-[15rem_1fr] grid-rows-[auto_auto] gap-4 border-t px-4 pb-4 pt-4">
           <CustomerFields
             defaultValues={customerDefaults}
+            defaultSelection={value.selection}
             onValuesChange={(v) => onChange(v)}
-            onIdChange={onIdChange}
+            onSelectionChange={onSelectionChange}
             onSubmit={onSaveCustomer}
             footer={
               hideSaveButton

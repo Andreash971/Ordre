@@ -1,6 +1,6 @@
 import { useForm, useStore } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import * as z from 'zod'
 
 import {
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import { FieldGroup } from '@/components/ui/field'
 import { DialogClose } from '@/components/ui/dialog'
 
@@ -21,6 +22,12 @@ import AutocompleteField from '@/components/AutocompleteField'
 import FormInputField from '@/components/FormInputField'
 import { lookupPostcode, suggestAddresses } from '@/lib/bring-server-fns'
 import type { AddressSuggestion } from '@/lib/bring-server-fns'
+import type {
+  CustomerSuggestion,
+  CustomerType,
+} from '@/lib/customer-server-fns'
+import { searchCustomersByBusiness } from '@/lib/customer-server-fns'
+import type { CustomerSelection } from '@shared/customers'
 import { queryKeys } from '@/lib/query-keys'
 
 export type AddCustomerFormValues = {
@@ -39,7 +46,25 @@ interface AddCustomerFormProps {
   reset?: boolean
   close?: boolean
   defaultValues?: Partial<AddCustomerFormValues>
-  onSubmit: (values: AddCustomerFormValues) => Promise<void> | void
+  defaultType?: CustomerType
+  /** Show the Privat/Firma tab; disable when editing (type is fixed). */
+  allowTypeSwitch?: boolean
+  /**
+   * Business only: include representative fields (name/phone/careof) so a new
+   * company is created with its first contact. Off when editing a company —
+   * representatives are managed on the company's detail sheet.
+   */
+  withRepresentative?: boolean
+  /**
+   * Business only: let the company field autocomplete against existing
+   * business customers. Selecting one turns the submit into "add a
+   * representative to that company" instead of creating a new one.
+   */
+  allowExistingCompany?: boolean
+  onSubmit: (
+    values: AddCustomerFormValues,
+    selection: CustomerSelection,
+  ) => Promise<void> | void
 }
 
 function formatAddress(address: AddressSuggestion) {
@@ -63,11 +88,8 @@ function AddressSuggestionItem({ address }: { address: AddressSuggestion }) {
   )
 }
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Navn er påkrevd')
-    .max(50, 'Navn kan ikke være lengre enn 50 tegn'),
+const baseSchema = z.object({
+  name: z.string().max(50, 'Navn kan ikke være lengre enn 50 tegn'),
   phone: z.string().max(15, 'Telefonnummer kan ikke være lengre enn 15 tegn'),
   company: z.string().max(50, 'Firma navn kan ikke være lengre enn 50 tegn'),
   address: z.string().max(50, 'Adresse kan ikke være lengre enn 50 tegn'),
@@ -76,15 +98,51 @@ const formSchema = z.object({
   careof: z.string().max(50, 'C/O kan ikke være lengre enn 50 tegn'),
 })
 
+/** The primary field is required: name for private, company for business. */
+function schemaFor(type: CustomerType) {
+  return type === 'business'
+    ? baseSchema.extend({
+        company: z
+          .string()
+          .min(1, 'Firma er påkrevd')
+          .max(50, 'Firma navn kan ikke være lengre enn 50 tegn'),
+      })
+    : baseSchema.extend({
+        name: z
+          .string()
+          .min(1, 'Navn er påkrevd')
+          .max(50, 'Navn kan ikke være lengre enn 50 tegn'),
+      })
+}
+
 export default function AddCustomerForm({
   saveText,
   disabled,
   reset,
   close,
   defaultValues: initialValues,
+  defaultType = 'private',
+  allowTypeSwitch = true,
+  withRepresentative = true,
+  allowExistingCompany = false,
   onSubmit,
 }: AddCustomerFormProps) {
   const formId = useId()
+  const [type, setType] = useState<CustomerType>(defaultType)
+  const isBusiness = type === 'business'
+  const showRepresentative = !isBusiness || withRepresentative
+
+  // Existing company the business submit should target instead of creating a
+  // new one. Typing a different company name breaks the link. The ref is the
+  // source of truth so the form's synchronous change listener never reads a
+  // stale value; the state mirror drives rendering.
+  const [existingCompany, setExistingCompanyState] =
+    useState<CustomerSuggestion | null>(null)
+  const existingCompanyRef = useRef<CustomerSuggestion | null>(null)
+  const setExistingCompany = (c: CustomerSuggestion | null) => {
+    existingCompanyRef.current = c
+    setExistingCompanyState(c)
+  }
 
   const form = useForm({
     defaultValues: {
@@ -97,13 +155,37 @@ export default function AddCustomerForm({
       careof: initialValues?.careof ?? '',
     },
     validators: {
-      onSubmit: formSchema,
-      onChange: formSchema,
+      onSubmit: schemaFor(type),
+      onChange: schemaFor(type),
+    },
+    listeners: {
+      onChange: ({ formApi }) => {
+        const linked = existingCompanyRef.current
+        if (
+          linked &&
+          formApi.state.values.company !== (linked.company ?? linked.name)
+        ) {
+          setExistingCompany(null)
+        }
+      },
     },
     onSubmit: async ({ value }) => {
-      await onSubmit(value)
+      await onSubmit(value, {
+        type,
+        customerId:
+          type === 'business' ? (existingCompanyRef.current?.id ?? null) : null,
+        contactId: null,
+      })
     },
   })
+
+  function fillFromCompany(customer: CustomerSuggestion) {
+    setExistingCompany(customer)
+    form.setFieldValue('company', customer.company ?? customer.name)
+    form.setFieldValue('address', customer.address ?? '')
+    form.setFieldValue('postcode', customer.postcode ?? '')
+    form.setFieldValue('city', customer.city ?? '')
+  }
 
   const postcode = useStore(form.store, (s) => s.values.postcode)
 
@@ -120,43 +202,68 @@ export default function AddCustomerForm({
     }
   }, [bringLookup?.city])
 
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
-      }}
-    >
-      <FieldGroup className="flex flex-col gap-4">
-        <form.Field name="name">
-          {(field) => (
-            <FormInputField
-              field={field}
-              id={`${formId}-name`}
-              icon={<User className="text-foreground" />}
-              placeholder="Navn"
-              disabled={disabled}
-              autoComplete="name"
-            />
-          )}
-        </form.Field>
+  const nameField = showRepresentative && (
+    <form.Field name="name">
+      {(field) => (
+        <FormInputField
+          field={field}
+          id={`${formId}-name`}
+          icon={<User className="text-foreground" />}
+          placeholder={isBusiness ? 'Representant' : 'Navn'}
+          disabled={disabled}
+          autoComplete={isBusiness ? 'off' : 'name'}
+        />
+      )}
+    </form.Field>
+  )
 
-        <form.Field name="phone">
-          {(field) => (
-            <FormInputField
-              field={field}
-              id={`${formId}-phone`}
-              icon={<Phone className="text-foreground" />}
-              placeholder="Telefon"
-              type="tel"
-              disabled={disabled}
-              autoComplete="tel"
-            />
-          )}
-        </form.Field>
+  const phoneField = showRepresentative && (
+    <form.Field name="phone">
+      {(field) => (
+        <FormInputField
+          field={field}
+          id={`${formId}-phone`}
+          icon={<Phone className="text-foreground" />}
+          placeholder="Telefon"
+          type="tel"
+          disabled={disabled}
+          autoComplete="tel"
+        />
+      )}
+    </form.Field>
+  )
 
-        <form.Field name="company">
-          {(field) => (
+  const companyField = (
+    <div className="flex flex-col gap-1">
+      <form.Field name="company">
+        {(field) =>
+          isBusiness && allowExistingCompany ? (
+            <AutocompleteField
+              field={field}
+              id={`${formId}-company`}
+              icon={<BriefcaseBusiness className="text-foreground" />}
+              placeholder="Firma"
+              disabled={disabled}
+              autoComplete="organization"
+              searchKey="customers-business-company"
+              onSearch={(q) =>
+                searchCustomersByBusiness({
+                  data: { query: q, type: 'business' },
+                })
+              }
+              onSelect={fillFromCompany}
+              renderSuggestion={(c) => (
+                <>
+                  <span className="font-medium">{c.company || c.name}</span>
+                  {(c.address || c.city) && (
+                    <span className="text-xs flex gap-1.5 mt-0.5">
+                      {[c.address, c.city].filter(Boolean).join(' | ')}
+                    </span>
+                  )}
+                </>
+              )}
+            />
+          ) : (
             <FormInputField
               field={field}
               id={`${formId}-company`}
@@ -165,8 +272,72 @@ export default function AddCustomerForm({
               disabled={disabled}
               autoComplete="organization"
             />
-          )}
-        </form.Field>
+          )
+        }
+      </form.Field>
+      {isBusiness && existingCompany && (
+        <p className="text-xs text-muted-foreground">
+          Eksisterende firma valgt — representanten legges til i{' '}
+          <span className="font-medium">
+            {existingCompany.company || existingCompany.name}
+          </span>
+          .
+        </p>
+      )}
+    </div>
+  )
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        form.handleSubmit()
+      }}
+    >
+      <FieldGroup className="flex flex-col gap-4">
+        {allowTypeSwitch && (
+          <ButtonGroup className="w-full">
+            <Button
+              type="button"
+              size="sm"
+              variant={isBusiness ? 'outline' : 'default'}
+              className="flex-1"
+              disabled={disabled}
+              onClick={() => {
+                setType('private')
+                setExistingCompany(null)
+              }}
+            >
+              <User />
+              Privat
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={isBusiness ? 'default' : 'outline'}
+              className="flex-1"
+              disabled={disabled}
+              onClick={() => setType('business')}
+            >
+              <Building2 />
+              Firma
+            </Button>
+          </ButtonGroup>
+        )}
+
+        {isBusiness ? (
+          <>
+            {companyField}
+            {nameField}
+            {phoneField}
+          </>
+        ) : (
+          <>
+            {nameField}
+            {phoneField}
+            {companyField}
+          </>
+        )}
 
         <form.Field name="address">
           {(field) => (
@@ -217,18 +388,20 @@ export default function AddCustomerForm({
           </form.Field>
         </div>
 
-        <form.Field name="careof">
-          {(field) => (
-            <FormInputField
-              field={field}
-              id={`${formId}-careof`}
-              icon={<UserCheck className="text-foreground" />}
-              placeholder="C/O"
-              disabled={disabled}
-              autoComplete="off"
-            />
-          )}
-        </form.Field>
+        {showRepresentative && (
+          <form.Field name="careof">
+            {(field) => (
+              <FormInputField
+                field={field}
+                id={`${formId}-careof`}
+                icon={<UserCheck className="text-foreground" />}
+                placeholder="C/O"
+                disabled={disabled}
+                autoComplete="off"
+              />
+            )}
+          </form.Field>
+        )}
       </FieldGroup>
 
       <div className="flex justify-end gap-2 mt-4">

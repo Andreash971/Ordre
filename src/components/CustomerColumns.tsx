@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import * as z from 'zod'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Eye, MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
+import { MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useDataTableSheet } from '@/components/ui/DataTable'
@@ -22,57 +21,42 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-import type { AddCustomerFormValues } from '@/components/AddCustomerForm'
-import AddCustomerForm from '@/components/AddCustomerForm'
-import { deleteCustomer, updateCustomer } from '@/lib/customer-server-fns'
+import type { Customer } from '@/lib/customer-server-fns'
+import type { Contact } from '@/lib/contact-server-fns'
+import { deleteCustomer } from '@/lib/customer-server-fns'
 import { queryKeys } from '@/lib/query-keys'
 
-const customerSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  phone: z.string().nullable(),
-  company: z.string().nullable(),
-  address: z.string().nullable(),
-  postcode: z.string().nullable(),
-  city: z.string().nullable(),
-  careof: z.string().nullable(),
-})
+/** A customer with its representatives joined in (empty for private). */
+export type CustomerRow = Customer & { contacts: Contact[] }
 
-export type Customer = z.infer<typeof customerSchema>
+export type CustomerColumnCallbacks = {
+  /** Open the detail/edit sheet for a customer. */
+  onOpen: (customer: CustomerRow) => void
+}
 
-function CustomerActionsCell({ row }: { row: Row<Customer> }) {
+function CustomerActionsCell({
+  row,
+  callbacks,
+}: {
+  row: Row<CustomerRow>
+  callbacks: CustomerColumnCallbacks
+}) {
   const queryClient = useQueryClient()
-  const { isInSheet, openSheet, closeSheet } = useDataTableSheet()
-  const [editOpen, setEditOpen] = useState(false)
+  const { isInSheet, closeSheet } = useDataTableSheet()
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const isBusiness = row.original.type === 'business'
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteCustomer({ data: id }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all })
+    },
   })
 
-  const updateMutation = useMutation({
-    mutationFn: (values: AddCustomerFormValues) =>
-      updateCustomer({ data: { id: row.original.id, ...values } }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
-  })
-
-  const defaultValues: AddCustomerFormValues = {
-    name: row.original.name,
-    phone: row.original.phone ?? '',
-    company: row.original.company ?? '',
-    address: row.original.address ?? '',
-    postcode: row.original.postcode ?? '',
-    city: row.original.city ?? '',
-    careof: row.original.careof ?? '',
-  }
-
-  async function handleEdit(values: AddCustomerFormValues) {
-    await updateMutation.mutateAsync(values)
-    setEditOpen(false)
+  function openEditor() {
     if (isInSheet) closeSheet()
+    callbacks.onOpen(row.original)
   }
 
   async function handleConfirmDelete() {
@@ -85,7 +69,7 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
     <>
       {isInSheet ? (
         <>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" size="sm" onClick={openEditor}>
             <SquarePen />
             Rediger
           </Button>
@@ -107,11 +91,7 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => openSheet(row.id)}>
-              <Eye />
-              Vis
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <DropdownMenuItem onSelect={openEditor}>
               <SquarePen />
               Rediger
             </DropdownMenuItem>
@@ -126,30 +106,21 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
         </DropdownMenu>
       )}
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Rediger kunde</DialogTitle>
-            <DialogDescription>Oppdater kundens informasjon.</DialogDescription>
-          </DialogHeader>
-          <AddCustomerForm
-            saveText="Lagre"
-            close
-            disabled={updateMutation.isPending}
-            defaultValues={defaultValues}
-            onSubmit={handleEdit}
-          />
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Slett kunde</DialogTitle>
+            <DialogTitle>
+              {isBusiness ? 'Slett firma' : 'Slett kunde'}
+            </DialogTitle>
             <DialogDescription>
               Er du sikker på at du vil slette{' '}
-              <span className="font-medium">{row.original.name}</span>? Dette er
-              permanent og kan ikke angres.
+              <span className="font-medium">
+                {isBusiness
+                  ? row.original.company || row.original.name
+                  : row.original.name}
+              </span>
+              ? {isBusiness && 'Alle firmaets representanter slettes også. '}
+              Dette er permanent og kan ikke angres.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -172,38 +143,88 @@ function CustomerActionsCell({ row }: { row: Row<Customer> }) {
   )
 }
 
-export const customerColumns: ColumnDef<Customer>[] = [
-  {
-    accessorKey: 'name',
-    header: 'Navn',
-    meta: { priority: 'primary', truncate: true, className: 'max-w-[16rem]' },
-  },
-  { accessorKey: 'phone', header: 'Telefon' },
-  {
-    accessorKey: 'company',
-    header: 'Firma',
-    meta: { truncate: true, className: 'max-w-[14rem]' },
-  },
-  {
-    accessorKey: 'address',
-    header: 'Adresse',
-    meta: { truncate: true, className: 'max-w-[18rem]' },
-  },
-  { accessorKey: 'postcode', header: 'Postnr.' },
-  {
-    accessorKey: 'city',
-    header: 'Sted',
-    meta: { truncate: true, className: 'max-w-[10rem]' },
-  },
-  {
-    accessorKey: 'careof',
-    header: 'C/O',
-    meta: { truncate: true, className: 'max-w-[10rem]' },
-  },
-  {
+function actionsColumn(
+  callbacks: CustomerColumnCallbacks,
+): ColumnDef<CustomerRow> {
+  return {
     id: 'actions',
     header: '',
     meta: { className: 'w-0 whitespace-nowrap', action: true },
-    cell: ({ row }) => <CustomerActionsCell row={row} />,
-  },
-]
+    cell: ({ row }) => <CustomerActionsCell row={row} callbacks={callbacks} />,
+  }
+}
+
+/** Private customers: the person's name is primary. */
+export function buildPrivateColumns(
+  callbacks: CustomerColumnCallbacks,
+): ColumnDef<CustomerRow>[] {
+  return [
+    {
+      accessorKey: 'name',
+      header: 'Navn',
+      meta: { priority: 'primary', truncate: true, className: 'max-w-[16rem]' },
+    },
+    { accessorKey: 'phone', header: 'Telefon' },
+    {
+      accessorKey: 'company',
+      header: 'Firma',
+      meta: { truncate: true, className: 'max-w-[14rem]' },
+    },
+    {
+      accessorKey: 'address',
+      header: 'Adresse',
+      meta: { truncate: true, className: 'max-w-[18rem]' },
+    },
+    { accessorKey: 'postcode', header: 'Postnr.' },
+    {
+      accessorKey: 'city',
+      header: 'Sted',
+      meta: { truncate: true, className: 'max-w-[10rem]' },
+    },
+    {
+      accessorKey: 'careof',
+      header: 'C/O',
+      meta: { truncate: true, className: 'max-w-[10rem]' },
+    },
+    actionsColumn(callbacks),
+  ]
+}
+
+/**
+ * Business customers: the company is primary; representatives are rendered
+ * as sub-rows below each company. The company column's filter value includes
+ * representative names/phones so table search finds a firm via its people.
+ */
+export function buildBusinessColumns(
+  callbacks: CustomerColumnCallbacks,
+): ColumnDef<CustomerRow>[] {
+  return [
+    {
+      id: 'company',
+      header: 'Firma',
+      accessorFn: (c) =>
+        [
+          c.company ?? c.name,
+          ...c.contacts.map((k) => `${k.name} ${k.phone ?? ''}`),
+        ].join(' '),
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {row.original.company || row.original.name}
+        </span>
+      ),
+      meta: { priority: 'primary', truncate: true, className: 'max-w-[16rem]' },
+    },
+    {
+      accessorKey: 'address',
+      header: 'Adresse',
+      meta: { truncate: true, className: 'max-w-[18rem]' },
+    },
+    { accessorKey: 'postcode', header: 'Postnr.' },
+    {
+      accessorKey: 'city',
+      header: 'Sted',
+      meta: { truncate: true, className: 'max-w-[10rem]' },
+    },
+    actionsColumn(callbacks),
+  ]
+}
