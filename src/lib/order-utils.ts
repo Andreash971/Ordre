@@ -1,16 +1,84 @@
 import type { Item } from '@/components/OrderColumns'
 import type {
+  ArchivedOrder,
   CustomerFormValues,
   DeliveryValues,
   NewArchivedOrder,
   OrderData,
   OrderRecipient,
+  OrderSender,
 } from '@shared/orders'
 import { getStoredSettings } from '@/lib/settings'
 import { getSpecialKeyForItem } from '@/lib/special-items'
 
-export type { CustomerFormValues, DeliveryValues }
+export type { CustomerFormValues, DeliveryValues, OrderSender }
 export type Customer = OrderRecipient
+
+/**
+ * Whether an archived order's receiver is a business customer
+ * (company-first display, name is the representative). Only orders created
+ * after the private/business split carry the selection.
+ */
+export function isBusinessReceiver(order: ArchivedOrder): boolean {
+  return (
+    order.source?.customer.selection?.type === 'business' &&
+    Boolean(order.data.receiver.company)
+  )
+}
+
+/** Display label for the receiver: company for businesses, else name. */
+export function orderReceiverLabel(order: ArchivedOrder): string {
+  const { receiver } = order.data
+  return (
+    (isBusinessReceiver(order) ? receiver.company : receiver.name) ||
+    'Uten navn'
+  )
+}
+
+/**
+ * Representative line ("v/ …") for business receivers, when the contact
+ * person differs from the company name. Undefined for private customers.
+ */
+export function orderReceiverRepresentative(
+  order: ArchivedOrder,
+): string | undefined {
+  const { receiver } = order.data
+  return isBusinessReceiver(order) &&
+    receiver.name &&
+    receiver.name !== receiver.company
+    ? receiver.name
+    : undefined
+}
+
+/**
+ * Whether an archived order's sender is a business customer. Only orders
+ * created after the sender selection was archived carry this; older orders
+ * fall back to private display.
+ */
+export function isBusinessSender(order: ArchivedOrder): boolean {
+  return (
+    order.source?.sender?.selection?.type === 'business' &&
+    Boolean(order.data.sender.company)
+  )
+}
+
+/** Display label for the sender: company for businesses, else name. */
+export function orderSenderLabel(order: ArchivedOrder): string {
+  const { sender } = order.data
+  return (isBusinessSender(order) ? sender.company : sender.name) || '—'
+}
+
+/** Representative line ("v/ …") for business senders. */
+export function orderSenderRepresentative(
+  order: ArchivedOrder,
+): string | undefined {
+  const { sender } = order.data
+  return isBusinessSender(order) &&
+    sender.name &&
+    sender.name !== sender.company
+    ? sender.name
+    : undefined
+}
 
 /** Copy just the customer-form fields from any customer-shaped object. */
 export function pickCustomerFormValues(
@@ -43,7 +111,7 @@ export function formatDeliveryDate(dateStr: string) {
 
 export function buildOrderData(
   customer: Customer,
-  sender: CustomerFormValues | null,
+  sender: OrderSender | null,
   delivery: DeliveryValues,
   items: Item[],
 ): OrderData {
@@ -110,7 +178,7 @@ export function buildOrderData(
  */
 export function buildArchivedOrderPayloads(
   customers: Customer[],
-  sender: CustomerFormValues | null,
+  sender: OrderSender | null,
   delivery: DeliveryValues,
   items: Item[],
 ): NewArchivedOrder[] {

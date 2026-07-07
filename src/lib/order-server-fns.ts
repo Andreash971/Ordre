@@ -1,6 +1,10 @@
-import type { ArchivedOrder, NewArchivedOrder } from '@shared/orders'
+import type {
+  ArchivedOrder,
+  NewArchivedOrder,
+  UpdatedArchivedOrder,
+} from '@shared/orders'
 
-export type { ArchivedOrder, NewArchivedOrder }
+export type { ArchivedOrder, NewArchivedOrder, UpdatedArchivedOrder }
 
 const api = () => window.electronAPI.orders
 
@@ -11,6 +15,12 @@ export const insertOrders = ({
 }: {
   data: Array<NewArchivedOrder>
 }): Promise<void> => api().insert(data)
+
+export const updateOrder = ({
+  data,
+}: {
+  data: UpdatedArchivedOrder
+}): Promise<ArchivedOrder | null> => api().update(data)
 
 export const deleteOrder = ({ data }: { data: string }): Promise<void> =>
   api().delete(data)

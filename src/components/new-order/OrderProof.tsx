@@ -10,7 +10,9 @@ import type {
   Customer,
   CustomerFormValues,
   DeliveryValues,
+  OrderSender,
 } from '@/lib/order-utils'
+import type { CustomerSelection } from '@shared/customers'
 import type { OrderDraft } from '@/components/new-order/order-draft'
 import { getSpecialKeyForItem, isSpecial } from '@/lib/special-items'
 
@@ -23,11 +25,13 @@ interface OrderProofProps {
 
 function customerFromSender(
   sender: CustomerFormValues,
+  selection: CustomerSelection,
   delivery: DeliveryValues,
   card: string,
   instructions: string,
 ): Customer {
   return {
+    selection,
     name: sender.name,
     phone: sender.phone,
     company: sender.company,
@@ -54,6 +58,20 @@ const HIGHLIGHT = 'border border-primary bg-primary/10'
 
 export default function OrderProof({ draft, beforeSubmit }: OrderProofProps) {
   const { sender, delivery, items, recipients } = draft
+  const senderWithSelection: OrderSender = {
+    ...sender,
+    selection: draft.senderSelection,
+  }
+  // Business senders are company-first with the name as representative.
+  const businessSender =
+    draft.senderSelection.type === 'business' && Boolean(sender.company)
+  const senderPrimary =
+    (businessSender ? sender.company : sender.name) || 'Uten navn'
+  const senderSecondary = businessSender
+    ? sender.name && sender.name !== sender.company
+      ? `v/ ${sender.name}`
+      : undefined
+    : sender.company || undefined
   const cardEnabled = draft.card.enabled
   const cardValue = draft.card.text
   const instructionsEnabled = draft.instructions.enabled
@@ -76,6 +94,7 @@ export default function OrderProof({ draft, beforeSubmit }: OrderProofProps) {
     : [
         customerFromSender(
           sender,
+          draft.senderSelection,
           delivery,
           cardEnabled ? cardValue : '',
           instructionsEnabled ? instructionsValue : '',
@@ -102,9 +121,9 @@ export default function OrderProof({ draft, beforeSubmit }: OrderProofProps) {
             Fakturering · kunde
           </div>
           <div className="mt-2 space-y-0.5 text-sm">
-            <div className="font-medium">{sender.name || 'Uten navn'}</div>
-            {sender.company ? (
-              <div className="text-muted-foreground">{sender.company}</div>
+            <div className="font-medium">{senderPrimary}</div>
+            {senderSecondary ? (
+              <div className="text-muted-foreground">{senderSecondary}</div>
             ) : null}
             {formatAddress(sender) ? (
               <div className="text-muted-foreground">
@@ -173,7 +192,7 @@ export default function OrderProof({ draft, beforeSubmit }: OrderProofProps) {
         <div className="flex flex-col items-end gap-1.5">
           <OpenOrderButton
             customers={effectiveRecipients}
-            senderValues={sender}
+            senderValues={senderWithSelection}
             deliveryValues={delivery}
             items={items}
             beforeSubmit={beforeSubmit}

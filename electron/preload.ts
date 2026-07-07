@@ -25,7 +25,11 @@ import type {
   PartialSettings,
   ThemeMode,
 } from '../shared/settings'
-import type { ArchivedOrder, NewArchivedOrder } from '../shared/orders'
+import type {
+  ArchivedOrder,
+  NewArchivedOrder,
+  UpdatedArchivedOrder,
+} from '../shared/orders'
 import type { DiscoveredPrinter, PrinterInfo } from '../shared/printing'
 import type { PendingUpdate } from '../shared/updates'
 
@@ -107,6 +111,8 @@ const api = {
       ipcRenderer.invoke('orders:getAll'),
     insert: (payloads: Array<NewArchivedOrder>): Promise<void> =>
       ipcRenderer.invoke('orders:insert', payloads),
+    update: (payload: UpdatedArchivedOrder): Promise<ArchivedOrder | null> =>
+      ipcRenderer.invoke('orders:update', payload),
     delete: (id: string): Promise<void> =>
       ipcRenderer.invoke('orders:delete', id),
     clear: (): Promise<void> => ipcRenderer.invoke('orders:clear'),

@@ -7,8 +7,12 @@ import type {
   OrderData,
   OrderSource,
   StoredOrder,
+  UpdatedArchivedOrder,
 } from '../../shared/orders'
-import { newArchivedOrdersSchema } from '../../shared/orders'
+import {
+  newArchivedOrdersSchema,
+  updatedArchivedOrderSchema,
+} from '../../shared/orders'
 import type { RetentionOption } from '../../shared/settings'
 import { getDb, schema } from '../db'
 import { getStore } from '../store'
@@ -85,6 +89,43 @@ export function registerOrderHandlers() {
           },
         })
     }
+  })
+
+  ipcMain.handle('orders:update', async (_e, raw: unknown) => {
+    const payload = updatedArchivedOrderSchema.parse(
+      raw,
+    ) as UpdatedArchivedOrder
+    const existing = (
+      await db.select().from(orders).where(eq(orders.id, payload.id))
+    ).at(0)
+    if (!existing) return null
+
+    const store = await getStore()
+    const retention = store.get('settings').archiveRetention
+    const now = Date.now()
+    const effectiveDate =
+      payload.source?.customer.date ||
+      payload.source?.delivery.date ||
+      existing.deliveryDate
+    const values = {
+      id: orderId(payload.data),
+      savedAt: now,
+      expiresAt: retentionToExpiresAt(retention, now),
+      deliveryDate: effectiveDate,
+      source: payload.source,
+      data: payload.data,
+    }
+    // The id is a content hash, so the edited order gets a new row id;
+    // remove the old row first, then upsert (the edited content may
+    // collide with an already-archived identical order).
+    if (values.id !== payload.id) {
+      await db.delete(orders).where(eq(orders.id, payload.id))
+    }
+    await db
+      .insert(orders)
+      .values(values)
+      .onConflictDoUpdate({ target: orders.id, set: values })
+    return values
   })
 
   ipcMain.handle('orders:delete', async (_e, raw: unknown) => {

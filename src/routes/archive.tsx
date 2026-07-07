@@ -8,6 +8,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ArchivedOrder } from '@shared/orders'
 import { deleteOrder, getAllOrders } from '@/lib/order-server-fns'
 import { queryKeys } from '@/lib/query-keys'
+import {
+  orderReceiverLabel,
+  orderReceiverRepresentative,
+  orderSenderLabel,
+  orderSenderRepresentative,
+} from '@/lib/order-utils'
 import { formatNok } from '@/lib/format'
 import { isSpecial } from '@/lib/special-items'
 import { Button } from '@/components/ui/button'
@@ -16,7 +22,6 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import { Sheet, SheetContent } from '@/components/ui/sheet'
 import {
   Empty,
   EmptyContent,
@@ -26,7 +31,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { DataTable } from '@/components/ui/DataTable'
-import { OrderDetail } from '@/components/OrderDetailSheet'
+import { OrderDetailSheet } from '@/components/OrderDetailSheet'
 
 export const Route = createFileRoute('/archive')({ component: ArchivePage })
 
@@ -65,35 +70,66 @@ function buildColumns(
       accessorFn: (o) =>
         `${o.data.sender.name} ${o.data.sender.company} ${o.data.sender.phone}`,
       meta: { truncate: true },
-      cell: ({ row }) => (
-        <div className="min-w-0">
-          <div className="truncate font-medium">
-            {row.original.data.sender.name || '—'}
-          </div>
-          {row.original.data.sender.company ? (
-            <div className="truncate text-xs text-muted-foreground">
-              {row.original.data.sender.company}
+      cell: ({ row }) => {
+        const representative = orderSenderRepresentative(row.original)
+        const { sender } = row.original.data
+        const employer =
+          !representative && sender.company && sender.company !== sender.name
+            ? sender.company
+            : undefined
+        return (
+          <div className="min-w-0">
+            <div className="truncate font-medium">
+              {orderSenderLabel(row.original)}
             </div>
-          ) : null}
-        </div>
-      ),
+            {representative ? (
+              <div className="truncate text-xs text-muted-foreground">
+                v/ {representative}
+              </div>
+            ) : null}
+            {employer ? (
+              <div className="truncate text-xs text-muted-foreground">
+                {employer}
+              </div>
+            ) : null}
+            {sender.phone ? (
+              <div className="truncate font-mono text-[11px] text-muted-foreground">
+                {sender.phone}
+              </div>
+            ) : null}
+          </div>
+        )
+      },
     },
     {
       id: 'receiver',
       header: () => <span>Mottaker</span>,
       accessorFn: (o) =>
-        `${o.data.receiver.name} ${o.data.receiver.address} ${o.data.receiver.phone}`,
+        `${o.data.receiver.name} ${o.data.receiver.company} ${o.data.receiver.address} ${o.data.receiver.phone}`,
       meta: { priority: 'primary', truncate: true },
-      cell: ({ row }) => (
-        <div className="min-w-0">
-          <div className="truncate font-medium">
-            {row.original.data.receiver.name || 'Uten navn'}
+      cell: ({ row }) => {
+        const representative = orderReceiverRepresentative(row.original)
+        return (
+          <div className="min-w-0">
+            <div className="truncate font-medium">
+              {orderReceiverLabel(row.original)}
+            </div>
+            {representative ? (
+              <div className="truncate text-xs text-muted-foreground">
+                v/ {representative}
+              </div>
+            ) : null}
+            <div className="truncate text-xs text-muted-foreground">
+              {row.original.data.receiver.address || '—'}
+            </div>
+            {row.original.data.receiver.phone ? (
+              <div className="truncate font-mono text-[11px] text-muted-foreground">
+                {row.original.data.receiver.phone}
+              </div>
+            ) : null}
           </div>
-          <div className="truncate text-xs text-muted-foreground">
-            {row.original.data.receiver.address || '—'}
-          </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       id: 'items',
@@ -220,18 +256,15 @@ function ArchivePage() {
         />
       )}
 
-      <Sheet
-        open={open !== null}
+      <OrderDetailSheet
+        order={open}
         onOpenChange={(v) => {
           if (!v) setOpen(null)
         }}
-      >
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          {open ? (
-            <OrderDetail order={open} onDelete={() => handleDelete(open)} />
-          ) : null}
-        </SheetContent>
-      </Sheet>
+        onDelete={() => {
+          if (open) handleDelete(open)
+        }}
+      />
     </main>
   )
 }

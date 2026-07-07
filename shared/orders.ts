@@ -4,6 +4,7 @@
  * order row shape.
  */
 import * as z from 'zod'
+import type { CustomerSelection } from './customers'
 import type { SpecialItemKey } from './settings'
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,22 @@ export type OrderRecipient = CustomerFormValues & {
   time: string | null
   leaveDoor: boolean
   leaveNeighbour: boolean
+  /**
+   * Customer-type selection captured from the order form (business rows are
+   * company-first). Absent on orders archived before the private/business
+   * customer split.
+   */
+  selection?: CustomerSelection
+}
+
+/** The sender/payer: customer fields plus the same type selection. */
+export type OrderSender = CustomerFormValues & {
+  /**
+   * Customer-type selection captured from the order form (business rows are
+   * company-first). Absent on orders archived before the private/business
+   * customer split.
+   */
+  selection?: CustomerSelection
 }
 
 export type OrderItem = {
@@ -53,7 +70,7 @@ export type OrderItem = {
 /** The raw draft an archived order was generated from. */
 export type OrderSource = {
   customer: OrderRecipient
-  sender: CustomerFormValues | null
+  sender: OrderSender | null
   delivery: DeliveryValues
   items: OrderItem[]
 }
@@ -139,6 +156,19 @@ export type ArchivedOrder = {
 export const newArchivedOrdersSchema = z.array(
   z.object({ source: z.unknown(), data: z.unknown() }),
 )
+
+/** Payload for updating an archived order in place (review/edit flow). */
+export type UpdatedArchivedOrder = {
+  id: string
+  source: OrderSource | null
+  data: OrderData
+}
+
+export const updatedArchivedOrderSchema = z.object({
+  id: z.string().min(1),
+  source: z.unknown(),
+  data: z.unknown(),
+})
 
 // ---------------------------------------------------------------------------
 // Legacy electron-store archive blob (pre-SQLite). Used only by the one-time

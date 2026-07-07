@@ -6,11 +6,7 @@ import { Button } from '@/components/ui/button'
 import type { VariantProps } from 'class-variance-authority'
 import { openOrdersPdf, printOrdersPdf } from '@/lib/open-orders'
 import { buildArchivedOrderPayloads } from '@/lib/order-utils'
-import type {
-  Customer,
-  CustomerFormValues,
-  DeliveryValues,
-} from '@/lib/order-utils'
+import type { Customer, DeliveryValues, OrderSender } from '@/lib/order-utils'
 import type { ArchivedOrder, OrderData } from '@shared/orders'
 import { insertOrders } from '@/lib/order-server-fns'
 import { queryKeys } from '@/lib/query-keys'
@@ -27,15 +23,17 @@ type OpenOrderButtonProps =
       items?: never
       beforeSubmit?: never
       variant?: VariantProps<typeof buttonVariants>['variant']
+      disabled?: boolean
     }
   | {
       storedOrder?: never
       customers: Customer[]
-      senderValues: CustomerFormValues | null
+      senderValues: OrderSender | null
       deliveryValues: DeliveryValues
       items: Item[]
       beforeSubmit?: () => Promise<boolean>
       variant?: VariantProps<typeof buttonVariants>['variant']
+      disabled?: boolean
     }
 
 export default function OpenOrderButton({
@@ -46,6 +44,7 @@ export default function OpenOrderButton({
   items,
   beforeSubmit,
   variant = 'default',
+  disabled = false,
 }: OpenOrderButtonProps) {
   const [isPrinting, setIsPrinting] = useState(false)
   const queryClient = useQueryClient()
@@ -91,7 +90,8 @@ export default function OpenOrderButton({
     }
   }
 
-  const isDisabled = isPrinting || (!storedOrder && customers.length === 0)
+  const isDisabled =
+    disabled || isPrinting || (!storedOrder && customers.length === 0)
 
   if (defaultPrinter) {
     return (

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowUpRight, FilePlusIcon } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronRight, FilePlusIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -12,21 +12,155 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { OrderDetailSheet } from '@/components/OrderDetailSheet'
-import { formatDeliveryDate } from '@/lib/order-utils'
+import { SectionHead } from '@/components/SectionHead'
+import { KpiCard } from '@/components/KpiCard'
+import { MissingFieldsBadge } from '@/components/MissingFieldsBadge'
+import {
+  formatDeliveryDate,
+  orderReceiverLabel,
+  orderReceiverRepresentative,
+  orderSenderLabel,
+  orderSenderRepresentative,
+} from '@/lib/order-utils'
+import { orderMissingFields } from '@/lib/order-review'
 import type { ArchivedOrder } from '@shared/orders'
-import { useQuery } from '@tanstack/react-query'
-import { getAllOrders } from '@/lib/order-server-fns'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { deleteOrder, getAllOrders } from '@/lib/order-server-fns'
 import { queryKeys } from '@/lib/query-keys'
 import { formatNok, toIsoDate } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/')({ component: Dashboard })
 
+function orderSum(order: ArchivedOrder) {
+  return order.data.orderContent.reduce((s, l) => s + l.total, 0)
+}
+
+const headerCellClass =
+  'font-mono text-[10px] uppercase tracking-wider text-muted-foreground'
+
+/** Full-width divider row separating groups inside the deliveries table. */
+function TableSectionRow({
+  children,
+  tinted,
+}: {
+  children: React.ReactNode
+  tinted?: boolean
+}) {
+  return (
+    <TableRow className="hover:bg-transparent">
+      <TableCell
+        colSpan={5}
+        className={cn(
+          'py-2 text-xs font-semibold first-letter:uppercase',
+          tinted ? 'bg-primary/10' : 'bg-muted/60',
+        )}
+      >
+        {children}
+      </TableCell>
+    </TableRow>
+  )
+}
+
+function DeliveryRow({
+  order,
+  onOpen,
+}: {
+  order: ArchivedOrder & { deliveryDate: string }
+  onOpen: (order: ArchivedOrder) => void
+}) {
+  const missing = orderMissingFields(order)
+  const isToday = order.deliveryDate === toIsoDate()
+  const info = formatDeliveryDate(order.deliveryDate)
+  return (
+    <TableRow onClick={() => onOpen(order)} className="cursor-pointer">
+      <TableCell className="w-16">
+        {isToday ? (
+          <span className="font-mono text-xs">
+            {order.data.delivery.deliveryTime || '—'}
+          </span>
+        ) : (
+          <div className="flex flex-col">
+            <span className="font-mono text-xs">
+              {info.shortDate.slice(0, 5)}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {info.dayText.slice(0, 3)}
+            </span>
+          </div>
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col">
+          <span className="font-medium">{orderReceiverLabel(order)}</span>
+          {orderReceiverRepresentative(order) ? (
+            <span className="text-xs text-muted-foreground">
+              v/ {orderReceiverRepresentative(order)}
+            </span>
+          ) : null}
+          {order.data.receiver.address ? (
+            <span className="text-xs text-muted-foreground">
+              {order.data.receiver.address}
+            </span>
+          ) : null}
+          {order.data.receiver.phone ? (
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {order.data.receiver.phone}
+            </span>
+          ) : null}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col">
+          <span className="text-muted-foreground">
+            {orderSenderLabel(order)}
+          </span>
+          {orderSenderRepresentative(order) ? (
+            <span className="text-xs text-muted-foreground">
+              v/ {orderSenderRepresentative(order)}
+            </span>
+          ) : null}
+          {order.data.sender.phone ? (
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {order.data.sender.phone}
+            </span>
+          ) : null}
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        {missing.length > 0 ? (
+          <MissingFieldsBadge fields={missing} />
+        ) : (
+          <span className="font-mono text-xs">
+            {formatNok(orderSum(order))}
+          </span>
+        )}
+      </TableCell>
+      <TableCell className="w-8 pl-0 pr-3">
+        <ChevronRight className="size-4 text-muted-foreground" />
+      </TableCell>
+    </TableRow>
+  )
+}
+
 function Dashboard() {
+  const queryClient = useQueryClient()
   const { data: orders = [] } = useQuery({
     queryKey: queryKeys.orders.all,
     queryFn: getAllOrders,
   })
   const [open, setOpen] = React.useState<ArchivedOrder | null>(null)
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteOrder({ data: id }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
+  })
+
+  function handleDelete(order: ArchivedOrder) {
+    deleteMutation.mutate(order.id)
+    setOpen(null)
+  }
 
   const today = toIsoDate()
   const upcoming = React.useMemo(
@@ -45,38 +179,129 @@ function Dashboard() {
     [orders],
   )
 
-  const headerCellClass =
-    'font-mono text-[10px] uppercase tracking-wider text-muted-foreground'
+  const todayOrders = upcoming.filter((o) => o.deliveryDate === today)
+  const laterOrders = upcoming
+    .filter((o) => o.deliveryDate !== today)
+    .slice(0, 8)
+  const flagged = upcoming.filter((o) => orderMissingFields(o).length > 0)
+  const todaySum = todayOrders.reduce((s, o) => s + orderSum(o), 0)
+
+  const endOfWeek = React.useMemo(() => {
+    const d = new Date()
+    // Through Sunday of the current week (Norwegian weeks start on Monday).
+    d.setDate(d.getDate() + ((7 - d.getDay()) % 7))
+    return toIsoDate(d)
+  }, [])
+  const weekCount = upcoming.filter((o) => o.deliveryDate <= endOfWeek).length
+
+  const todayLabel = new Date().toLocaleDateString('nb-NO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
 
   return (
-    <main className="rise-in page-wrap flex flex-col gap-5 px-4 pb-12 pt-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-medium leading-tight">
-          Ordreoversikt
-        </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Kommende leveranser og siste ordre.
-        </p>
+    <main className="rise-in page-wrap flex flex-col gap-6 px-4 pb-12 pt-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-medium leading-tight">
+            Oversikt
+          </h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Kommende leveringer og siste ordre.
+          </p>
+        </div>
+        <Button asChild size="lg">
+          <Link to="/new">
+            <FilePlusIcon className="size-4" />
+            Ny ordre
+          </Link>
+        </Button>
       </div>
 
-      <Button asChild size="lg" className="w-fit">
-        <Link to="/new">
-          <FilePlusIcon className="size-4" />
-          Ny ordre
-        </Link>
-      </Button>
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard
+          label="Leveres i dag"
+          value={todayOrders.length}
+          unit="ordre"
+        />
+        <KpiCard label="Leveres denne uken" value={weekCount} unit="ordre" />
+        {flagged.length > 0 ? (
+          <KpiCard
+            label="Trenger gjennomgang"
+            value={flagged.length}
+            unit="ordre"
+            warn
+            onClick={() => setOpen(flagged[0])}
+          />
+        ) : (
+          <KpiCard
+            label="Trenger gjennomgang"
+            value={
+              <span className="flex items-center gap-1.5 text-base font-medium text-primary">
+                <Check className="size-4" />
+                Alt klart
+              </span>
+            }
+          />
+        )}
+        <KpiCard label="Sum dagens ordre" value={formatNok(todaySum)} />
+      </section>
 
-      <section className="grid gap-4 lg:grid-cols-[3fr_2fr] rise-in">
-        <div className="rounded-lg border">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex flex-col">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Kommende leveringer
+      <section className="grid items-start gap-5 lg:grid-cols-[3fr_2fr]">
+        <div className="flex flex-col gap-3">
+          <SectionHead title="Kommende leveringer" sub="Sortert etter dato" />
+          <div className="overflow-hidden rounded-lg border bg-card">
+            {upcoming.length === 0 ? (
+              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                Ingen kommende leveringer. Start en ny ordre for å fylle på.
               </div>
-              <div className="text-sm font-medium">
-                {upcoming.length} planlagte
-              </div>
-            </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className={headerCellClass}>Leveres</TableHead>
+                    <TableHead className={headerCellClass}>Mottaker</TableHead>
+                    <TableHead className={headerCellClass}>Avsender</TableHead>
+                    <TableHead className={`${headerCellClass} text-right`}>
+                      Sum
+                    </TableHead>
+                    <TableHead className="w-8" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableSectionRow tinted>I dag · {todayLabel}</TableSectionRow>
+                  {todayOrders.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={5}
+                        className="py-4 text-sm text-muted-foreground"
+                      >
+                        Ingen leveringer i dag.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    todayOrders.map((o) => (
+                      <DeliveryRow key={o.id} order={o} onOpen={setOpen} />
+                    ))
+                  )}
+                  {laterOrders.length > 0 ? (
+                    <>
+                      <TableSectionRow>Senere</TableSectionRow>
+                      {laterOrders.map((o) => (
+                        <DeliveryRow key={o.id} order={o} onOpen={setOpen} />
+                      ))}
+                    </>
+                  ) : null}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-end justify-between">
+            <SectionHead title="Siste ordre" />
             <Button asChild variant="ghost" size="sm">
               <Link to="/archive">
                 Åpne arkiv
@@ -84,135 +309,40 @@ function Dashboard() {
               </Link>
             </Button>
           </div>
-          {upcoming.length === 0 ? (
-            <div className="border-t px-4 py-10 text-center text-sm text-muted-foreground">
-              Ingen kommende leveringer. Start en ny ordre for å fylle på.
-            </div>
-          ) : (
-            <div className="border-t">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className={headerCellClass}>Dato</TableHead>
-                    <TableHead className={headerCellClass}>Mottaker</TableHead>
-                    <TableHead className={headerCellClass}>Avsender</TableHead>
-                    <TableHead className={headerCellClass}>Tid</TableHead>
-                    <TableHead className={`${headerCellClass} text-right`}>
-                      Sum
-                    </TableHead>
-                    <TableHead className="w-0 p-0" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcoming.slice(0, 8).map((o) => {
-                    const info = formatDeliveryDate(o.deliveryDate)
-                    const sum = o.data.orderContent.reduce(
-                      (s, l) => s + l.total,
-                      0,
-                    )
-                    const isToday = o.deliveryDate === today
-                    return (
-                      <TableRow
-                        key={o.id}
-                        onClick={() => setOpen(o)}
-                        className="cursor-pointer"
-                      >
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-mono text-xs">
-                              {info.shortDate}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              {info.dayText}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {o.data.receiver.name || 'Uten navn'}
-                            </span>
-                            {o.data.receiver.address ? (
-                              <span className="text-xs text-muted-foreground">
-                                {o.data.receiver.address}
-                              </span>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {o.data.sender.name || '—'}
-                            </span>
-                            {o.data.sender.phone ? (
-                              <span className="text-xs text-muted-foreground">
-                                {o.data.sender.phone}
-                              </span>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {o.data.delivery.deliveryTime || '—'}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-xs">
-                          {formatNok(sum)}
-                        </TableCell>
-                        {isToday ? (
-                          <TableCell className="w-0 whitespace-nowrap pl-2 pr-3">
-                            <span className="inline-flex items-center rounded-md border bg-accent/80 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-accent-foreground">
-                              I dag
-                            </span>
-                          </TableCell>
-                        ) : (
-                          <TableCell className="w-0 p-0" />
-                        )}
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-lg border">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex flex-col">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Siste ordre
+          <div className="overflow-hidden rounded-lg border bg-card">
+            {recent.length === 0 ? (
+              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                Ingen lagrede ordrer.
               </div>
-              <div className="text-sm font-medium">{recent.length} nylige</div>
-            </div>
+            ) : (
+              <div className="divide-y">
+                {recent.map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() => setOpen(o)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/50"
+                  >
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted font-mono text-[10px] text-muted-foreground">
+                      {o.data.delivery.shortDate.slice(0, 5)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">
+                        {orderReceiverLabel(o)}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {orderSenderLabel(o)}
+                        {' · '}
+                        {o.data.orderContent.length} vare
+                        {o.data.orderContent.length === 1 ? '' : 'r'}
+                      </span>
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          {recent.length === 0 ? (
-            <div className="border-t px-4 py-10 text-center text-sm text-muted-foreground">
-              Ingen lagrede ordrer.
-            </div>
-          ) : (
-            <div className="divide-y border-t">
-              {recent.map((o) => (
-                <div
-                  key={o.id}
-                  className="flex items-start justify-center gap-3 px-4 py-3"
-                >
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px]">
-                    {o.data.delivery.shortDate.slice(0, 5)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">
-                      {o.data.receiver.name || 'Uten navn'}
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {o.data.sender.name}
-                      {' · '}
-                      {o.data.orderContent.length} vare
-                      {o.data.orderContent.length === 1 ? '' : 'r'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
@@ -220,6 +350,9 @@ function Dashboard() {
         order={open}
         onOpenChange={(v) => {
           if (!v) setOpen(null)
+        }}
+        onDelete={() => {
+          if (open) handleDelete(open)
         }}
       />
     </main>
