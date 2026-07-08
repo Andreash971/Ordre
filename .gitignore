@@ -26,3 +26,7 @@ dev.db-shm
 # Local-only — signing certs and personal documentation
 certs/
 docs/
+
+# Storybook
+storybook-static/
+*storybook.log

@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Intro" />
+
+# Ordre – komponentbibliotek
+
+Storybook for **Ordre**, ordrehåndterings- og utskriftsappen. Her finner du
+alle gjenbrukbare byggeklosser, isolert fra Electron og databasen, slik at de
+kan utvikles og testes i nettleseren.
+
+## Struktur
+
+- **UI/** – primitivene i `src/components/ui` (shadcn-baserte). Knapper,
+  skjemafelt, overlays, tabeller osv.
+- **App/** – presentasjonskomponenter fra `src/components` som brukes på tvers
+  av sidene (KPI-kort, varselbannere, seksjonsoverskrifter …).
+
+## Tema
+
+Appen bytter mellom lyst og mørkt tema ved å sette `data-theme="dark"` på
+rotelementet. Bruk **tema-knappen i verktøylinjen** øverst for å se enhver
+story i begge temaer.
+
+## Verktøy
+
+- **Controls** – juster props direkte i panelet under canvaset.
+- **Interactions** – flere stories har `play`-funksjoner som åpner dialoger,
+  krysser av checkbokser osv. og verifiserer resultatet automatisk.
+- **Accessibility** – a11y-fanen kjører axe-sjekker på hver story.
+- **Docs** – hver komponent har en autogenerert docs-side med alle variantene.
+
+## Kjøre lokalt
+
+```bash
+npm run storybook        # dev-server på http://localhost:6006
+npm run build-storybook  # statisk bygg i storybook-static/
+```

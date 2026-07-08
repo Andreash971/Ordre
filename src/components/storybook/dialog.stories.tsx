@@ -1,92 +1,114 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import { Dialog } from './dialog'
-import { Button } from './button'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 const meta = {
-  title: 'Form/Dialog',
+  title: 'UI/Dialog',
   component: Dialog,
-  parameters: {
-    layout: 'centered',
-  },
-  tags: ['autodocs'],
 } satisfies Meta<typeof Dialog>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  args: {
-    title: 'User Profile',
-    children: (
-      <div className="space-y-4">
-        <p className="text-gray-700 dark:text-gray-300">
-          This is a simple dialog component with a title and content area.
-        </p>
-      </div>
-    ),
-  },
+  render: () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Åpne dialog</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Slett ordre?</DialogTitle>
+          <DialogDescription>
+            Ordren fjernes fra arkivet. Dette kan ikke angres.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Avbryt</Button>
+          </DialogClose>
+          <Button variant="destructive">Slett</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  ),
 }
 
-export const WithFooter: Story = {
-  args: {
-    title: 'Confirm Action',
-    children: (
-      <div className="space-y-4">
-        <p className="text-gray-700 dark:text-gray-300">
-          Are you sure you want to proceed with this action?
-        </p>
-      </div>
-    ),
-    footer: (
-      <div className="flex gap-3 justify-end">
-        <Button variant="secondary" size="medium">
-          Cancel
-        </Button>
-        <Button variant="primary" size="medium">
-          Confirm
-        </Button>
-      </div>
-    ),
-  },
+export const WithForm: Story = {
+  render: () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Ny kontakt</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Legg til kontaktperson</DialogTitle>
+          <DialogDescription>
+            Kontakten knyttes til bedriftskunden.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="contact-name">Navn</Label>
+            <Input id="contact-name" placeholder="Ola Nordmann" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="contact-phone">Telefon</Label>
+            <Input id="contact-phone" type="tel" placeholder="+47 999 99 999" />
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Avbryt</Button>
+          </DialogClose>
+          <Button>Lagre</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  ),
 }
 
-export const Form: Story = {
-  args: {
-    title: 'Create Account',
-    children: (
-      <div className="space-y-4 min-w-80">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-            Email
-          </label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          />
-        </div>
-      </div>
-    ),
-    footer: (
-      <div className="flex gap-3 justify-end">
-        <Button variant="secondary" size="medium">
-          Cancel
-        </Button>
-        <Button variant="primary" size="medium">
-          Create Account
-        </Button>
-      </div>
-    ),
+export const OpenInteraction: Story = {
+  render: () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Åpne dialog</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Bekreft handling</DialogTitle>
+          <DialogDescription>Er du sikker?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Lukk</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const body = within(canvasElement.ownerDocument.body)
+    await userEvent.click(canvas.getByRole('button', { name: 'Åpne dialog' }))
+    const dialog = await body.findByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await userEvent.click(body.getByRole('button', { name: 'Lukk' }))
+    await waitFor(() =>
+      expect(body.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
   },
 }
