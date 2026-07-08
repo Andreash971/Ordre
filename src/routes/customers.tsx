@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Building2, User, UserPlus, UserSearch } from 'lucide-react'
+import { UserPlus, UserSearch } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { DataTable } from '@/components/ui/DataTable'
 import {
   Dialog,
@@ -29,15 +28,17 @@ import {
 import { ContactSubRows } from '@/components/CustomerContacts'
 import type { ContactEditTarget } from '@/components/CustomerContacts'
 import { CustomerSheet } from '@/components/CustomerSheet'
+import CustomerTypeTabs from '@/components/CustomerTypeTabs'
 import type { Contact } from '@/lib/contact-server-fns'
 import { getAllContacts } from '@/lib/contact-server-fns'
 import { getAllCustomers } from '@/lib/customer-server-fns'
 import type { CustomerType } from '@/lib/customer-server-fns'
 import type { CustomerSelection } from '@shared/customers'
+import { clampCustomerType } from '@shared/modules'
 import { resolveCustomerTypeDefault } from '@shared/settings'
 import { useSaveCustomerMutation } from '@/hooks/use-save-customer-mutation'
 import { queryKeys } from '@/lib/query-keys'
-import { useSettings } from '@/lib/store-hooks'
+import { useEnabledCustomerTypes, useSettings } from '@/lib/store-hooks'
 
 export const Route = createFileRoute('/customers')({
   component: CustomersPage,
@@ -50,9 +51,12 @@ type SheetTarget = {
 
 function CustomersPage() {
   const settings = useSettings()
-  const [activeTab, setActiveTab] = useState<CustomerType>(() =>
+  const enabledTypes = useEnabledCustomerTypes()
+  const [tabState, setActiveTab] = useState<CustomerType>(() =>
     resolveCustomerTypeDefault(settings, 'customersPage'),
   )
+  // The tab state can point at a module that was disabled after mount.
+  const activeTab = clampCustomerType(settings.modules, tabState)
   const [globalFilter, setGlobalFilter] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
@@ -122,24 +126,11 @@ function CustomersPage() {
         </p>
       </div>
 
-      <ButtonGroup>
-        <Button
-          size="sm"
-          variant={isBusinessTab ? 'outline' : 'default'}
-          onClick={() => setActiveTab('private')}
-        >
-          <User />
-          Privat
-        </Button>
-        <Button
-          size="sm"
-          variant={isBusinessTab ? 'default' : 'outline'}
-          onClick={() => setActiveTab('business')}
-        >
-          <Building2 />
-          Firma
-        </Button>
-      </ButtonGroup>
+      <CustomerTypeTabs
+        value={activeTab}
+        types={enabledTypes}
+        onChange={setActiveTab}
+      />
 
       <div className="flex flex-row items-center justify-between w-full gap-2">
         <InputGroup className="w-full max-w-sm bg-card">
@@ -200,8 +191,9 @@ function CustomersPage() {
           <DialogHeader>
             <DialogTitle>Legg til kunde</DialogTitle>
             <DialogDescription>
-              Registrer en ny kunde, eller legg til en representant ved å velge
-              et eksisterende firma.
+              {enabledTypes.includes('business')
+                ? 'Registrer en ny kunde, eller legg til en representant ved å velge et eksisterende firma.'
+                : 'Registrer en ny kunde i registeret.'}
             </DialogDescription>
           </DialogHeader>
           <AddCustomerForm

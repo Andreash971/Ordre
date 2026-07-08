@@ -201,7 +201,65 @@ let ORDERS: ArchivedOrder[] = [
 
 const asyncNoop = async () => undefined
 
+const CUSTOMERS = [
+  {
+    id: 1,
+    type: 'private' as const,
+    name: 'Anne Lie',
+    phone: '+47 901 22 540',
+    company: null,
+    address: 'Kirkeveien 22',
+    postcode: '0364',
+    city: 'Oslo',
+    careof: null,
+  },
+  {
+    id: 2,
+    type: 'business' as const,
+    name: 'Hansen Eiendom AS',
+    phone: null,
+    company: 'Hansen Eiendom AS',
+    address: 'Storgata 14',
+    postcode: '0184',
+    city: 'Oslo',
+    careof: null,
+  },
+]
+
+const CONTACTS = [
+  {
+    id: 1,
+    customerId: 2,
+    name: 'Bjørn Hansen',
+    phone: '+47 922 14 008',
+    careof: null,
+  },
+]
+
 const mock = {
+  customers: {
+    getAll: async () => CUSTOMERS,
+    search: async () => [],
+    searchByPhone: async () => [],
+    searchByBusiness: async () => [],
+    insert: async () => ({ id: 99 }),
+    update: asyncNoop,
+    delete: asyncNoop,
+  },
+  contacts: {
+    getAll: async () => CONTACTS,
+    getByCompany: async (customerId: number) =>
+      CONTACTS.filter((c) => c.customerId === customerId),
+    search: async () => [],
+    searchAll: async () => [],
+    insert: async () => ({ id: 99 }),
+    update: asyncNoop,
+    delete: asyncNoop,
+  },
+  products: {
+    getAll: async () => [],
+    search: async () => [],
+  },
   store: {
     getAll: async () => ({
       theme: 'auto',
@@ -237,6 +295,14 @@ const mock = {
     },
     clear: asyncNoop,
     pruneExpired: asyncNoop,
+  },
+  printer: {
+    list: async () => [
+      { name: 'Mock-skriver (HP LaserJet)' },
+      { name: 'Mock-etikettskriver' },
+    ],
+    discover: async () => [{ name: 'Mock nettverksskriver' }],
+    print: asyncNoop,
   },
   update: {
     getPending: async () => null,

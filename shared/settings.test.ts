@@ -99,6 +99,65 @@ describe('mergeSettings', () => {
   })
 })
 
+describe('modules', () => {
+  it('migrates settings from versions without modules to everything enabled', () => {
+    const migrated = migrateSettings({ rowsPerPage: 25 })
+    expect(migrated.modules).toEqual({
+      privateCustomers: true,
+      businessCustomers: true,
+    })
+  })
+
+  it('keeps a persisted module choice through migration', () => {
+    const migrated = migrateSettings({
+      modules: { privateCustomers: false, businessCustomers: true },
+    })
+    expect(migrated.modules).toEqual({
+      privateCustomers: false,
+      businessCustomers: true,
+    })
+  })
+
+  it('merges partial module updates', () => {
+    const next = mergeSettings(DEFAULT_SETTINGS, {
+      modules: { businessCustomers: false },
+    })
+    expect(next.modules).toEqual({
+      privateCustomers: true,
+      businessCustomers: false,
+    })
+  })
+
+  it('never lets a merge disable every customer type', () => {
+    const privateOnly = mergeSettings(DEFAULT_SETTINGS, {
+      modules: { businessCustomers: false },
+    })
+    const next = mergeSettings(privateOnly, {
+      modules: { privateCustomers: false },
+    })
+    expect(next.modules).toEqual({
+      privateCustomers: true,
+      businessCustomers: false,
+    })
+  })
+
+  it('resolves customer-type defaults away from disabled modules', () => {
+    const businessDefault = mergeSettings(DEFAULT_SETTINGS, {
+      customerTypeDefaults: { global: 'business' },
+    })
+    expect(resolveCustomerTypeDefault(businessDefault, 'senderForm')).toBe(
+      'business',
+    )
+
+    const businessDisabled = mergeSettings(businessDefault, {
+      modules: { businessCustomers: false },
+    })
+    expect(resolveCustomerTypeDefault(businessDisabled, 'senderForm')).toBe(
+      'private',
+    )
+  })
+})
+
 describe('customerTypeDefaults', () => {
   it('migrates older settings without the field to private everywhere', () => {
     const migrated = migrateSettings({ rowsPerPage: 25 })

@@ -20,7 +20,7 @@ import { Switch } from '@/components/ui/switch'
 import type { CustomerType } from '@shared/customers'
 import type { CustomerTypeLocation } from '@shared/settings'
 import { updateSettings } from '@/lib/settings'
-import { useSettings } from '@/lib/store-hooks'
+import { useEnabledCustomerTypes, useSettings } from '@/lib/store-hooks'
 
 const LOCATION_LABELS: Record<CustomerTypeLocation, string> = {
   senderForm: 'Kundeinformasjon (ny ordre)',
@@ -58,6 +58,11 @@ function CustomerTypeSelect({
 
 export default function CustomerTypeSection() {
   const defaults = useSettings().customerTypeDefaults
+  const enabledTypes = useEnabledCustomerTypes()
+
+  // With a single customer-type module enabled there is nothing to default
+  // between — the Moduler section is where that is controlled.
+  if (enabledTypes.length < 2) return null
 
   function setGlobal(next: CustomerType) {
     updateSettings({ customerTypeDefaults: { global: next } })

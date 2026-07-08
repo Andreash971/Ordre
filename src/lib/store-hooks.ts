@@ -3,8 +3,11 @@
  * settings, theme, orders, or onboarding state should use these hooks —
  * they re-render automatically when the store changes anywhere in the app.
  */
-import { useSyncExternalStore } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 
+import type { CustomerType } from '@shared/customers'
+import { enabledCustomerTypes } from '@shared/modules'
+import type { ModulesSettings } from '@shared/modules'
 import type { AppSettings, ThemeMode } from '@shared/settings'
 import type { StoreSnapshot } from './store-cache'
 import { getCache, subscribeToStore } from './store-cache'
@@ -23,4 +26,15 @@ export function useTheme(): ThemeMode {
 
 export function useOnboardingCompleted(): boolean {
   return useStoreSnapshot().onboardingCompleted
+}
+
+/** Which optional feature modules are enabled. */
+export function useModules(): ModulesSettings {
+  return useSettings().modules
+}
+
+/** The customer types whose module is enabled, in fixed schema order. */
+export function useEnabledCustomerTypes(): Array<CustomerType> {
+  const modules = useModules()
+  return useMemo(() => enabledCustomerTypes(modules), [modules])
 }

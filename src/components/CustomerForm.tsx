@@ -16,13 +16,13 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { cn } from '@/lib/utils'
 import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
 import { Card, CardContent } from '@/components/ui/card'
 import { FieldGroup } from '@/components/ui/field'
 
 import AutocompleteField from '@/components/AutocompleteField'
+import CustomerTypeTabs from '@/components/CustomerTypeTabs'
 import FormInputField from '@/components/FormInputField'
 import type {
   CustomerSuggestion,
@@ -44,6 +44,8 @@ import { queryKeys } from '@/lib/query-keys'
 import type { CustomerFormValues } from '@/lib/order-utils'
 import type { CustomerSelection } from '@shared/customers'
 import { EMPTY_SELECTION } from '@shared/customers'
+import { clampCustomerType } from '@shared/modules'
+import { useEnabledCustomerTypes, useModules } from '@/lib/store-hooks'
 
 /** Submit state handed to the `footer` slot, e.g. for a save button. */
 export interface CustomerFormSubmitCtx {
@@ -187,8 +189,17 @@ export function CustomerFields({
   footer,
 }: CustomerFieldsProps) {
   const formId = useId()
+  const modules = useModules()
+  const enabledTypes = useEnabledCustomerTypes()
+  // A selection seeded from existing data (an order draft or archived order)
+  // keeps its type even if that module was disabled later; a fresh form
+  // starts on an enabled type.
   const [selection, setSelectionState] = useState<CustomerSelection>(
-    defaultSelection ?? EMPTY_SELECTION,
+    () =>
+      defaultSelection ?? {
+        ...EMPTY_SELECTION,
+        type: clampCustomerType(modules, EMPTY_SELECTION.type),
+      },
   )
   const selectionRef = useRef(selection)
   /** Name of the currently selected contact; typing a different name means
@@ -284,6 +295,11 @@ export function CustomerFields({
 
   const type = selection.type
   const isBusiness = type === 'business'
+  // Enabled types, plus the current one when it came from saved data whose
+  // module has since been disabled — the tabs must not lie about the state.
+  const visibleTypes = enabledTypes.includes(type)
+    ? enabledTypes
+    : [...enabledTypes, type]
 
   const switchType = (next: CustomerType) => {
     if (next === type) return
@@ -460,28 +476,12 @@ export function CustomerFields({
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <ButtonGroup className="w-full">
-        <Button
-          type="button"
-          size="sm"
-          variant={isBusiness ? 'outline' : 'default'}
-          className="flex-1"
-          onClick={() => switchType('private')}
-        >
-          <User />
-          Privat
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={isBusiness ? 'default' : 'outline'}
-          className="flex-1"
-          onClick={() => switchType('business')}
-        >
-          <Building2 />
-          Firma
-        </Button>
-      </ButtonGroup>
+      <CustomerTypeTabs
+        value={type}
+        types={visibleTypes}
+        onChange={switchType}
+        fullWidth
+      />
       <form
         onSubmit={(e) => {
           e.preventDefault()

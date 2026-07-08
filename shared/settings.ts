@@ -10,6 +10,15 @@ import * as z from 'zod'
 
 import { customerTypeSchema } from './customers'
 import type { CustomerType } from './customers'
+import {
+  DEFAULT_MODULES,
+  clampCustomerType,
+  modulesSchema,
+  normalizeModules,
+} from './modules'
+import type { ModulesSettings } from './modules'
+
+export type { ModulesSettings }
 
 // ---------------------------------------------------------------------------
 // Theme
@@ -110,6 +119,7 @@ export const customerTypeDefaultsSchema = z.object({
 export type CustomerTypeDefaults = z.infer<typeof customerTypeDefaultsSchema>
 
 export const settingsSchema = z.object({
+  modules: modulesSchema,
   archiveRetention: retentionSchema,
   rowsPerPage: pageSizeSchema,
   company: companySchema,
@@ -138,6 +148,7 @@ export type AppSettings = z.infer<typeof settingsSchema>
  * objects may themselves be partial.
  */
 export const partialSettingsSchema = z.object({
+  modules: modulesSchema.partial().optional(),
   archiveRetention: retentionSchema.optional(),
   rowsPerPage: pageSizeSchema.optional(),
   company: companySchema.partial().optional(),
@@ -193,6 +204,7 @@ export const DEFAULT_CUSTOMER_TYPE_DEFAULTS: CustomerTypeDefaults = {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  modules: DEFAULT_MODULES,
   archiveRetention: 7,
   rowsPerPage: 14,
   defaultPrinter: null,
@@ -218,13 +230,17 @@ export const DEFAULT_SETTINGS: AppSettings = {
   deliveryTimePresets: ['11:00', '12:00', '14:00', '17:00'],
 }
 
-/** The effective default customer type for one location in the app. */
+/**
+ * The effective default customer type for one location in the app. A default
+ * pointing at a disabled module resolves to an enabled type instead.
+ */
 export function resolveCustomerTypeDefault(
   settings: AppSettings,
   location: CustomerTypeLocation,
 ): CustomerType {
   const d = settings.customerTypeDefaults
-  return d.perLocation ? d.locations[location] : d.global
+  const type = d.perLocation ? d.locations[location] : d.global
+  return clampCustomerType(settings.modules, type)
 }
 
 // ---------------------------------------------------------------------------
@@ -243,6 +259,7 @@ export function migrateSettings(raw: unknown): AppSettings {
   const persisted = (raw ?? {}) as Partial<AppSettings>
   const special = persisted.specialItems as PersistedSpecialItems | undefined
   return {
+    modules: normalizeModules(persisted.modules),
     archiveRetention:
       persisted.archiveRetention ?? DEFAULT_SETTINGS.archiveRetention,
     rowsPerPage: persisted.rowsPerPage ?? DEFAULT_SETTINGS.rowsPerPage,
@@ -289,6 +306,7 @@ export function mergeSettings(
   partial: PartialSettings,
 ): AppSettings {
   return {
+    modules: normalizeModules({ ...current.modules, ...partial.modules }),
     archiveRetention: partial.archiveRetention ?? current.archiveRetention,
     rowsPerPage: partial.rowsPerPage ?? current.rowsPerPage,
     company: { ...current.company, ...partial.company },

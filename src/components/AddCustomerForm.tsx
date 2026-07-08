@@ -14,11 +14,11 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { FieldGroup } from '@/components/ui/field'
 import { DialogClose } from '@/components/ui/dialog'
 
 import AutocompleteField from '@/components/AutocompleteField'
+import CustomerTypeTabs from '@/components/CustomerTypeTabs'
 import FormInputField from '@/components/FormInputField'
 import { lookupPostcode, suggestAddresses } from '@/lib/bring-server-fns'
 import type { AddressSuggestion } from '@/lib/bring-server-fns'
@@ -28,7 +28,9 @@ import type {
 } from '@/lib/customer-server-fns'
 import { searchCustomersByBusiness } from '@/lib/customer-server-fns'
 import type { CustomerSelection } from '@shared/customers'
+import { clampCustomerType } from '@shared/modules'
 import { queryKeys } from '@/lib/query-keys'
+import { useEnabledCustomerTypes, useModules } from '@/lib/store-hooks'
 
 export type AddCustomerFormValues = {
   name: string
@@ -128,8 +130,17 @@ export default function AddCustomerForm({
   onSubmit,
 }: AddCustomerFormProps) {
   const formId = useId()
-  const [type, setType] = useState<CustomerType>(defaultType)
+  const modules = useModules()
+  const enabledTypes = useEnabledCustomerTypes()
+  // A fixed type (editing an existing customer) is respected even if its
+  // module was disabled later; a new record starts on an enabled type.
+  const [type, setType] = useState<CustomerType>(() =>
+    allowTypeSwitch ? clampCustomerType(modules, defaultType) : defaultType,
+  )
   const isBusiness = type === 'business'
+  const visibleTypes = enabledTypes.includes(type)
+    ? enabledTypes
+    : [...enabledTypes, type]
   const showRepresentative = !isBusiness || withRepresentative
 
   // Existing company the business submit should target instead of creating a
@@ -296,33 +307,16 @@ export default function AddCustomerForm({
     >
       <FieldGroup className="flex flex-col gap-4">
         {allowTypeSwitch && (
-          <ButtonGroup className="w-full">
-            <Button
-              type="button"
-              size="sm"
-              variant={isBusiness ? 'outline' : 'default'}
-              className="flex-1"
-              disabled={disabled}
-              onClick={() => {
-                setType('private')
-                setExistingCompany(null)
-              }}
-            >
-              <User />
-              Privat
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={isBusiness ? 'default' : 'outline'}
-              className="flex-1"
-              disabled={disabled}
-              onClick={() => setType('business')}
-            >
-              <Building2 />
-              Firma
-            </Button>
-          </ButtonGroup>
+          <CustomerTypeTabs
+            value={type}
+            types={visibleTypes}
+            disabled={disabled}
+            onChange={(next) => {
+              setType(next)
+              if (next !== 'business') setExistingCompany(null)
+            }}
+            fullWidth
+          />
         )}
 
         {isBusiness ? (

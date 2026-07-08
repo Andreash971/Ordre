@@ -7,6 +7,7 @@ import ThemeSection from '@/components/settings/ThemeSection'
 import QuickSelectSection from '@/components/settings/QuickSelectSection'
 import DeliveryTimeSection from '@/components/settings/DeliveryTimeSection'
 import AutoSaveSection from '@/components/settings/AutoSaveSection'
+import ModulesSection from '@/components/settings/ModulesSection'
 import CustomerTypeSection from '@/components/settings/CustomerTypeSection'
 import SpecialItemsSection from '@/components/settings/SpecialItemsSection'
 import PrinterSection from '@/components/settings/PrinterSection'
@@ -30,6 +31,7 @@ function SettingsPage() {
         <QuickSelectSection />
         <DeliveryTimeSection />
         <AutoSaveSection />
+        <ModulesSection />
         <CustomerTypeSection />
         <SpecialItemsSection />
         <PrinterSection />
