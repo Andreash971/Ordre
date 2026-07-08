@@ -14,6 +14,7 @@ import PrinterSection from '@/components/settings/PrinterSection'
 import CompanySection from '@/components/settings/CompanySection'
 import RowsPerPageSection from '@/components/settings/RowsPerPageSection'
 import RetentionSection from '@/components/settings/RetentionSection'
+import RerunOnboardingSection from '@/components/settings/RerunOnboardingSection'
 import BetaChannelSection from '@/components/settings/BetaChannelSection'
 import BringApiSection from '@/components/settings/BringApiSection'
 import ClearArchiveSection from '@/components/settings/ClearArchiveSection'
@@ -38,6 +39,7 @@ function SettingsPage() {
         <CompanySection />
         <RowsPerPageSection />
         <RetentionSection />
+        <RerunOnboardingSection />
 
         <button
           type="button"

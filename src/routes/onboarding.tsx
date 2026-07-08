@@ -21,7 +21,12 @@ import type {
 } from '@/components/onboarding/CompanyStep'
 import ModulesStep from '@/components/onboarding/ModulesStep'
 import PrinterStep from '@/components/onboarding/PrinterStep'
-import { completeOnboarding, updateSettings } from '@/lib/settings'
+import {
+  completeOnboarding,
+  getOnboardingCompleted,
+  getStoredSettings,
+  updateSettings,
+} from '@/lib/settings'
 import { DEFAULT_MODULES } from '@shared/modules'
 import type { ModulesSettings } from '@shared/modules'
 
@@ -76,12 +81,21 @@ const ALL_TOUCHED: Record<CompanyFieldKey, boolean> = {
 
 function OnboardingPage() {
   const navigate = useNavigate()
+  // Re-run: the wizard was opened from settings after onboarding already
+  // completed. Captured once so completing doesn't flip the UI mid-submit.
+  const [isRerun] = useState(() => getOnboardingCompleted())
   const [stepIndex, setStepIndex] = useState(0)
-  const [form, setForm] = useState<CompanyFormState>(EMPTY_FORM)
+  const [form, setForm] = useState<CompanyFormState>(() =>
+    isRerun ? getStoredSettings().company : EMPTY_FORM,
+  )
   const [touched, setTouched] =
     useState<Record<CompanyFieldKey, boolean>>(UNTOUCHED)
-  const [modules, setModules] = useState<ModulesSettings>(DEFAULT_MODULES)
-  const [selectedPrinter, setSelectedPrinter] = useState<string | null>(null)
+  const [modules, setModules] = useState<ModulesSettings>(() =>
+    isRerun ? getStoredSettings().modules : DEFAULT_MODULES,
+  )
+  const [selectedPrinter, setSelectedPrinter] = useState<string | null>(() =>
+    isRerun ? getStoredSettings().defaultPrinter : null,
+  )
   const [submitting, setSubmitting] = useState(false)
 
   const step: StepId = STEPS[stepIndex].id
@@ -127,7 +141,7 @@ function OnboardingPage() {
       modules,
     })
     completeOnboarding()
-    void navigate({ to: '/' })
+    void navigate({ to: isRerun ? '/settings' : '/' })
   }
 
   return (
@@ -197,6 +211,15 @@ function OnboardingPage() {
                 disabled={submitting}
               >
                 Tilbake
+              </Button>
+            ) : isRerun ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => void navigate({ to: '/settings' })}
+                disabled={submitting}
+              >
+                Avbryt
               </Button>
             ) : (
               <span />

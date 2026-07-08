@@ -54,6 +54,13 @@ export default function PrinterStep({
     }
   }
 
+  // A remembered printer (re-run with prefilled settings) stays selectable
+  // even before the list loads or if it is currently unavailable.
+  const options =
+    selectedPrinter && !printers.some((p) => p.name === selectedPrinter)
+      ? [{ name: selectedPrinter }, ...printers]
+      : printers
+
   return (
     <section className="flex flex-col gap-3">
       <div>
@@ -73,7 +80,7 @@ export default function PrinterStep({
           <SelectContent>
             <SelectGroup>
               <SelectItem value="__none__">Ingen (deaktivert)</SelectItem>
-              {printers.map((p) => (
+              {options.map((p) => (
                 <SelectItem key={p.name} value={p.name}>
                   {p.name}
                 </SelectItem>

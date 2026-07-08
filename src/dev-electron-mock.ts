@@ -263,7 +263,20 @@ const mock = {
   store: {
     getAll: async () => ({
       theme: 'auto',
-      settings: DEFAULT_SETTINGS,
+      // A configured install: company info and a default printer are set, so
+      // previews of settings-dependent UI (sidebar title, onboarding re-run
+      // prefill) show realistic data.
+      settings: {
+        ...DEFAULT_SETTINGS,
+        company: {
+          name: 'Blomster i Byhaven AS',
+          displayName: 'Blomster i Byhaven',
+          address: 'Storgata 1',
+          postCode: '0155 Oslo',
+          phone: '+47 22 00 00 00',
+        },
+        defaultPrinter: 'Mock-skriver (HP LaserJet)',
+      },
       onboardingCompleted: true,
     }),
     setTheme: asyncNoop,
